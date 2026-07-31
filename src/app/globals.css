@@ -1,26 +1,211 @@
 @import "tailwindcss";
 
+/* Dark mode driven by next-themes class on <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================
+   CRISKA DESIGN SYSTEM  ·  Editorial / Ankar-inspired
+   Cream + greige + near-black · EB Garamond (serif) + Switzer
+   ============================================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Semantic tokens — LIGHT (default) · Ankar bright white */
+  --paper: #ffffff; /* bright white base */
+  --surface: #ffffff; /* cards */
+  --panel: #f1f0ec; /* greige panel (Ankar #F0EFEC) */
+  --panel-2: #f7f6f3;
+  --foreground: #171717; /* near-black */
+  --muted: #6f6f6f; /* secondary text */
+  --faint: #979797; /* labels / captions */
+  --border: #e8e8e8; /* hairline */
+  --border-strong: #d7d7d7;
+  --ink: #171717; /* dark buttons / dark section */
+  --on-ink: #ffffff; /* text on dark */
+  --accent: #8b93c4; /* soft periwinkle — used sparingly */
+  --accent-soft: #edeef7;
+
+  /* Navy-slate palette for DARK sections (constant in both themes) */
+  --navy-bg: #0a1a24; /* between #06141B and #11212D */
+  --navy-surface: #11212d;
+  --navy-surface-2: #16283550;
+  --navy-border: rgba(203, 208, 207, 0.12);
+  --navy-border-strong: rgba(203, 208, 207, 0.22);
+  --navy-text: #eef1f0; /* headings */
+  --navy-body: #ccd0cf; /* body */
+  --navy-muted: #9ba8ab; /* secondary */
+  --navy-faint: #6d7f88; /* labels */
+  --navy-accent: #a9c0cd; /* light slate accent */
+
+  --radius: 16px;
+}
+
+.dark {
+  --paper: #121211;
+  --surface: #1a1a19;
+  --panel: #1e1e1c;
+  --panel-2: #232320;
+  --foreground: #f2efe8;
+  --muted: #a3a099;
+  --faint: #78756d;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --ink: #f2efe8; /* buttons invert: light pill on dark */
+  --on-ink: #171717;
+  --accent: #a6afdd;
+  --accent-soft: rgba(139, 147, 196, 0.16);
 }
 
 @theme inline {
-  --color-background: var(--background);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-border: var(--border);
+  --color-ink: var(--ink);
+  --color-on-ink: var(--on-ink);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+
+  --font-display: var(--font-eb-garamond);
+  --font-sans: "Switzer", var(--font-inter), system-ui, sans-serif;
+
+  --radius-xl: 16px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
+  background: var(--paper);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+::selection {
+  background: #171717;
+  color: #f5f2ec;
+}
+.dark ::selection {
+  background: #f2efe8;
+  color: #171717;
+}
+
+/* ---- Typography helpers ---- */
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+.serif {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+/* Legacy label class kept for compatibility — restyled */
+.label-mono {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.font-mono {
+  font-family: var(--font-sans);
+}
+
+/* ---- Buttons (black/cream pills, Ankar-style) ---- */
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 0.72rem 1.5rem;
+  transition: transform 0.2s ease, background-color 0.2s ease,
+    border-color 0.2s ease, opacity 0.2s ease;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--foreground);
+  border: 1px solid var(--border-strong);
+}
+.btn-ghost:hover {
+  background: var(--panel);
+  transform: translateY(-1px);
+}
+
+/* Soft pastel wash for hero (Sequence-like, very subtle) */
+.pastel-wash {
+  background:
+    radial-gradient(60% 50% at 12% 8%, rgba(167, 199, 231, 0.28), transparent 70%),
+    radial-gradient(55% 45% at 88% 4%, rgba(198, 189, 228, 0.26), transparent 70%),
+    radial-gradient(50% 40% at 96% 92%, rgba(210, 200, 232, 0.22), transparent 70%),
+    radial-gradient(45% 40% at 4% 96%, rgba(180, 205, 226, 0.2), transparent 70%);
+}
+.dark .pastel-wash {
+  opacity: 0.35;
+}
+
+/* Faint blueprint grid lines like Sequence */
+.blueprint {
+  background-image: linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 100% 100%;
+}
+
+/* Node pulse (logo dot) */
+@keyframes node-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(1.2); }
+}
+.animate-node {
+  animation: node-pulse 3s ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* Marquee */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 40s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-node,
+  .animate-marquee { animation: none !important; }
+  html { scroll-behavior: auto; }
 }

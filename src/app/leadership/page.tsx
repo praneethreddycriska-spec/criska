@@ -1,0 +1,47 @@
+import type { Metadata } from "next";
+import { Nav } from "@/components/nav";
+import { Footer } from "@/components/sections/footer";
+import { PageHeader } from "@/components/page-header";
+import { site } from "@/content/site";
+
+export const metadata: Metadata = {
+  title: "Leadership Team — Criska Business Consulting",
+  description: "Experienced technology and consulting leaders focused on client outcomes and long-term partnerships.",
+};
+
+export default function LeadershipPage() {
+  const { leadership } = site;
+  return (
+    <>
+      <Nav />
+      <main className="flex-1">
+        <PageHeader eyebrow={leadership.eyebrow} title={leadership.title} lead={leadership.lead} />
+
+        <section className="py-20 md:py-28">
+          <div className="mx-auto max-w-[1200px] px-6 md:px-10">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {leadership.functions.map((f) => (
+                <div key={f.area} className="rounded-[var(--radius)] border border-border bg-surface p-8">
+                  <div className="grid h-11 w-11 place-items-center rounded-full bg-panel text-accent">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="8" r="3.2" />
+                      <path d="M5 20a7 7 0 0114 0" />
+                    </svg>
+                  </div>
+                  <h2 className="font-display mt-5 text-[22px] leading-tight">{f.area}</h2>
+                  <p className="mt-2 text-[14.5px] leading-relaxed text-muted">{f.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 rounded-[var(--radius)] bg-panel p-10 text-center">
+              <p className="mx-auto max-w-xl text-[16px] text-foreground">{leadership.note}</p>
+              <a href="/contact" className="btn-pill btn-primary mt-6">Get in touch</a>
+            </div>
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </>
+  );
+}
