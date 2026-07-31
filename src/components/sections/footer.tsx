@@ -23,8 +23,8 @@ export function Footer() {
   return (
     <footer className="border-t border-border bg-panel">
       <div className="mx-auto max-w-[1200px] px-6 py-16 md:px-10">
-        <div className="grid grid-cols-2 gap-x-8 gap-y-12 md:grid-cols-12">
-          <div className="col-span-2 md:col-span-3">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-12 lg:grid-cols-12">
+          <div className="col-span-2 lg:col-span-3">
             <div className="flex items-center gap-3 text-foreground">
               <Monogram className="h-8 w-8" />
               <span className="font-display text-2xl">{brand.name}</span>
@@ -37,16 +37,16 @@ export function Footer() {
             </a>
           </div>
 
-          <div className="md:col-span-2 md:col-start-5">
+          <div className="lg:col-span-2">
             <Column title="Quick Links" links={footer.quickLinks} />
           </div>
-          <div className="md:col-span-3">
+          <div className="lg:col-span-3">
             <Column title="Our Services" links={footer.services} />
           </div>
-          <div className="md:col-span-2">
+          <div className="lg:col-span-2">
             <Column title="Industries" links={footer.industries} />
           </div>
-          <div className="md:col-span-2">
+          <div className="lg:col-span-2">
             <Column title="Resources" links={footer.resources} />
           </div>
         </div>

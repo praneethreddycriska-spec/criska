@@ -1,11 +1,8 @@
 import type { NextConfig } from "next";
-import path from "path";
 
 const nextConfig: NextConfig = {
-  turbopack: {
-    // Pin the workspace root to this project (a stray lockfile lives higher up).
-    root: path.join(__dirname),
-  },
+  // Turbopack workspace root is inferred correctly on Vercel (single lockfile).
+  // The stray parent lockfile only exists on this local machine.
 };
 
 export default nextConfig;

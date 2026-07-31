@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/sections/footer";
 import { PageHeader } from "@/components/page-header";
+import { LeadershipMembers } from "@/components/sections/leadership-members";
 import { site } from "@/content/site";
 
 export const metadata: Metadata = {
@@ -17,8 +18,14 @@ export default function LeadershipPage() {
       <main className="flex-1">
         <PageHeader eyebrow={leadership.eyebrow} title={leadership.title} lead={leadership.lead} />
 
+        <LeadershipMembers title={leadership.membersTitle} />
+
         <section className="py-20 md:py-28">
           <div className="mx-auto max-w-[1200px] px-6 md:px-10">
+            <div className="mb-10">
+              <span className="eyebrow">How we&apos;re organized</span>
+              <h2 className="font-display mt-3 text-[30px] leading-tight sm:text-[38px]">Leadership by function</h2>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {leadership.functions.map((f) => (
                 <div key={f.area} className="rounded-[var(--radius)] border border-border bg-surface p-8">

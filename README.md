@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Criska — Business Consulting Website
 
-## Getting Started
+Marketing website for **Criska Business Consulting Pvt. Ltd.** — built with
+Next.js 16 (App Router), TypeScript, and Tailwind CSS v4.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router, Turbopack) · **React 19**
+- **Tailwind CSS v4** with CSS-variable design tokens (`src/app/globals.css`)
+- **Fonts:** EB Garamond (serif headings) + Switzer (body, via Fontshare) + Inter (fallback)
+- **motion** (animations) · **next-themes** (light/dark)
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+```bash
+npm run build    # production build (type-check + lint + prerender)
+npm run start    # serve the production build
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Editing content
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+All copy lives in one typed file: **`src/content/site.ts`** (the single source of
+truth for hero, 15 services, industries, why-choose, security, leadership/board,
+events, blog posts, contact, quality, FAQ, and footer). Edit values there and the
+site updates — no component changes needed.
 
-## Learn More
+- **Board photos:** put an image in `public/team/…` and set `leadership.members[].image`.
+- **Event photos:** put an image in `public/events/…` and set `events.items[].image`.
 
-To learn more about Next.js, take a look at the following resources:
+## Pages
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+`/` · `/blog` + `/blog/[slug]` · `/events` · `/careers` · `/case-studies` ·
+`/leadership` · `/quality` · `/faq` · `/contact`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy to Vercel
 
-## Deploy on Vercel
+Standard Next.js app — no extra config or environment variables required.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Push this repo to GitHub (see below).
+2. Go to [vercel.com/new](https://vercel.com/new), **Import** the repo.
+3. Framework preset auto-detects **Next.js**. Keep defaults and **Deploy**.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# push to a new GitHub repo (after `gh auth login`)
+gh repo create criska-website --private --source=. --remote=origin --push
+```
+
+Or with the Vercel CLI:
+
+```bash
+npm i -g vercel
+vercel        # first run links/creates the project
+vercel --prod # production deployment
+```
+
+> The contact form and Careers "apply" are front-end only today (submit shows a
+> confirmation / opens an email client). Wire them to an email service (e.g. Resend)
+> before relying on them for live inquiries.

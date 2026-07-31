@@ -23,6 +23,8 @@ export type BlogPost = {
 };
 export type BlogCategory = { title: string; desc: string };
 export type NavLink = { label: string; href: string };
+export type Member = { name: string; role: string; bio: string; image: string; linkedin: string };
+export type EventItem = { title: string; date: string; location: string; tag: string; overview: string; image: string };
 
 export const site = {
   brand: {
@@ -38,8 +40,9 @@ export const site = {
     links: [
       { label: "Services", href: "/#services" },
       { label: "Industries", href: "/#industries" },
-      { label: "Why Criska", href: "/#why" },
       { label: "Blog", href: "/blog" },
+      { label: "Events", href: "/events" },
+      { label: "Careers", href: "/careers" },
       { label: "Contact", href: "/contact" },
     ],
     cta: { label: "Schedule Consultation", href: "/contact" },
@@ -541,6 +544,7 @@ export const site = {
       { label: "Industries", href: "/#industries" },
       { label: "Blogs & Insights", href: "/blog" },
       { label: "Case Studies", href: "/case-studies" },
+      { label: "Events", href: "/events" },
       { label: "Careers", href: "/careers" },
       { label: "Contact Us", href: "/contact" },
     ] as NavLink[],
@@ -636,10 +640,82 @@ export const site = {
     ],
   },
 
+  events: {
+    eyebrow: "Events",
+    title: "Life & events at Criska",
+    lead: "Tech talks, workshops, hackathons, and celebrations — a look at the events we host at our Hyderabad office and beyond. Add your own photos and details for each event.",
+    // Replace `image` with a file in /public (e.g. "/events/tech-talk.jpg"); empty shows a placeholder.
+    items: [
+      {
+        title: "Criska Tech Talk: Generative AI in the Enterprise",
+        date: "March 2026",
+        location: "Hyderabad Office",
+        tag: "Tech Talk",
+        overview:
+          "An internal knowledge-sharing session where our engineers explored practical Generative AI use cases, LLM integration patterns, and responsible AI governance.",
+        image: "",
+      },
+      {
+        title: "Cybersecurity Awareness Week",
+        date: "February 2026",
+        location: "Hyderabad Office",
+        tag: "Workshop",
+        overview:
+          "A week of hands-on workshops on secure coding, phishing awareness, and incident response — reinforcing our cybersecurity-first culture across every team.",
+        image: "",
+      },
+      {
+        title: "Cloud & DevOps Hackathon",
+        date: "January 2026",
+        location: "Hyderabad Office",
+        tag: "Hackathon",
+        overview:
+          "Cross-functional teams built and shipped cloud-native prototypes in 24 hours, competing on automation, observability, and delivery speed.",
+        image: "",
+      },
+      {
+        title: "Annual Team Offsite & Innovation Day",
+        date: "December 2025",
+        location: "Hyderabad",
+        tag: "Culture",
+        overview:
+          "Our yearly offsite bringing the whole team together for strategy, recognition, and an innovation showcase of ideas from across the company.",
+        image: "",
+      },
+      {
+        title: "Campus Connect & Recruitment Drive",
+        date: "November 2025",
+        location: "Hyderabad",
+        tag: "Hiring",
+        overview:
+          "Engaging with emerging talent through campus sessions and a recruitment drive to grow our engineering, data, and consulting teams.",
+        image: "",
+      },
+      {
+        title: "Festival Celebrations at the Office",
+        date: "October 2025",
+        location: "Hyderabad Office",
+        tag: "Culture",
+        overview:
+          "Celebrating together — the people-focused, relationship-driven culture that makes Criska a great place to work.",
+        image: "",
+      },
+    ] as EventItem[],
+  },
+
   leadership: {
     eyebrow: "Leadership Team",
     title: "Experienced leaders, hands-on delivery",
     lead: "Criska is led by experienced technology and consulting professionals who stay close to delivery. Our leadership spans engineering, security, consulting, and people functions — united by a focus on client outcomes and long-term partnerships.",
+    // Board / leadership members. Replace name, role, bio, image (put a file in /public
+    // and set e.g. "/team/name.jpg"), and linkedin URL. Empty image shows a placeholder.
+    membersTitle: "Meet the board",
+    members: [
+      { name: "", role: "Founder & Managing Director", bio: "Sets Criska's vision, partnerships, and standards of trust and quality.", image: "", linkedin: "#" },
+      { name: "", role: "Chief Technology Officer", bio: "Leads solution architecture, engineering, and delivery excellence.", image: "", linkedin: "#" },
+      { name: "", role: "Head of Security & Compliance", bio: "Drives our cybersecurity-first approach, ISO standards, and CMMI journey.", image: "", linkedin: "#" },
+      { name: "", role: "Head of People & Talent", bio: "Leads staffing, recruitment, and Criska's people-focused culture.", image: "", linkedin: "#" },
+    ] as Member[],
     functions: [
       { area: "Executive Leadership", desc: "Sets strategy, partnerships, and the standards of trust and quality that guide every engagement." },
       { area: "Delivery & Engineering", desc: "Owns solution architecture, delivery excellence, and the health of every project." },
