@@ -34,8 +34,12 @@ export function ContactForm() {
   return (
     <form
       onSubmit={onSubmit}
-      className="rounded-[var(--radius)] border border-border bg-surface p-7 md:p-9"
+      className="rounded-[var(--radius)] border border-border bg-surface p-7 shadow-[0_30px_80px_-50px_rgba(10,22,34,0.4)] md:p-9"
     >
+      <div className="mb-7">
+        <h2 className="font-display text-[26px] leading-tight">Send us a message</h2>
+        <p className="mt-1.5 text-[14px] text-muted">Fill in the details below and our team will get back to you.</p>
+      </div>
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <Field label="Full Name" name="name" required />
         <Field label="Company Name" name="company" />
@@ -45,7 +49,7 @@ export function ContactForm() {
           <Label>Service Interested In</Label>
           <select
             name="service"
-            className="mt-2 w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none transition-colors focus:border-foreground"
+            className="mt-2 w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none transition hover:border-border-strong focus:border-foreground focus:ring-2 focus:ring-accent/30"
             defaultValue=""
           >
             <option value="" disabled>Select a service…</option>
@@ -59,7 +63,7 @@ export function ContactForm() {
           <textarea
             name="requirements"
             rows={3}
-            className="mt-2 w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none transition-colors focus:border-foreground"
+            className="mt-2 w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none transition hover:border-border-strong focus:border-foreground focus:ring-2 focus:ring-accent/30"
             placeholder="Tell us about scope, timeline, and goals…"
           />
         </div>
@@ -68,13 +72,16 @@ export function ContactForm() {
           <textarea
             name="message"
             rows={3}
-            className="mt-2 w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none transition-colors focus:border-foreground"
+            className="mt-2 w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none transition hover:border-border-strong focus:border-foreground focus:ring-2 focus:ring-accent/30"
           />
         </div>
       </div>
-      <button type="submit" className="btn-pill btn-primary mt-7 w-full sm:w-auto">
-        {contact.submitLabel}
-      </button>
+      <div className="mt-7 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+        <button type="submit" className="btn-pill btn-primary w-full sm:w-auto">
+          {contact.submitLabel}
+        </button>
+        <span className="text-[12.5px] text-faint">We respect your privacy. No spam, ever.</span>
+      </div>
     </form>
   );
 }
@@ -101,7 +108,7 @@ function Field({
         type={type}
         name={name}
         required={required}
-        className="mt-2 w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none transition-colors focus:border-foreground"
+        className="mt-2 w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none transition hover:border-border-strong focus:border-foreground focus:ring-2 focus:ring-accent/30"
       />
     </div>
   );

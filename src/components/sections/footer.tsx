@@ -1,5 +1,5 @@
 import { site } from "@/content/site";
-import { Monogram } from "@/components/logo";
+import { CKMark } from "@/components/logo";
 
 function Column({ title, links }: { title: string; links: { label: string; href: string }[] }) {
   return (
@@ -26,8 +26,8 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-x-8 gap-y-12 lg:grid-cols-12">
           <div className="col-span-2 lg:col-span-3">
             <div className="flex items-center gap-3 text-foreground">
-              <Monogram className="h-8 w-8" />
-              <span className="font-display text-2xl">{brand.name}</span>
+              <CKMark className="h-9 w-auto" />
+              <span className="text-xl font-semibold uppercase tracking-[0.2em]">{brand.name}</span>
             </div>
             <p className="mt-4 max-w-xs text-[14px] leading-relaxed text-muted">
               {brand.legalName} — {brand.tagline}. Est. {brand.est}, {brand.location}.

@@ -19,14 +19,17 @@ export function Hero() {
       </div>
 
       <div className="relative mx-auto max-w-[1200px] px-6 pb-20 pt-36 text-center md:px-10 md:pb-24 md:pt-44">
-        <motion.p
+        <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="eyebrow"
+          className="flex justify-center"
         >
-          {hero.eyebrow}
-        </motion.p>
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface/70 px-4 py-1.5 shadow-[0_6px_18px_-12px_rgba(10,22,34,0.4)] backdrop-blur">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+            <span className="eyebrow">{hero.eyebrow}</span>
+          </span>
+        </motion.div>
 
         <motion.h1
           initial={{ opacity: 0, y: 18 }}
@@ -66,12 +69,12 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.3 }}
-          className="mx-auto mt-20 grid max-w-3xl grid-cols-2 gap-y-10 border-t border-border pt-10 sm:grid-cols-4"
+          className="mx-auto mt-20 grid max-w-3xl grid-cols-2 gap-y-10 border-t border-border pt-12 sm:grid-cols-4 sm:divide-x sm:divide-border"
         >
           {hero.stats.map((s) => (
-            <div key={s.label} className="px-2 text-center">
+            <div key={s.label} className="px-4 text-center">
               <Stat value={s.value} />
-              <div className="mt-2 text-[12.5px] uppercase tracking-[0.12em] text-faint">
+              <div className="mt-2.5 text-[12px] uppercase tracking-[0.14em] text-faint">
                 {s.label}
               </div>
             </div>

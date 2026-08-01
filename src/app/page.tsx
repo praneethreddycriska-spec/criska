@@ -4,6 +4,7 @@ import { About } from "@/components/sections/about";
 import { Services } from "@/components/sections/services";
 import { Security } from "@/components/sections/security";
 import { Industries } from "@/components/sections/industries";
+import { TechShowcase } from "@/components/sections/tech-showcase";
 import { WhyChoose } from "@/components/sections/why-choose";
 import { LeadershipMembers } from "@/components/sections/leadership-members";
 import { Clients } from "@/components/sections/clients";
@@ -20,6 +21,7 @@ export default function Home() {
         <Services />
         <Security />
         <Industries />
+        <TechShowcase />
         <WhyChoose />
         <LeadershipMembers />
         <Clients />

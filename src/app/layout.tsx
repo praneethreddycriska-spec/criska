@@ -50,6 +50,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>{children}</ThemeProvider>
+        <div className="grain" aria-hidden />
       </body>
     </html>
   );

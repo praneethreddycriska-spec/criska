@@ -3,11 +3,12 @@
 import { motion, type Variants } from "motion/react";
 
 const variants: Variants = {
-  hidden: { opacity: 0, y: 22 },
+  hidden: { opacity: 0, y: 26, filter: "blur(8px)" },
   show: (i: number = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.55, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] },
+    filter: "blur(0px)",
+    transition: { duration: 0.7, delay: i * 0.07, ease: [0.22, 1, 0.36, 1] },
   }),
 };
 

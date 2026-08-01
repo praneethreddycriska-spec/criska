@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { site } from "@/content/site";
-import { Wordmark } from "./logo";
+import { LogoLockup } from "./logo";
 import { ThemeToggle } from "./theme-toggle";
 
 export function Nav() {
@@ -27,8 +27,8 @@ export function Nav() {
         }`}
       >
         <nav className="mx-auto flex h-[74px] max-w-[1200px] items-center justify-between px-6 md:px-10">
-          <a href="#top" className="text-foreground" aria-label="Criska home">
-            <Wordmark className="h-[26px] w-auto" pulse />
+          <a href="/" className="text-foreground" aria-label="Criska home">
+            <LogoLockup markClassName="h-[30px] w-auto" />
           </a>
 
           <div className="hidden items-center gap-7 lg:flex">

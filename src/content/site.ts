@@ -25,6 +25,7 @@ export type BlogCategory = { title: string; desc: string };
 export type NavLink = { label: string; href: string };
 export type Member = { name: string; role: string; bio: string; image: string; linkedin: string };
 export type EventItem = { title: string; date: string; location: string; tag: string; overview: string; image: string };
+export type CareerRole = { title: string; type: string; applyUrl: string };
 
 export const site = {
   brand: {
@@ -593,14 +594,16 @@ export const site = {
       { title: "Global exposure", desc: "Work with clients across India, the UK, and the US on meaningful technology problems." },
       { title: "Continuous growth", desc: "Learn across AI, cloud, security, data, and consulting as you grow your career." },
     ],
+    // Set `applyUrl` to a real job posting (LinkedIn / ATS / careers portal) to redirect
+    // there in a new tab. Leave "" to fall back to a pre-filled email to HR.
     roles: [
-      { title: "AI / Machine Learning Engineer", type: "Full-time · Hyderabad / Remote" },
-      { title: "Cloud & DevOps Engineer", type: "Full-time · Hyderabad / Remote" },
-      { title: "Cybersecurity Analyst", type: "Full-time · Hyderabad" },
-      { title: "Full-Stack Software Engineer", type: "Full-time · Hyderabad / Remote" },
-      { title: "Data Engineer / BI Developer", type: "Full-time · Hyderabad / Remote" },
-      { title: "IT Recruiter / Talent Partner", type: "Full-time · Hyderabad" },
-    ],
+      { title: "AI / Machine Learning Engineer", type: "Full-time · Hyderabad / Remote", applyUrl: "" },
+      { title: "Cloud & DevOps Engineer", type: "Full-time · Hyderabad / Remote", applyUrl: "" },
+      { title: "Cybersecurity Analyst", type: "Full-time · Hyderabad", applyUrl: "" },
+      { title: "Full-Stack Software Engineer", type: "Full-time · Hyderabad / Remote", applyUrl: "" },
+      { title: "Data Engineer / BI Developer", type: "Full-time · Hyderabad / Remote", applyUrl: "" },
+      { title: "IT Recruiter / Talent Partner", type: "Full-time · Hyderabad", applyUrl: "" },
+    ] as CareerRole[],
     ctaNote: "Don't see the right role? We're always glad to meet great people.",
   },
 
@@ -637,6 +640,25 @@ export const site = {
         metric: "2x",
         metricLabel: "delivery velocity",
       },
+    ],
+  },
+
+  technologies: {
+    eyebrow: "Technology Stack",
+    title: "Built on a modern, best-in-class stack",
+    lead: "From cloud and containers to data and AI, our engineers work across the tools that leading teams rely on — matched to your goals, not ours.",
+    // Cards that float around the device mockup (Raycast-style cascade).
+    items: [
+      "AWS",
+      "Azure",
+      "Google Cloud",
+      "Docker",
+      "Kubernetes",
+      "Terraform",
+      "Power BI",
+      "Snowflake",
+      "Databricks",
+      "GitHub Actions",
     ],
   },
 

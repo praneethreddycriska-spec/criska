@@ -1,82 +1,72 @@
 import { type SVGProps } from "react";
 
 /**
- * Criska "Signal Node" wordmark — open C + single cyan node.
- * Letters use currentColor (theme-aware); the node is always Pulse Cyan.
+ * Criska "CK" mark — open C + chevron K + cyan node.
+ * Vector (transparent, resolution-independent). Strokes use currentColor so the
+ * mark is ink on light / white on dark; the node stays Pulse Cyan.
  */
-export function Wordmark({
+export function CKMark({
   className,
   pulse = false,
   ...props
 }: SVGProps<SVGSVGElement> & { pulse?: boolean }) {
   return (
     <svg
-      viewBox="-6 10 188 44"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-label="CRISKA"
-      className={className}
-      {...props}
-    >
-      <g
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={7}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M26.28 19.74 A16 16 0 1 0 26.28 44.26" />
-        <g transform="translate(42,0)">
-          <path d="M3.5 16 V48" />
-          <path d="M3.5 16 H15 A8 8 0 0 1 15 32 H3.5" />
-          <path d="M14 32 L24 48" />
-        </g>
-        <path transform="translate(76,0)" d="M3.5 16 V48" />
-        <path
-          transform="translate(93,0)"
-          d="M17.5 19.5 A10 8 0 1 0 10 32 A10 8 0 1 1 2.5 44.5"
-        />
-        <g transform="translate(123,0)">
-          <path d="M3.5 16 V48" />
-          <path d="M19 16 L3.5 33.5" />
-          <path d="M9.5 27 L20.5 48" />
-        </g>
-        <g transform="translate(154,0)">
-          <path d="M0 48 L11 16 L22 48" />
-          <path d="M4.8 37 H17.2" />
-        </g>
-      </g>
-      <circle
-        cx="32"
-        cy="32"
-        r="4.5"
-        fill="var(--accent)"
-        className={pulse ? "animate-node" : undefined}
-      />
-    </svg>
-  );
-}
-
-/** Compact monogram — open C + node. */
-export function Monogram({
-  className,
-  ...props
-}: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 64 64"
+      viewBox="0 0 116 96"
       xmlns="http://www.w3.org/2000/svg"
       aria-label="Criska"
       className={className}
       {...props}
     >
+      {/* C — open circle facing right */}
       <path
-        d="M44.86 16.68 A20 20 0 1 0 44.86 47.32"
+        d="M68 24 A34 34 0 1 0 68 72"
         fill="none"
         stroke="currentColor"
-        strokeWidth={9}
+        strokeWidth={13}
         strokeLinecap="round"
       />
-      <circle cx="52" cy="32" r="5" fill="var(--accent)" />
+      {/* K — chevron, using the C's edge as its spine */}
+      <path
+        d="M104 18 L74 48 L104 78"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={13}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* node */}
+      <circle cx="46" cy="48" r="7" fill="#43BFC7" className={pulse ? "animate-node" : undefined} />
     </svg>
   );
+}
+
+/** Compact monogram alias (favicon / small spaces). */
+export function Monogram(props: SVGProps<SVGSVGElement> & { pulse?: boolean }) {
+  return <CKMark {...props} />;
+}
+
+/** Horizontal lockup — CK mark + CRISKA wordmark. Inherits color from parent. */
+export function LogoLockup({
+  className = "",
+  markClassName = "h-7 w-auto",
+  pulse = true,
+}: {
+  className?: string;
+  markClassName?: string;
+  pulse?: boolean;
+}) {
+  return (
+    <span className={`inline-flex items-center gap-2.5 ${className}`}>
+      <CKMark className={markClassName} pulse={pulse} />
+      <span className="text-[19px] font-semibold uppercase leading-none tracking-[0.2em]">
+        Criska
+      </span>
+    </span>
+  );
+}
+
+/** Backward-compatible export used by existing imports. */
+export function Wordmark({ className, pulse }: { className?: string; pulse?: boolean }) {
+  return <LogoLockup className={className} pulse={pulse} />;
 }
