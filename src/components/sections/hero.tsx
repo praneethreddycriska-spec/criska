@@ -90,10 +90,10 @@ function Stat({ value }: { value: string }) {
   const inView = useInView(ref, { once: true, margin: "-40px" });
   const [display, setDisplay] = useState(value);
 
-  const match = value.match(/^(\d+)(\D*)$/);
-  const isYear = /^\d{4}$/.test(value);
-
   useEffect(() => {
+    const match = value.match(/^(\d+)(\D*)$/);
+    const isYear = /^\d{4}$/.test(value);
+
     if (!inView || !match || isYear) {
       setDisplay(value);
       return;
@@ -101,15 +101,15 @@ function Stat({ value }: { value: string }) {
     const target = parseInt(match[1], 10);
     const suffix = match[2] ?? "";
     const controls = animate(0, target, {
-      duration: 1.1,
+      duration: 1.2,
       ease: [0.22, 1, 0.36, 1],
       onUpdate: (v) => setDisplay(`${Math.round(v)}${suffix}`),
     });
     return () => controls.stop();
-  }, [inView, value, isYear, match]);
+  }, [inView, value]);
 
   return (
-    <div ref={ref} className="font-display text-[40px] leading-none text-foreground md:text-[46px]">
+    <div ref={ref} className="font-display tabular-nums text-[40px] leading-none text-foreground md:text-[46px]">
       {display}
     </div>
   );
