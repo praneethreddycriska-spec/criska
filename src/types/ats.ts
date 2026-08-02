@@ -45,6 +45,27 @@ export interface AtsAnalysis {
   redFlags: string[];
 }
 
+export interface ParsedResumeData {
+  extractedSkills: string[];
+  yearsExperienceEstimate: number;
+  educationLevel: string;
+  previousCompanies: string[];
+  summaryHeadline: string;
+}
+
+export interface ScheduledInterview {
+  id: string;
+  interviewType: 'Technical Round' | 'HR Round' | 'System Design' | 'Executive Interview';
+  date: string; // YYYY-MM-DD
+  time: string; // HH:MM
+  durationMinutes: number;
+  interviewerName: string;
+  interviewerEmail: string;
+  meetingUrl: string;
+  notes: string;
+  createdAt: string;
+}
+
 export interface JobApplication {
   id: string;
   jobId: string;
@@ -59,8 +80,11 @@ export interface JobApplication {
   screeningAnswers: Record<string, string>;
   atsScore: number;
   atsAnalysis: AtsAnalysis;
+  parsedResume?: ParsedResumeData;
+  scheduledInterviews?: ScheduledInterview[];
   status: ApplicationStatus;
   adminNotes: string;
+  shareToken?: string;
   createdAt: string;
   updatedAt?: string;
 }

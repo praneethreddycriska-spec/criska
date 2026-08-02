@@ -9,8 +9,10 @@ import {
   saveJobPosting,
   isSupabaseConfigured,
 } from "@/lib/supabase";
+import { exportApplicationsToCSV } from "@/lib/export-utils";
 import { CandidateDrawer } from "./candidate-drawer";
 import { JobModal } from "./job-modal";
+import { ComparisonModal } from "./comparison-modal";
 import { ThemeToggle } from "../theme-toggle";
 
 export function AdminDashboard() {
@@ -21,10 +23,14 @@ export function AdminDashboard() {
 
   // Navigation & Data state
   const [activeTab, setActiveTab] = useState<"applicants" | "overview" | "jobs">("applicants");
-  const [viewMode, setViewMode] = useState<"grouped" | "table">("grouped"); // Default to Grouped by Job Role
+  const [viewMode, setViewMode] = useState<"grouped" | "table">("grouped");
   const [jobs, setJobs] = useState<JobPosting[]>([]);
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Candidate Selection for Comparison Matrix
+  const [selectedCandidateIds, setSelectedCandidateIds] = useState<string[]>([]);
+  const [comparisonModalOpen, setComparisonModalOpen] = useState(false);
 
   // Filters & Sorting State
   const [searchQuery, setSearchQuery] = useState("");
@@ -85,7 +91,6 @@ export function AdminDashboard() {
   const filteredApplications = useMemo(() => {
     return applications
       .filter((app) => {
-        // Search Filter
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase();
           const matchName = app.fullName.toLowerCase().includes(q);
@@ -97,13 +102,8 @@ export function AdminDashboard() {
           if (!matchName && !matchEmail && !matchJob && !matchSkills) return false;
         }
 
-        // Job Filter
         if (selectedJobId !== "all" && app.jobId !== selectedJobId) return false;
-
-        // Status Filter
         if (selectedStatus !== "all" && app.status !== selectedStatus) return false;
-
-        // Score Tier Filter
         if (selectedScoreTier === "top" && app.atsScore < 80) return false;
         if (selectedScoreTier === "moderate" && (app.atsScore < 50 || app.atsScore >= 80)) return false;
         if (selectedScoreTier === "low" && app.atsScore >= 50) return false;
@@ -124,12 +124,10 @@ export function AdminDashboard() {
   const groupedByRole = useMemo(() => {
     const map = new Map<string, { job: JobPosting; apps: JobApplication[] }>();
 
-    // Add entries for all jobs
     jobs.forEach((j) => {
       map.set(j.id, { job: j, apps: [] });
     });
 
-    // Add unknown job bucket if any app refers to missing job
     filteredApplications.forEach((app) => {
       if (map.has(app.jobId)) {
         map.get(app.jobId)!.apps.push(app);
@@ -151,7 +149,6 @@ export function AdminDashboard() {
       }
     });
 
-    // For each role, sort candidates strictly by ATS score descending (80+ first)
     const result: Array<{ job: JobPosting; apps: JobApplication[] }> = [];
     map.forEach((value) => {
       value.apps.sort((a, b) => b.atsScore - a.atsScore);
@@ -160,6 +157,16 @@ export function AdminDashboard() {
 
     return result;
   }, [jobs, filteredApplications]);
+
+  const selectedCandidates = useMemo(() => {
+    return applications.filter((a) => selectedCandidateIds.includes(a.id));
+  }, [applications, selectedCandidateIds]);
+
+  const toggleSelectCandidate = (id: string) => {
+    setSelectedCandidateIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
 
   // Analytics Metrics
   const totalAppsCount = applications.length;
@@ -198,7 +205,6 @@ export function AdminDashboard() {
     await loadData();
   };
 
-  // ADMIN LOGIN SCREEN IF NOT AUTHENTICATED
   if (!authenticated) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center p-6 text-foreground">
@@ -233,7 +239,7 @@ export function AdminDashboard() {
           </form>
 
           <div className="mt-6 text-center border-t border-border pt-4 text-[12.5px] text-faint">
-            Criska ATS v1.0 · Protected Session
+            Criska ATS v2.0 Enterprise · Protected Session
           </div>
         </div>
       </div>
@@ -353,9 +359,28 @@ export function AdminDashboard() {
                       </button>
                     </div>
 
+                    {/* Action Bar: Compare & Export */}
+                    <div className="flex items-center gap-2">
+                      {selectedCandidateIds.length >= 2 && (
+                        <button
+                          type="button"
+                          onClick={() => setComparisonModalOpen(true)}
+                          className="btn-pill btn-primary !px-3.5 !py-1.5 text-[13px]"
+                        >
+                          📊 Compare ({selectedCandidateIds.length}) Side-by-Side
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => exportApplicationsToCSV(filteredApplications)}
+                        className="btn-pill btn-ghost !px-3.5 !py-1.5 text-[13px]"
+                      >
+                        📥 Export CSV / Excel
+                      </button>
+                    </div>
+
                     {/* Filter Selectors */}
                     <div className="flex flex-wrap items-center gap-2.5">
-                      {/* Search Input */}
                       <input
                         type="text"
                         value={searchQuery}
@@ -364,7 +389,6 @@ export function AdminDashboard() {
                         className="rounded-xl border border-border bg-paper px-3.5 py-2 text-[13.5px] text-foreground outline-none focus:ring-2 focus:ring-accent/30 w-full sm:w-64"
                       />
 
-                      {/* Job Role Filter */}
                       <select
                         value={selectedJobId}
                         onChange={(e) => setSelectedJobId(e.target.value)}
@@ -378,7 +402,6 @@ export function AdminDashboard() {
                         ))}
                       </select>
 
-                      {/* Status Filter */}
                       <select
                         value={selectedStatus}
                         onChange={(e) => setSelectedStatus(e.target.value)}
@@ -393,7 +416,6 @@ export function AdminDashboard() {
                         <option value="rejected">Rejected</option>
                       </select>
 
-                      {/* ATS Score Filter */}
                       <select
                         value={selectedScoreTier}
                         onChange={(e) => setSelectedScoreTier(e.target.value)}
@@ -430,7 +452,7 @@ export function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* VIEW 1: GROUPED BY JOB ROLE BOXES (REQUESTED SPLIT LAYOUT) */}
+                {/* VIEW 1: GROUPED BY JOB ROLE BOXES */}
                 {viewMode === "grouped" ? (
                   <div className="space-y-8">
                     {groupedByRole.map(({ job, apps }) => (
@@ -466,7 +488,7 @@ export function AdminDashboard() {
                           </div>
                         </div>
 
-                        {/* Candidates Table inside this Role Box (Ordered by ATS Score 80+ first) */}
+                        {/* Candidates Table inside this Role Box */}
                         {apps.length === 0 ? (
                           <div className="p-8 text-center text-muted italic text-[14px]">
                             No applicants received for this job role matching your active filters.
@@ -476,6 +498,7 @@ export function AdminDashboard() {
                             <table className="w-full text-left text-[14px]">
                               <thead className="border-b border-border bg-paper/50 text-[11.5px] uppercase tracking-[0.12em] text-faint">
                                 <tr>
+                                  <th className="px-4 py-3 w-10 text-center">Compare</th>
                                   <th className="px-6 py-3">Candidate</th>
                                   <th className="px-6 py-3">ATS Match Score</th>
                                   <th className="px-6 py-3">Recommendation</th>
@@ -494,6 +517,14 @@ export function AdminDashboard() {
                                       setDrawerOpen(true);
                                     }}
                                   >
+                                    <td className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedCandidateIds.includes(app.id)}
+                                        onChange={() => toggleSelectCandidate(app.id)}
+                                        className="h-4 w-4 rounded border-border text-accent focus:ring-accent"
+                                      />
+                                    </td>
                                     <td className="px-6 py-4">
                                       <div className="font-medium text-foreground">{app.fullName}</div>
                                       <div className="text-[12.5px] text-muted">{app.email}</div>
@@ -574,6 +605,7 @@ export function AdminDashboard() {
                         <table className="w-full text-left text-[14px]">
                           <thead className="border-b border-border bg-panel text-[12px] uppercase tracking-[0.12em] text-faint">
                             <tr>
+                              <th className="px-4 py-4 w-10 text-center">Compare</th>
                               <th className="px-6 py-4">Candidate</th>
                               <th className="px-6 py-4">Position</th>
                               <th className="px-6 py-4">ATS Match Score</th>
@@ -593,6 +625,14 @@ export function AdminDashboard() {
                                   setDrawerOpen(true);
                                 }}
                               >
+                                <td className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedCandidateIds.includes(app.id)}
+                                    onChange={() => toggleSelectCandidate(app.id)}
+                                    className="h-4 w-4 rounded border-border text-accent focus:ring-accent"
+                                  />
+                                </td>
                                 <td className="px-6 py-4">
                                   <div className="font-medium text-foreground">{app.fullName}</div>
                                   <div className="text-[12.5px] text-muted">{app.email}</div>
@@ -843,6 +883,13 @@ export function AdminDashboard() {
         isOpen={jobModalOpen}
         onClose={() => setJobModalOpen(false)}
         onSave={handleSaveJob}
+      />
+
+      {/* Side-by-Side Candidate Comparison Modal */}
+      <ComparisonModal
+        candidates={selectedCandidates}
+        isOpen={comparisonModalOpen}
+        onClose={() => setComparisonModalOpen(false)}
       />
     </div>
   );
