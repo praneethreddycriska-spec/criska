@@ -58,7 +58,7 @@ export function CareersClient() {
                 <button
                   type="button"
                   onClick={() => handleApplyClick(r)}
-                  className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-surface px-6 py-3 text-[14.5px] font-medium text-foreground transition-all duration-200 hover:border-foreground hover:bg-foreground hover:text-background shadow-2xs group-hover:border-border-strong"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-6 py-2.5 text-[14.5px] font-medium text-foreground transition-all duration-200 hover:bg-panel hover:border-foreground/40 hover:shadow-xs"
                 >
                   <span>Apply</span>
                   <svg
@@ -70,7 +70,7 @@ export function CareersClient() {
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="transition-transform group-hover:translate-x-0.5"
+                    className="transition-transform group-hover:translate-x-0.5 text-foreground"
                   >
                     <path d="M5 12h14M13 6l6 6-6 6" />
                   </svg>
