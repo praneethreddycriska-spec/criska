@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { JobPosting, JobApplication, ApplicationStatus } from "@/types/ats";
+import { JobPosting, JobApplication, ApplicationStatus, ScheduledInterview } from "@/types/ats";
 import {
   fetchJobs,
   fetchApplications,
@@ -9,10 +9,13 @@ import {
   saveJobPosting,
   isSupabaseConfigured,
 } from "@/lib/supabase";
-import { exportApplicationsToCSV } from "@/lib/export-utils";
+import { exportApplicationsToCSV, printCandidateDossier } from "@/lib/export-utils";
 import { CandidateDrawer } from "./candidate-drawer";
 import { JobModal } from "./job-modal";
 import { ComparisonModal } from "./comparison-modal";
+import { InterviewScheduler } from "./interview-scheduler";
+import { EmailWorkflowModal } from "./email-workflow-modal";
+import { ShareLinkModal } from "./share-link-modal";
 import { ThemeToggle } from "../theme-toggle";
 
 export function AdminDashboard() {
@@ -31,6 +34,11 @@ export function AdminDashboard() {
   // Candidate Selection for Comparison Matrix
   const [selectedCandidateIds, setSelectedCandidateIds] = useState<string[]>([]);
   const [comparisonModalOpen, setComparisonModalOpen] = useState(false);
+
+  // Feature Modals triggered from table rows
+  const [scheduleTargetApp, setScheduleTargetApp] = useState<JobApplication | null>(null);
+  const [emailTargetApp, setEmailTargetApp] = useState<JobApplication | null>(null);
+  const [shareTargetApp, setShareTargetApp] = useState<JobApplication | null>(null);
 
   // Filters & Sorting State
   const [searchQuery, setSearchQuery] = useState("");
@@ -200,6 +208,12 @@ export function AdminDashboard() {
     }
   };
 
+  const handleScheduleSuccess = (interview: ScheduledInterview) => {
+    if (scheduleTargetApp) {
+      handleUpdateStatus(scheduleTargetApp.id, "interviewing");
+    }
+  };
+
   const handleSaveJob = async (job: JobPosting) => {
     await saveJobPosting(job);
     await loadData();
@@ -330,15 +344,15 @@ export function AdminDashboard() {
             {/* TAB 1: APPLICANTS ATS TABLE & GROUPED BOXES VIEW */}
             {activeTab === "applicants" && (
               <div className="space-y-6">
-                {/* Search & Filter Control Bar */}
-                <div className="rounded-2xl border border-border bg-surface p-5 space-y-4 shadow-xs">
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                {/* Search & Filter Control Bar — STRICTLY ONE LINE LAYOUT */}
+                <div className="rounded-2xl border border-border bg-surface p-4 shadow-xs overflow-x-auto">
+                  <div className="flex flex-wrap lg:flex-nowrap items-center justify-between gap-3 min-w-[950px]">
                     {/* View Mode Toggle: Split by Job Role vs Single List */}
-                    <div className="flex items-center gap-1 rounded-full border border-border bg-panel p-1">
+                    <div className="flex items-center gap-1 rounded-full border border-border bg-panel p-1 shrink-0">
                       <button
                         type="button"
                         onClick={() => setViewMode("grouped")}
-                        className={`rounded-full px-3.5 py-1 text-[13px] font-medium transition ${
+                        className={`rounded-full px-3.5 py-1 text-[13px] font-medium transition whitespace-nowrap ${
                           viewMode === "grouped"
                             ? "bg-ink text-on-ink shadow-xs"
                             : "text-muted hover:text-foreground"
@@ -349,7 +363,7 @@ export function AdminDashboard() {
                       <button
                         type="button"
                         onClick={() => setViewMode("table")}
-                        className={`rounded-full px-3.5 py-1 text-[13px] font-medium transition ${
+                        className={`rounded-full px-3.5 py-1 text-[13px] font-medium transition whitespace-nowrap ${
                           viewMode === "table"
                             ? "bg-ink text-on-ink shadow-xs"
                             : "text-muted hover:text-foreground"
@@ -360,12 +374,12 @@ export function AdminDashboard() {
                     </div>
 
                     {/* Action Bar: Compare & Export */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       {selectedCandidateIds.length >= 2 && (
                         <button
                           type="button"
                           onClick={() => setComparisonModalOpen(true)}
-                          className="btn-pill btn-primary !px-3.5 !py-1.5 text-[13px]"
+                          className="btn-pill btn-primary !px-3.5 !py-1 text-[13px] whitespace-nowrap"
                         >
                           📊 Compare ({selectedCandidateIds.length}) Side-by-Side
                         </button>
@@ -373,26 +387,26 @@ export function AdminDashboard() {
                       <button
                         type="button"
                         onClick={() => exportApplicationsToCSV(filteredApplications)}
-                        className="btn-pill btn-ghost !px-3.5 !py-1.5 text-[13px]"
+                        className="btn-pill btn-ghost !px-3.5 !py-1 text-[13px] whitespace-nowrap"
                       >
                         📥 Export CSV / Excel
                       </button>
                     </div>
 
-                    {/* Filter Selectors */}
-                    <div className="flex flex-wrap items-center gap-2.5">
+                    {/* Filter Selectors — EVERYTHING IN ONE SINGLE ROW (Search -> All Roles -> All Statuses -> All ATS Scores) */}
+                    <div className="flex items-center gap-2 shrink-0 flex-1 justify-end">
                       <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search candidate name, email, skills…"
-                        className="rounded-xl border border-border bg-paper px-3.5 py-2 text-[13.5px] text-foreground outline-none focus:ring-2 focus:ring-accent/30 w-full sm:w-64"
+                        placeholder="Search name, email, skills…"
+                        className="rounded-xl border border-border bg-paper px-3 py-1.5 text-[13.5px] text-foreground outline-none focus:ring-2 focus:ring-accent/30 w-48 shrink-0"
                       />
 
                       <select
                         value={selectedJobId}
                         onChange={(e) => setSelectedJobId(e.target.value)}
-                        className="rounded-xl border border-border bg-paper px-3 py-2 text-[13.5px] text-foreground outline-none"
+                        className="rounded-xl border border-border bg-paper px-3 py-1.5 text-[13.5px] text-foreground outline-none shrink-0"
                       >
                         <option value="all">All Roles</option>
                         {jobs.map((j) => (
@@ -405,7 +419,7 @@ export function AdminDashboard() {
                       <select
                         value={selectedStatus}
                         onChange={(e) => setSelectedStatus(e.target.value)}
-                        className="rounded-xl border border-border bg-paper px-3 py-2 text-[13.5px] text-foreground outline-none"
+                        className="rounded-xl border border-border bg-paper px-3 py-1.5 text-[13.5px] text-foreground outline-none shrink-0"
                       >
                         <option value="all">All Statuses</option>
                         <option value="new">New</option>
@@ -416,20 +430,32 @@ export function AdminDashboard() {
                         <option value="rejected">Rejected</option>
                       </select>
 
+                      {/* All ATS Scores placed directly beside All Statuses in same line */}
                       <select
                         value={selectedScoreTier}
                         onChange={(e) => setSelectedScoreTier(e.target.value)}
-                        className="rounded-xl border border-border bg-paper px-3 py-2 text-[13.5px] text-foreground outline-none"
+                        className="rounded-xl border border-border bg-paper px-3 py-1.5 text-[13.5px] text-foreground outline-none shrink-0"
                       >
                         <option value="all">All ATS Scores</option>
                         <option value="top">Top Match (≥80%)</option>
                         <option value="moderate">Moderate Match (50-79%)</option>
                         <option value="low">Low Match (&lt;50%)</option>
                       </select>
+
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                        className="rounded-xl border border-border bg-paper px-3 py-1.5 text-[13.5px] text-foreground font-medium outline-none shrink-0"
+                      >
+                        <option value="ats_desc">Sort: ATS Score (High to Low)</option>
+                        <option value="ats_asc">Sort: ATS Score (Low to High)</option>
+                        <option value="date_desc">Sort: Date Applied (Newest)</option>
+                        <option value="name_asc">Sort: Name (A-Z)</option>
+                      </select>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-[12.5px] text-faint border-t border-border pt-3">
+                  <div className="flex items-center justify-between text-[12.5px] text-faint border-t border-border pt-2.5 mt-2">
                     <span>
                       Showing <strong>{filteredApplications.length}</strong> total candidate profile matches
                     </span>
@@ -504,7 +530,7 @@ export function AdminDashboard() {
                                   <th className="px-6 py-3">Recommendation</th>
                                   <th className="px-6 py-3">Pipeline Status</th>
                                   <th className="px-6 py-3">Applied Date</th>
-                                  <th className="px-6 py-3 text-right">Actions</th>
+                                  <th className="px-6 py-3 text-right">Actions & Feature Tools</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-border">
@@ -573,16 +599,50 @@ export function AdminDashboard() {
                                       })}
                                     </td>
                                     <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setSelectedApp(app);
-                                          setDrawerOpen(true);
-                                        }}
-                                        className="btn-pill btn-ghost !px-3 !py-1 text-[12.5px]"
-                                      >
-                                        Inspect Profile →
-                                      </button>
+                                      <div className="flex items-center justify-end gap-1.5">
+                                        <button
+                                          type="button"
+                                          title="Schedule Interview (.ics)"
+                                          onClick={() => setScheduleTargetApp(app)}
+                                          className="p-1.5 rounded-lg border border-border bg-paper hover:bg-panel text-[13px]"
+                                        >
+                                          📅
+                                        </button>
+                                        <button
+                                          type="button"
+                                          title="Email Workflows & Offer Letter"
+                                          onClick={() => setEmailTargetApp(app)}
+                                          className="p-1.5 rounded-lg border border-border bg-paper hover:bg-panel text-[13px]"
+                                        >
+                                          ✉️
+                                        </button>
+                                        <button
+                                          type="button"
+                                          title="Generate Client Share Link"
+                                          onClick={() => setShareTargetApp(app)}
+                                          className="p-1.5 rounded-lg border border-border bg-paper hover:bg-panel text-[13px]"
+                                        >
+                                          🔗
+                                        </button>
+                                        <button
+                                          type="button"
+                                          title="Print Candidate PDF Dossier"
+                                          onClick={() => printCandidateDossier(app)}
+                                          className="p-1.5 rounded-lg border border-border bg-paper hover:bg-panel text-[13px]"
+                                        >
+                                          🖨️
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setSelectedApp(app);
+                                            setDrawerOpen(true);
+                                          }}
+                                          className="btn-pill btn-ghost !px-2.5 !py-1 text-[12px]"
+                                        >
+                                          Profile →
+                                        </button>
+                                      </div>
                                     </td>
                                   </tr>
                                 ))}
@@ -612,7 +672,7 @@ export function AdminDashboard() {
                               <th className="px-6 py-4">Recommendation</th>
                               <th className="px-6 py-4">Pipeline Status</th>
                               <th className="px-6 py-4">Applied Date</th>
-                              <th className="px-6 py-4 text-right">Actions</th>
+                              <th className="px-6 py-4 text-right">Actions & Feature Tools</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-border">
@@ -684,16 +744,50 @@ export function AdminDashboard() {
                                   })}
                                 </td>
                                 <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setSelectedApp(app);
-                                      setDrawerOpen(true);
-                                    }}
-                                    className="btn-pill btn-ghost !px-3 !py-1 text-[12.5px]"
-                                  >
-                                    Inspect Profile →
-                                  </button>
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    <button
+                                      type="button"
+                                      title="Schedule Interview (.ics)"
+                                      onClick={() => setScheduleTargetApp(app)}
+                                      className="p-1.5 rounded-lg border border-border bg-paper hover:bg-panel text-[13px]"
+                                    >
+                                      📅
+                                    </button>
+                                    <button
+                                      type="button"
+                                      title="Email Workflows & Offer Letter"
+                                      onClick={() => setEmailTargetApp(app)}
+                                      className="p-1.5 rounded-lg border border-border bg-paper hover:bg-panel text-[13px]"
+                                    >
+                                      ✉️
+                                    </button>
+                                    <button
+                                      type="button"
+                                      title="Generate Client Share Link"
+                                      onClick={() => setShareTargetApp(app)}
+                                      className="p-1.5 rounded-lg border border-border bg-paper hover:bg-panel text-[13px]"
+                                    >
+                                      🔗
+                                    </button>
+                                    <button
+                                      type="button"
+                                      title="Print Candidate PDF Dossier"
+                                      onClick={() => printCandidateDossier(app)}
+                                      className="p-1.5 rounded-lg border border-border bg-paper hover:bg-panel text-[13px]"
+                                    >
+                                      🖨️
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedApp(app);
+                                        setDrawerOpen(true);
+                                      }}
+                                      className="btn-pill btn-ghost !px-2.5 !py-1 text-[12px]"
+                                    >
+                                      Profile →
+                                    </button>
+                                  </div>
                                 </td>
                               </tr>
                             ))}
@@ -890,6 +984,26 @@ export function AdminDashboard() {
         candidates={selectedCandidates}
         isOpen={comparisonModalOpen}
         onClose={() => setComparisonModalOpen(false)}
+      />
+
+      {/* Direct Row Feature Tool Modals */}
+      <InterviewScheduler
+        application={scheduleTargetApp}
+        isOpen={Boolean(scheduleTargetApp)}
+        onClose={() => setScheduleTargetApp(null)}
+        onScheduleSuccess={handleScheduleSuccess}
+      />
+
+      <EmailWorkflowModal
+        application={emailTargetApp}
+        isOpen={Boolean(emailTargetApp)}
+        onClose={() => setEmailTargetApp(null)}
+      />
+
+      <ShareLinkModal
+        application={shareTargetApp}
+        isOpen={Boolean(shareTargetApp)}
+        onClose={() => setShareTargetApp(null)}
       />
     </div>
   );

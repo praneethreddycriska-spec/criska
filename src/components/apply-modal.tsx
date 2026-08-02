@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { JobPosting, JobApplication } from "@/types/ats";
 import { createApplication } from "@/lib/supabase";
+import { parseResumeData } from "@/lib/resume-parser";
 
 export function ApplyModal({
   job,
@@ -69,6 +70,7 @@ export function ApplyModal({
     try {
       // Simulate file URL object for local/Supabase storage link
       const fakeObjectUrl = URL.createObjectURL(resumeFile);
+      const parsedResume = parseResumeData(fullName, resumeFile.name, screeningAnswers);
 
       const newApp = await createApplication(job, {
         fullName,
@@ -80,6 +82,8 @@ export function ApplyModal({
         resumeFilename: resumeFile.name,
         screeningAnswers,
       });
+
+      newApp.parsedResume = parsedResume;
 
       setSubmittedApp(newApp);
       setStep(4); // Success screen
