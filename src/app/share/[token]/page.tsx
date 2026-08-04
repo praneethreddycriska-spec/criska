@@ -8,6 +8,8 @@ export const metadata: Metadata = {
   description: "Secure view-only candidate dossier for client review.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function SharePage({
   params,
 }: {
