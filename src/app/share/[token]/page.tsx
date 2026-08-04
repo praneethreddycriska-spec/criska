@@ -82,19 +82,17 @@ export default async function SharePage({
               </div>
             </div>
 
-            {/* Resume Download Action */}
-            <div className="pt-4 border-t border-border flex items-center justify-between">
-              <span className="text-[13px] text-muted">Attachment: {application.resumeFilename}</span>
-              <a
-                href={application.resumeUrl}
-                download={application.resumeFilename}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-pill btn-primary text-[13.5px]"
-              >
-                📄 View / Download Candidate Resume
-              </a>
-            </div>
+            {/* Technical Skills */}
+            {application.technicalSkills && application.technicalSkills.length > 0 && (
+              <div className="pt-4 border-t border-border">
+                <span className="text-[13px] text-muted block mb-2">Technical Skills</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {application.technicalSkills.map((s, i) => (
+                    <span key={i} className="rounded-full bg-panel px-2.5 py-1 text-[12px] text-foreground">{s}</span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>

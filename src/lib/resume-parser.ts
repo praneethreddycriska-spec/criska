@@ -6,12 +6,12 @@ import { ParsedResumeData } from "@/types/ats";
  */
 export function parseResumeData(
   fullName: string,
-  resumeFilename: string,
+  technicalSkills: string,
   screeningAnswers: Record<string, string>
 ): ParsedResumeData {
   const combinedText = [
     fullName,
-    resumeFilename,
+    technicalSkills,
     ...Object.values(screeningAnswers),
   ]
     .join(" ")

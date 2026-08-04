@@ -138,13 +138,10 @@ export function ComparisonModal({
                   {candidates.map((cand) => (
                     <td key={cand.id} className="p-4 border-l border-border">
                       <a
-                        href={cand.resumeUrl}
-                        download={cand.resumeFilename}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href={`mailto:${cand.email}`}
                         className="btn-pill btn-ghost !px-3 !py-1 text-[12px] block text-center"
                       >
-                        📄 Download Resume
+                        ✉ Email Candidate
                       </a>
                     </td>
                   ))}

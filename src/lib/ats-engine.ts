@@ -9,7 +9,7 @@ export function evaluateApplication(
   job: JobPosting,
   candidate: {
     fullName: string;
-    resumeFilename: string;
+    technicalSkills?: string[];
     screeningAnswers: Record<string, string>;
     linkedinUrl?: string;
     portfolioUrl?: string;
@@ -21,7 +21,7 @@ export function evaluateApplication(
   // Extract all text content from candidate response and resume filename
   const combinedCandidateText = [
     candidate.fullName,
-    candidate.resumeFilename,
+    (candidate.technicalSkills || []).join(" "),
     candidate.linkedinUrl || "",
     candidate.portfolioUrl || "",
     ...Object.values(answers),
@@ -88,7 +88,7 @@ export function evaluateApplication(
 
   // 3. Profile Completeness & Artifact Checks
   let bonusScore = 0;
-  if (candidate.resumeFilename && candidate.resumeFilename.length > 5) bonusScore += 10;
+  if (candidate.technicalSkills && candidate.technicalSkills.length > 0) bonusScore += 10;
   if (candidate.linkedinUrl && candidate.linkedinUrl.includes("linkedin.com")) bonusScore += 5;
   if (candidate.portfolioUrl && candidate.portfolioUrl.length > 5) bonusScore += 5;
 
@@ -108,7 +108,7 @@ export function evaluateApplication(
   }
 
   if (strengths.length === 0) {
-    strengths.push("Solid foundational background submitted with resume");
+    strengths.push("Solid foundational background submitted");
   }
   if (skillsMatched.length > 0) {
     strengths.push(`Matches ${skillsMatched.length} of ${requirements.length || 1} core job requirements`);

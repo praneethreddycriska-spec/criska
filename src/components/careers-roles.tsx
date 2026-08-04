@@ -68,17 +68,29 @@ export function CareersRoles({ jobs, ctaNote }: { jobs: Job[]; ctaNote: string }
 
       <div className="mt-8 rounded-[var(--radius)] bg-panel p-8 text-center">
         <p className="text-[16px] text-foreground">{ctaNote}</p>
-        <a
-          href={gmailCompose(
-            "Resume Submission — Criska",
-            "Hi Criska team,\n\nI'd like to submit my resume for future opportunities. Please find it attached.\n\nName:\nRole of interest:\nTechnical skills:\n\nThanks,",
-          )}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          onClick={() => {
+            const subject = "Resume Submission — Criska";
+            const body =
+              "Hi Criska team,\n\nI'd like to submit my resume for future opportunities. Please find it attached.\n\nName:\nRole of interest:\nTechnical skills:\n\nThanks,";
+            const gmail = gmailCompose(subject, body);
+            const win = window.open(gmail, "_blank", "noopener,noreferrer");
+            // If the browser blocked the new tab (or no Gmail), fall back to the default mail app.
+            if (!win) {
+              window.location.href = `mailto:${HR_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            }
+          }}
           className="btn-pill btn-primary mt-5"
         >
           Send us your resume
-        </a>
+        </button>
+        <p className="mt-4 text-[13.5px] text-muted">
+          Prefer your own mail app? Email us at{" "}
+          <a href={`mailto:${HR_EMAIL}`} className="text-foreground underline underline-offset-2 hover:text-accent">
+            {HR_EMAIL}
+          </a>
+        </p>
       </div>
 
       {active && <ApplyModal job={active} onClose={() => setActive(null)} />}

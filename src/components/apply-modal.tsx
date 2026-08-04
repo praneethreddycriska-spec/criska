@@ -28,7 +28,7 @@ export function ApplyModal({
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [portfolioUrl, setPortfolioUrl] = useState("");
   const [screeningAnswers, setScreeningAnswers] = useState<Record<string, string>>({});
-  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [technicalSkills, setTechnicalSkills] = useState("");
   const [fileError, setFileError] = useState("");
 
   if (!isOpen || !job) return null;
@@ -47,44 +47,22 @@ export function ApplyModal({
     updatedAt: new Date().toISOString(),
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const validTypes = [
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ];
-    if (!validTypes.includes(file.type) && !file.name.match(/\.(pdf|doc|docx)$/i)) {
-      setFileError("Please upload a PDF or DOC/DOCX document.");
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      setFileError("File size exceeds 10MB limit.");
-      return;
-    }
-
-    setFileError("");
-    setResumeFile(file);
-  };
-
   const handleAnswerChange = (questionId: string, value: string) => {
     setScreeningAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!resumeFile) {
-      setFileError("Please attach your resume to complete your application.");
+    const skills = technicalSkills.split(",").map((s) => s.trim()).filter(Boolean);
+    if (skills.length === 0) {
+      setFileError("Please list at least one technical skill to complete your application.");
       return;
     }
 
     setLoading(true);
 
     try {
-      const fakeObjectUrl = URL.createObjectURL(resumeFile);
-      const parsedResume = parseResumeData(fullName, resumeFile.name, screeningAnswers);
+      const parsedResume = parseResumeData(fullName, skills.join(" "), screeningAnswers);
 
       const newApp = await createApplication(fullJob, {
         fullName,
@@ -92,8 +70,7 @@ export function ApplyModal({
         phone,
         linkedinUrl,
         portfolioUrl,
-        resumeUrl: fakeObjectUrl,
-        resumeFilename: resumeFile.name,
+        technicalSkills: skills,
         screeningAnswers,
       });
 
@@ -117,7 +94,7 @@ export function ApplyModal({
     setLinkedinUrl("");
     setPortfolioUrl("");
     setScreeningAnswers({});
-    setResumeFile(null);
+    setTechnicalSkills("");
     setFileError("");
     setSubmittedApp(null);
     onClose();
@@ -200,7 +177,7 @@ export function ApplyModal({
                       2. Screening Qs
                     </span>
                     <span className={`px-3 py-1 rounded-full font-medium ${step === 3 ? "bg-ink text-on-ink" : "bg-panel text-muted"}`}>
-                      3. Resume Upload
+                      3. Technical Skills
                     </span>
                   </div>
                 </div>
@@ -317,37 +294,29 @@ export function ApplyModal({
                   </div>
                 )}
 
-                {/* Step 3: Resume Upload */}
+                {/* Step 3: Technical Skills */}
                 {step === 3 && (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <label className="block text-[12.5px] uppercase tracking-[0.12em] text-faint mb-1">
-                      Upload Resume (PDF, DOCX · Max 10MB) <span className="text-red-500">*</span>
+                      Technical Skills <span className="text-red-500">*</span>
                     </label>
-                    <div className="border-2 border-dashed border-border rounded-2xl p-8 text-center bg-paper hover:border-accent transition-colors">
-                      <input
-                        type="file"
-                        accept=".pdf,.doc,.docx"
-                        onChange={handleFileChange}
-                        className="hidden"
-                        id="resume-upload-input"
-                      />
-                      <label htmlFor="resume-upload-input" className="cursor-pointer flex flex-col items-center">
-                        <div className="grid h-12 w-12 place-items-center rounded-full bg-panel text-accent mb-3">
-                          📄
-                        </div>
-                        {resumeFile ? (
-                          <div>
-                            <span className="font-medium text-[15px] text-foreground block">{resumeFile.name}</span>
-                            <span className="text-[13px] text-muted">{(resumeFile.size / 1024 / 1024).toFixed(2)} MB · Change file</span>
-                          </div>
-                        ) : (
-                          <div>
-                            <span className="font-medium text-[15px] text-foreground block">Click to select or drag resume file</span>
-                            <span className="text-[13px] text-muted">Supports PDF, DOC, DOCX up to 10MB</span>
-                          </div>
-                        )}
-                      </label>
-                    </div>
+                    <p className="text-[13px] text-muted">
+                      List your key technical skills, separated by commas (e.g. Python, PyTorch, LangChain, AWS, Docker, SQL).
+                    </p>
+                    <textarea
+                      rows={4}
+                      value={technicalSkills}
+                      onChange={(e) => setTechnicalSkills(e.target.value)}
+                      placeholder="Python, PyTorch, LangChain, AWS, Docker, Kubernetes, SQL…"
+                      className="w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:ring-2 focus:ring-accent/30"
+                    />
+                    {technicalSkills.trim() && (
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {technicalSkills.split(",").map((s) => s.trim()).filter(Boolean).map((s, i) => (
+                          <span key={i} className="rounded-full bg-panel px-2.5 py-1 text-[12px] text-foreground">{s}</span>
+                        ))}
+                      </div>
+                    )}
                     {fileError && <p className="text-red-500 text-[13px] mt-1">{fileError}</p>}
                   </div>
                 )}
@@ -376,7 +345,7 @@ export function ApplyModal({
                   ) : (
                     <button
                       type="submit"
-                      disabled={loading || !resumeFile}
+                      disabled={loading || !technicalSkills.trim()}
                       className="btn-pill btn-primary text-[14px] disabled:opacity-50"
                     >
                       {loading ? "Scanning & Submitting…" : "Submit Application"}

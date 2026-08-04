@@ -143,8 +143,7 @@ export const INITIAL_APPLICATIONS: JobApplication[] = [
     phone: "+91 98765 43210",
     linkedinUrl: "https://linkedin.com/in/aarav-sharma-ai",
     portfolioUrl: "https://github.com/aarav-ai",
-    resumeUrl: "/samples/resume-aarav-sharma.pdf",
-    resumeFilename: "Aarav_Sharma_AI_Engineer_Resume.pdf",
+    technicalSkills: ["Python", "PyTorch", "LangChain", "LlamaIndex", "Pinecone", "RAG"],
     screeningAnswers: {
       "q-exp": "4.5",
       "q-notice": "Immediate",
@@ -184,8 +183,7 @@ export const INITIAL_APPLICATIONS: JobApplication[] = [
     phone: "+91 91234 56789",
     linkedinUrl: "https://linkedin.com/in/priya-patel-dev",
     portfolioUrl: "https://priyapatel.dev",
-    resumeUrl: "/samples/resume-priya-patel.pdf",
-    resumeFilename: "Priya_Patel_FullStack_Resume.pdf",
+    technicalSkills: ["Next.js", "React", "TypeScript", "Node.js", "PostgreSQL", "Supabase"],
     screeningAnswers: {
       "q-stack": "Expert (4+ yrs)",
     },
@@ -217,8 +215,7 @@ export const INITIAL_APPLICATIONS: JobApplication[] = [
     phone: "+44 7911 123456",
     linkedinUrl: "https://linkedin.com/in/davidmiller-cloud",
     portfolioUrl: "",
-    resumeUrl: "/samples/resume-david-miller.pdf",
-    resumeFilename: "David_Miller_DevOps_Resume.pdf",
+    technicalSkills: ["AWS", "Kubernetes", "Terraform", "Docker", "CI/CD"],
     screeningAnswers: {
       "q-cloud-exp": "5",
       "q-certs": "AWS Solutions Architect Professional, CKA (Certified Kubernetes Administrator)",
@@ -250,8 +247,7 @@ export const INITIAL_APPLICATIONS: JobApplication[] = [
     phone: "+1 415 555 0199",
     linkedinUrl: "https://linkedin.com/in/sarah-jenkins-sec",
     portfolioUrl: "",
-    resumeUrl: "/samples/resume-sarah-jenkins.pdf",
-    resumeFilename: "Sarah_Jenkins_CyberSec_CV.pdf",
+    technicalSkills: ["ISO 27001", "SOC 2", "SIEM", "Incident Response", "CISSP"],
     screeningAnswers: {
       "q-sec-cert": "Yes",
     },
@@ -284,8 +280,7 @@ export const INITIAL_APPLICATIONS: JobApplication[] = [
     phone: "+91 99887 76655",
     linkedinUrl: "",
     portfolioUrl: "",
-    resumeUrl: "/samples/resume-vikram-reddy.pdf",
-    resumeFilename: "Vikram_Reddy_Resume.pdf",
+    technicalSkills: ["Python"],
     screeningAnswers: {
       "q-exp": "0.5",
       "q-notice": "60+ Days",
@@ -377,8 +372,7 @@ export function submitNewApplication(
     phone: string;
     portfolioUrl?: string;
     linkedinUrl?: string;
-    resumeUrl: string;
-    resumeFilename: string;
+    technicalSkills?: string[];
     screeningAnswers: Record<string, string>;
   }
 ): JobApplication {
@@ -393,8 +387,7 @@ export function submitNewApplication(
     phone: candidateData.phone,
     portfolioUrl: candidateData.portfolioUrl,
     linkedinUrl: candidateData.linkedinUrl,
-    resumeUrl: candidateData.resumeUrl,
-    resumeFilename: candidateData.resumeFilename,
+    technicalSkills: candidateData.technicalSkills,
     screeningAnswers: candidateData.screeningAnswers,
     atsScore: atsAnalysis.overallScore,
     atsAnalysis,

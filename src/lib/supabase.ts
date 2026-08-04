@@ -91,8 +91,7 @@ export async function fetchApplications(): Promise<JobApplication[]> {
         phone: item.phone,
         portfolioUrl: item.portfolio_url,
         linkedinUrl: item.linkedin_url,
-        resumeUrl: item.resume_url,
-        resumeFilename: item.resume_filename,
+        technicalSkills: item.technical_skills || [],
         screeningAnswers: item.screening_answers || {},
         atsScore: item.ats_score,
         atsAnalysis: item.ats_analysis,
@@ -117,8 +116,7 @@ export async function createApplication(
     phone: string;
     portfolioUrl?: string;
     linkedinUrl?: string;
-    resumeUrl: string;
-    resumeFilename: string;
+    technicalSkills?: string[];
     screeningAnswers: Record<string, string>;
   }
 ): Promise<JobApplication> {
@@ -134,8 +132,7 @@ export async function createApplication(
         phone: candidateData.phone,
         portfolio_url: candidateData.portfolioUrl || null,
         linkedin_url: candidateData.linkedinUrl || null,
-        resume_url: candidateData.resumeUrl,
-        resume_filename: candidateData.resumeFilename,
+        technical_skills: candidateData.technicalSkills || [],
         screening_answers: candidateData.screeningAnswers,
         ats_score: localApp.atsScore,
         ats_analysis: localApp.atsAnalysis,
