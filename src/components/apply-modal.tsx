@@ -2,255 +2,392 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { JobPosting, JobApplication } from "@/types/ats";
+import { createApplication } from "@/lib/supabase";
+import { parseResumeData } from "@/lib/resume-parser";
 
 export type ApplyJob = { id: string; title: string };
 
-const NOTICE = ["Immediate", "15 Days", "30 Days", "60 Days", "90+ Days"];
-const STEPS = ["Contact Info", "Screening Qs", "Technical Skills"];
+export function ApplyModal({
+  job,
+  isOpen = true,
+  onClose,
+}: {
+  job: JobPosting | ApplyJob | null;
+  isOpen?: boolean;
+  onClose: () => void;
+}) {
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [loading, setLoading] = useState(false);
+  const [submittedApp, setSubmittedApp] = useState<JobApplication | null>(null);
 
-const HR_EMAIL = "hr@criskasecurity.com";
+  // Form State
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [portfolioUrl, setPortfolioUrl] = useState("");
+  const [screeningAnswers, setScreeningAnswers] = useState<Record<string, string>>({});
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState("");
 
-export function ApplyModal({ job, onClose }: { job: ApplyJob; onClose: () => void }) {
-  const [step, setStep] = useState(0);
-  const [sending, setSending] = useState(false);
-  const [done, setDone] = useState(false);
-  const [err, setErr] = useState("");
+  if (!isOpen || !job) return null;
 
-  const [form, setForm] = useState({
-    full_name: "",
-    email: "",
-    phone: "",
-    current_company: "",
-    linkedin: "",
-    experience_years: "",
-    notice_period: "",
-    project_summary: "",
-    technical_skills: "",
-  });
+  const fullJob: JobPosting = (job && "department" in job) ? (job as JobPosting) : {
+    id: job?.id || "",
+    title: job?.title || "",
+    department: "Engineering",
+    type: "Full-time",
+    location: "Remote / Hybrid",
+    description: "Job opportunity at Criska.",
+    requirements: ["Relevant experience"],
+    screeningQuestions: [],
+    status: "published",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
 
-  const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const step1Valid = form.full_name.trim() && /\S+@\S+\.\S+/.test(form.email);
-  const step2Valid = form.experience_years.trim() && form.notice_period && form.project_summary.trim();
-  const step3Valid = form.technical_skills.trim();
-
-  async function submit() {
-    setSending(true);
-    setErr("");
-    try {
-      const res = await fetch("/api/apply", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          job_id: job.id.length > 20 ? job.id : null,
-          job_title: job.title,
-          ...form,
-          technical_skills: form.technical_skills.split(",").map((s) => s.trim()).filter(Boolean),
-        }),
-      });
-      const json = await res.json();
-      if (json.fallback) {
-        // DB not set up — fall back to email
-        window.location.href = mailtoFallback(job.title, form);
-        return;
-      }
-      if (!res.ok) throw new Error(json.error || "Something went wrong.");
-      setDone(true);
-    } catch (e) {
-      setErr((e as Error).message);
-    } finally {
-      setSending(false);
+    const validTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (!validTypes.includes(file.type) && !file.name.match(/\.(pdf|doc|docx)$/i)) {
+      setFileError("Please upload a PDF or DOC/DOCX document.");
+      return;
     }
-  }
+    if (file.size > 10 * 1024 * 1024) {
+      setFileError("File size exceeds 10MB limit.");
+      return;
+    }
+
+    setFileError("");
+    setResumeFile(file);
+  };
+
+  const handleAnswerChange = (questionId: string, value: string) => {
+    setScreeningAnswers((prev) => ({ ...prev, [questionId]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resumeFile) {
+      setFileError("Please attach your resume to complete your application.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const fakeObjectUrl = URL.createObjectURL(resumeFile);
+      const parsedResume = parseResumeData(fullName, resumeFile.name, screeningAnswers);
+
+      const newApp = await createApplication(fullJob, {
+        fullName,
+        email,
+        phone,
+        linkedinUrl,
+        portfolioUrl,
+        resumeUrl: fakeObjectUrl,
+        resumeFilename: resumeFile.name,
+        screeningAnswers,
+      });
+
+      newApp.parsedResume = parsedResume;
+
+      setSubmittedApp(newApp);
+      setStep(4);
+    } catch (err) {
+      console.error("Submission failed:", err);
+      setFileError("Failed to submit application. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetAndClose = () => {
+    setStep(1);
+    setFullName("");
+    setEmail("");
+    setPhone("");
+    setLinkedinUrl("");
+    setPortfolioUrl("");
+    setScreeningAnswers({});
+    setResumeFile(null);
+    setFileError("");
+    setSubmittedApp(null);
+    onClose();
+  };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={onClose} />
-      <motion.div
-        initial={{ opacity: 0, y: 16, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.25 }}
-        className="relative z-10 max-h-[90vh] w-full max-w-[680px] overflow-y-auto rounded-[20px] border border-border bg-surface p-7 shadow-2xl md:p-9"
-      >
-        <button
-          onClick={onClose}
-          aria-label="Close"
-          className="absolute right-6 top-6 grid h-8 w-8 place-items-center rounded-full border border-border text-muted transition-colors hover:text-foreground"
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={resetAndClose}
+          className="fixed inset-0 bg-black/65 backdrop-blur-sm"
+        />
+
+        {/* Modal Window */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 12 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 12 }}
+          className="relative z-10 w-full max-w-2xl overflow-hidden rounded-[var(--radius)] border border-border bg-surface shadow-2xl"
         >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
-        </button>
-
-        {done ? (
-          <div className="py-10 text-center">
-            <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-accent-soft text-accent">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-border px-6 py-4">
+            <div>
+              <span className="eyebrow">Apply for Position</span>
+              <h2 className="font-display text-[22px] leading-tight text-foreground">{job.title}</h2>
             </div>
-            <h3 className="font-display mt-5 text-[28px]">Application received!</h3>
-            <p className="mt-2 text-[15px] text-muted">
-              Thanks, {form.full_name.split(" ")[0] || "there"} — the Criska talent team will review your application and get back to you.
-            </p>
-            <button onClick={onClose} className="btn-pill btn-primary mt-7">Done</button>
+            <button
+              type="button"
+              onClick={resetAndClose}
+              className="grid h-9 w-9 place-items-center rounded-full border border-border text-muted hover:bg-panel hover:text-foreground"
+            >
+              ✕
+            </button>
           </div>
-        ) : (
-          <>
-            <div className="text-[12.5px] uppercase tracking-[0.14em] text-faint">Apply for position</div>
-            <h2 className="font-display mt-1 text-[26px] leading-tight">{job.title}</h2>
 
-            {/* Step pills */}
-            <div className="mt-6 flex flex-wrap gap-2 border-b border-border pb-6">
-              {STEPS.map((s, i) => (
-                <span
-                  key={s}
-                  className={`rounded-full px-3.5 py-1.5 text-[13px] transition-colors ${
-                    i === step
-                      ? "bg-ink text-on-ink"
-                      : i < step
-                      ? "bg-panel text-foreground"
-                      : "bg-panel text-faint"
-                  }`}
-                >
-                  {i + 1}. {s}
-                </span>
-              ))}
-            </div>
+          {/* Body Content */}
+          <div className="p-6 md:p-8">
+            {step === 4 && submittedApp ? (
+              <div className="text-center py-6">
+                <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-accent-soft text-accent">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                </div>
+                <h3 className="font-display mt-5 text-[28px]">Application Received</h3>
+                <p className="mt-2 text-[15px] text-muted max-w-md mx-auto">
+                  Thank you for applying to <strong className="text-foreground">{job.title}</strong> at Criska. Your profile has been scanned and filed in our ATS.
+                </p>
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={step}
-                initial={{ opacity: 0, x: 12 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -12 }}
-                transition={{ duration: 0.2 }}
-                className="mt-7 space-y-5"
-              >
-                {step === 0 && (
-                  <>
-                    <div className="grid gap-5 sm:grid-cols-2">
-                      <Field label="Full Name" req value={form.full_name} onChange={(v) => set("full_name", v)} />
-                      <Field label="Email Address" req type="email" value={form.email} onChange={(v) => set("email", v)} />
-                      <Field label="Phone Number" type="tel" value={form.phone} onChange={(v) => set("phone", v)} />
-                      <Field label="Current Company" value={form.current_company} onChange={(v) => set("current_company", v)} />
-                    </div>
-                    <Field label="LinkedIn / Portfolio URL" value={form.linkedin} onChange={(v) => set("linkedin", v)} />
-                  </>
-                )}
+                {/* Score & Match badge */}
+                <div className="mt-6 inline-flex flex-col items-center rounded-2xl border border-border bg-panel p-4 px-6">
+                  <span className="text-[12px] uppercase tracking-[0.14em] text-faint">Automated ATS Score Match</span>
+                  <div className="font-display mt-1 text-[36px] text-foreground tabular-nums">
+                    {submittedApp.atsScore}%
+                  </div>
+                  <span className="mt-1 rounded-full bg-accent-soft px-3 py-1 text-[12px] font-medium text-accent">
+                    {submittedApp.atsAnalysis.recommendation}
+                  </span>
+                </div>
 
+                <div className="mt-8 flex justify-center">
+                  <button type="button" onClick={resetAndClose} className="btn-pill btn-primary">
+                    Done
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit}>
+                {/* Progress Indicators */}
+                <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
+                  <div className="flex gap-2 text-[13px]">
+                    <span className={`px-3 py-1 rounded-full font-medium ${step === 1 ? "bg-ink text-on-ink" : "bg-panel text-muted"}`}>
+                      1. Contact Info
+                    </span>
+                    <span className={`px-3 py-1 rounded-full font-medium ${step === 2 ? "bg-ink text-on-ink" : "bg-panel text-muted"}`}>
+                      2. Screening Qs
+                    </span>
+                    <span className={`px-3 py-1 rounded-full font-medium ${step === 3 ? "bg-ink text-on-ink" : "bg-panel text-muted"}`}>
+                      3. Resume Upload
+                    </span>
+                  </div>
+                </div>
+
+                {/* Step 1: Contact Info */}
                 {step === 1 && (
-                  <>
-                    <Field
-                      label="Years of relevant professional experience?"
-                      req
-                      type="number"
-                      value={form.experience_years}
-                      onChange={(v) => set("experience_years", v)}
-                    />
+                  <div className="space-y-4">
                     <div>
-                      <Lbl req>What is your notice period / availability?</Lbl>
-                      <select
-                        value={form.notice_period}
-                        onChange={(e) => set("notice_period", e.target.value)}
-                        className="mt-2 w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:border-foreground"
-                      >
-                        <option value="" disabled>Select…</option>
-                        {NOTICE.map((n) => <option key={n} value={n}>{n}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <Lbl req>Briefly describe a relevant project you brought to production.</Lbl>
-                      <textarea
-                        rows={3}
-                        value={form.project_summary}
-                        onChange={(e) => set("project_summary", e.target.value)}
-                        className="mt-2 w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:border-foreground"
+                      <label className="block text-[12.5px] uppercase tracking-[0.12em] text-faint mb-1">
+                        Full Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="e.g. Alex Morgan"
+                        className="w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:ring-2 focus:ring-accent/30"
                       />
                     </div>
-                  </>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-[12.5px] uppercase tracking-[0.12em] text-faint mb-1">
+                          Email Address <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="alex@example.com"
+                          className="w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:ring-2 focus:ring-accent/30"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[12.5px] uppercase tracking-[0.12em] text-faint mb-1">
+                          Phone Number <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          required
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          placeholder="+91 98765 43210"
+                          className="w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:ring-2 focus:ring-accent/30"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-[12.5px] uppercase tracking-[0.12em] text-faint mb-1">
+                          LinkedIn Profile URL
+                        </label>
+                        <input
+                          type="url"
+                          value={linkedinUrl}
+                          onChange={(e) => setLinkedinUrl(e.target.value)}
+                          placeholder="https://linkedin.com/in/username"
+                          className="w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:ring-2 focus:ring-accent/30"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[12.5px] uppercase tracking-[0.12em] text-faint mb-1">
+                          Portfolio / GitHub URL
+                        </label>
+                        <input
+                          type="url"
+                          value={portfolioUrl}
+                          onChange={(e) => setPortfolioUrl(e.target.value)}
+                          placeholder="https://github.com/username"
+                          className="w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:ring-2 focus:ring-accent/30"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 )}
 
+                {/* Step 2: Screening Questions */}
                 {step === 2 && (
-                  <div>
-                    <Lbl req>Technical skills</Lbl>
-                    <p className="mt-1 text-[13px] text-muted">Separate each skill with a comma (e.g. Python, PyTorch, AWS, Docker, SQL).</p>
-                    <textarea
-                      rows={4}
-                      value={form.technical_skills}
-                      onChange={(e) => set("technical_skills", e.target.value)}
-                      placeholder="Python, PyTorch, LangChain, AWS, Docker, Kubernetes, SQL…"
-                      className="mt-2 w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:border-foreground"
-                    />
-                    {form.technical_skills.trim() && (
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        {form.technical_skills.split(",").map((s) => s.trim()).filter(Boolean).map((s, i) => (
-                          <span key={i} className="rounded-full bg-panel px-2.5 py-1 text-[12px] text-foreground">{s}</span>
-                        ))}
-                      </div>
+                  <div className="space-y-5">
+                    {fullJob.screeningQuestions.length === 0 ? (
+                      <p className="text-muted text-[15px] italic py-4">No additional screening questions for this position.</p>
+                    ) : (
+                      fullJob.screeningQuestions.map((q) => (
+                        <div key={q.id}>
+                          <label className="block text-[13.5px] font-medium text-foreground mb-1.5">
+                            {q.question} {q.required && <span className="text-red-500">*</span>}
+                          </label>
+                          {q.type === "select" ? (
+                            <select
+                              required={q.required}
+                              value={screeningAnswers[q.id] || ""}
+                              onChange={(e) => handleAnswerChange(q.id, e.target.value)}
+                              className="w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:ring-2 focus:ring-accent/30"
+                            >
+                              <option value="" disabled>Select option…</option>
+                              {q.options?.map((opt) => (
+                                <option key={opt} value={opt}>{opt}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              type={q.type === "number" ? "number" : "text"}
+                              required={q.required}
+                              value={screeningAnswers[q.id] || ""}
+                              onChange={(e) => handleAnswerChange(q.id, e.target.value)}
+                              placeholder="Your response…"
+                              className="w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:ring-2 focus:ring-accent/30"
+                            />
+                          )}
+                        </div>
+                      ))
                     )}
                   </div>
                 )}
-              </motion.div>
-            </AnimatePresence>
 
-            {err && <p className="mt-4 text-[14px]" style={{ color: "#c0564f" }}>{err}</p>}
+                {/* Step 3: Resume Upload */}
+                {step === 3 && (
+                  <div className="space-y-4">
+                    <label className="block text-[12.5px] uppercase tracking-[0.12em] text-faint mb-1">
+                      Upload Resume (PDF, DOCX · Max 10MB) <span className="text-red-500">*</span>
+                    </label>
+                    <div className="border-2 border-dashed border-border rounded-2xl p-8 text-center bg-paper hover:border-accent transition-colors">
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleFileChange}
+                        className="hidden"
+                        id="resume-upload-input"
+                      />
+                      <label htmlFor="resume-upload-input" className="cursor-pointer flex flex-col items-center">
+                        <div className="grid h-12 w-12 place-items-center rounded-full bg-panel text-accent mb-3">
+                          📄
+                        </div>
+                        {resumeFile ? (
+                          <div>
+                            <span className="font-medium text-[15px] text-foreground block">{resumeFile.name}</span>
+                            <span className="text-[13px] text-muted">{(resumeFile.size / 1024 / 1024).toFixed(2)} MB · Change file</span>
+                          </div>
+                        ) : (
+                          <div>
+                            <span className="font-medium text-[15px] text-foreground block">Click to select or drag resume file</span>
+                            <span className="text-[13px] text-muted">Supports PDF, DOC, DOCX up to 10MB</span>
+                          </div>
+                        )}
+                      </label>
+                    </div>
+                    {fileError && <p className="text-red-500 text-[13px] mt-1">{fileError}</p>}
+                  </div>
+                )}
 
-            <div className="mt-8 flex items-center justify-between border-t border-border pt-6">
-              <button
-                onClick={() => (step === 0 ? onClose() : setStep(step - 1))}
-                className="btn-pill btn-ghost"
-              >
-                {step === 0 ? "Cancel" : "Back"}
-              </button>
-              {step < 2 ? (
-                <button
-                  disabled={(step === 0 && !step1Valid) || (step === 1 && !step2Valid)}
-                  onClick={() => setStep(step + 1)}
-                  className="btn-pill btn-primary disabled:opacity-40"
-                >
-                  Next Step →
-                </button>
-              ) : (
-                <button
-                  disabled={!step3Valid || sending}
-                  onClick={submit}
-                  className="btn-pill btn-primary disabled:opacity-40"
-                >
-                  {sending ? "Submitting…" : "Submit Application"}
-                </button>
-              )}
-            </div>
-          </>
-        )}
-      </motion.div>
-    </div>
-  );
-}
+                {/* Footer Controls */}
+                <div className="mt-8 flex items-center justify-between border-t border-border pt-4">
+                  {step > 1 ? (
+                    <button
+                      type="button"
+                      onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)}
+                      className="btn-pill btn-ghost text-[14px]"
+                    >
+                      Back
+                    </button>
+                  ) : <div />}
 
-function mailtoFallback(title: string, f: Record<string, string>) {
-  const body = `Position: ${title}%0D%0AName: ${f.full_name}%0D%0AEmail: ${f.email}%0D%0APhone: ${f.phone}%0D%0ACurrent Company: ${f.current_company}%0D%0ALinkedIn: ${f.linkedin}%0D%0AExperience: ${f.experience_years}%0D%0ANotice: ${f.notice_period}%0D%0AProject: ${f.project_summary}%0D%0ASkills: ${f.technical_skills}`;
-  return `https://mail.google.com/mail/?view=cm&fs=1&to=${HR_EMAIL}&su=${encodeURIComponent("Application: " + title)}&body=${body}`;
-}
-
-function Lbl({ children, req }: { children: React.ReactNode; req?: boolean }) {
-  return (
-    <label className="text-[13px] font-medium text-foreground">
-      {children} {req && <span style={{ color: "#c0564f" }}>*</span>}
-    </label>
-  );
-}
-
-function Field({
-  label, value, onChange, type = "text", req = false,
-}: {
-  label: string; value: string; onChange: (v: string) => void; type?: string; req?: boolean;
-}) {
-  return (
-    <div>
-      <Lbl req={req}>{label}</Lbl>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="mt-2 w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:border-foreground"
-      />
-    </div>
+                  {step < 3 ? (
+                    <button
+                      type="button"
+                      disabled={step === 1 && (!fullName || !email || !phone)}
+                      onClick={() => setStep((s) => (s + 1) as 1 | 2 | 3)}
+                      className="btn-pill btn-primary text-[14px] disabled:opacity-50"
+                    >
+                      Next Step →
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={loading || !resumeFile}
+                      className="btn-pill btn-primary text-[14px] disabled:opacity-50"
+                    >
+                      {loading ? "Scanning & Submitting…" : "Submit Application"}
+                    </button>
+                  )}
+                </div>
+              </form>
+            )}
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
   );
 }

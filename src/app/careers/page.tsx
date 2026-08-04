@@ -7,7 +7,7 @@ import { getJobs } from "@/lib/data";
 import { site } from "@/content/site";
 
 export const metadata: Metadata = {
-  title: "Careers — Criska Business Consulting",
+  title: "Careers & ATS Portal — Criska Business Consulting",
   description: "Join Criska — build across AI, cloud, security, data, and consulting with a people-focused team.",
 };
 
