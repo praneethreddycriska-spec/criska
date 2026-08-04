@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: "Experienced technology and consulting leaders focused on client outcomes and long-term partnerships.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function LeadershipPage() {
   const { leadership } = site;
   return (

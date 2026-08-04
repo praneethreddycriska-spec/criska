@@ -11,6 +11,8 @@ import { Clients } from "@/components/sections/clients";
 import { CtaContact } from "@/components/sections/cta-contact";
 import { Footer } from "@/components/sections/footer";
 
+export const dynamic = "force-dynamic";
+
 export default function Home() {
   return (
     <>

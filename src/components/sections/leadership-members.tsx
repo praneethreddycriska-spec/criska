@@ -1,9 +1,10 @@
 import { site } from "@/content/site";
 import { Reveal } from "@/components/reveal";
+import { getLeadership } from "@/lib/data";
 
 const CREAM = "var(--navy-text)";
 
-export function LeadershipMembers({
+export async function LeadershipMembers({
   eyebrow = site.leadership.eyebrow,
   title = site.leadership.membersTitle,
   lead,
@@ -12,7 +13,7 @@ export function LeadershipMembers({
   title?: string;
   lead?: string;
 }) {
-  const { members } = site.leadership;
+  const members = await getLeadership();
   return (
     <section
       className="relative isolate overflow-hidden py-24 md:py-32"
@@ -39,9 +40,8 @@ export function LeadershipMembers({
 
         <div className="mt-16 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
           {members.map((m, i) => (
-            <Reveal key={m.role} i={i}>
+            <Reveal key={m.id} i={i}>
               <div className="flex flex-col items-center text-center">
-                {/* Circular avatar */}
                 <div
                   className="relative aspect-square w-40 overflow-hidden rounded-full md:w-44"
                   style={{ background: "var(--navy-surface)", border: "1px solid var(--navy-border-strong)" }}
@@ -69,18 +69,20 @@ export function LeadershipMembers({
                   {m.bio}
                 </p>
 
-                <a
-                  href={m.linkedin}
-                  target={m.linkedin.startsWith("http") ? "_blank" : undefined}
-                  rel={m.linkedin.startsWith("http") ? "noopener noreferrer" : undefined}
-                  aria-label={`${m.name || m.role} on LinkedIn`}
-                  className="mt-5 grid h-9 w-9 place-items-center rounded-lg transition-colors"
-                  style={{ border: "1px solid var(--navy-border-strong)", color: "var(--navy-body)" }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M4.98 3.5A2.5 2.5 0 1 0 5 8.5a2.5 2.5 0 0 0-.02-5zM3 9h4v12H3zM10 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.5 4.78 5.75V21H18.6v-5.4c0-1.29-.02-2.95-1.8-2.95-1.8 0-2.08 1.4-2.08 2.85V21H10z" />
-                  </svg>
-                </a>
+                {m.linkedin && m.linkedin !== "#" && (
+                  <a
+                    href={m.linkedin}
+                    target={m.linkedin.startsWith("http") ? "_blank" : undefined}
+                    rel={m.linkedin.startsWith("http") ? "noopener noreferrer" : undefined}
+                    aria-label={`${m.name || m.role} on LinkedIn`}
+                    className="mt-5 grid h-9 w-9 place-items-center rounded-lg transition-colors"
+                    style={{ border: "1px solid var(--navy-border-strong)", color: "var(--navy-body)" }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M4.98 3.5A2.5 2.5 0 1 0 5 8.5a2.5 2.5 0 0 0-.02-5zM3 9h4v12H3zM10 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.5 4.78 5.75V21H18.6v-5.4c0-1.29-.02-2.95-1.8-2.95-1.8 0-2.08 1.4-2.08 2.85V21H10z" />
+                    </svg>
+                  </a>
+                )}
               </div>
             </Reveal>
           ))}

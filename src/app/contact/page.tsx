@@ -3,6 +3,7 @@ import { Nav } from "@/components/nav";
 import { Footer } from "@/components/sections/footer";
 import { PageHeader } from "@/components/page-header";
 import { ContactForm } from "@/components/contact-form";
+import { getContactInfo } from "@/lib/data";
 import { site } from "@/content/site";
 
 export const metadata: Metadata = {
@@ -10,10 +11,12 @@ export const metadata: Metadata = {
   description: "Talk to Criska about consulting, software development, staffing, or outsourcing.",
 };
 
+export const dynamic = "force-dynamic";
+
 const MAP_QUERY = "Spacion Business Towers, Madhapur, Hyderabad";
 
-export default function ContactPage() {
-  const { contact } = site;
+export default async function ContactPage() {
+  const contact = { ...site.contact, ...(await getContactInfo()) };
   const tel = `tel:${contact.phone.replace(/[^\d+]/g, "")}`;
 
   return (

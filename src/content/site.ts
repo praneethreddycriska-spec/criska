@@ -580,6 +580,7 @@ export const site = {
       { label: "Case Studies", href: "/case-studies" },
       { label: "Industry Reports", href: "/case-studies" },
       { label: "FAQs", href: "/faq" },
+      { label: "Admin ATS Portal", href: "/admin" },
     ] as NavLink[],
     fine: "© 2026 CRISKA BUSINESS CONSULTING PVT. LTD. · HYDERABAD · INDIA / UK / US",
   },

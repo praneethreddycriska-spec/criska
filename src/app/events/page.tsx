@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/sections/footer";
 import { PageHeader } from "@/components/page-header";
+import { getEvents } from "@/lib/data";
 import { site } from "@/content/site";
 
 export const metadata: Metadata = {
@@ -9,8 +10,11 @@ export const metadata: Metadata = {
   description: "Tech talks, workshops, hackathons, and celebrations at Criska's Hyderabad office.",
 };
 
-export default function EventsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function EventsPage() {
   const { events } = site;
+  const items = await getEvents();
   return (
     <>
       <Nav />
@@ -20,9 +24,9 @@ export default function EventsPage() {
         <section className="py-20 md:py-28">
           <div className="mx-auto max-w-[1200px] px-6 md:px-10">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {events.items.map((ev) => (
+              {items.map((ev) => (
                 <article
-                  key={ev.title}
+                  key={ev.id}
                   className="group flex flex-col overflow-hidden rounded-[var(--radius)] border border-border bg-surface transition-all duration-300 hover:border-border-strong hover:shadow-[0_24px_60px_-34px_rgba(0,0,0,0.4)]"
                 >
                   {/* Image / placeholder */}
