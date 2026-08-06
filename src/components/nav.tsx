@@ -6,12 +6,10 @@ import { motion, AnimatePresence } from "motion/react";
 import { site } from "@/content/site";
 import { LogoLockup } from "./logo";
 import { ThemeToggle } from "./theme-toggle";
-import { ConsultationModal } from "./consultation-modal";
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const [consultOpen, setConsultOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -27,12 +25,6 @@ export function Nav() {
     href: string
   ) => {
     setOpen(false);
-
-    if (href === "/contact" || href.includes("consultation")) {
-      e.preventDefault();
-      setConsultOpen(true);
-      return;
-    }
 
     if (href.startsWith("/#")) {
       const targetId = href.replace("/#", "");
@@ -81,13 +73,12 @@ export function Nav() {
 
             <div className="hidden items-center gap-3 lg:flex">
               <ThemeToggle />
-              <button
-                type="button"
-                onClick={() => setConsultOpen(true)}
+              <a
+                href={site.nav.cta.href}
                 className="btn-pill btn-primary !px-5 !py-2.5 text-[14px]"
               >
                 {site.nav.cta.label}
-              </button>
+              </a>
             </div>
 
             {/* Mobile Menu Toggle Button */}
@@ -144,26 +135,18 @@ export function Nav() {
                     {l.label}
                   </a>
                 ))}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOpen(false);
-                    setConsultOpen(true);
-                  }}
+                <a
+                  href={site.nav.cta.href}
+                  onClick={() => setOpen(false)}
                   className="btn-pill btn-primary mt-2 text-center"
                 >
                   {site.nav.cta.label}
-                </button>
+                </a>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </header>
-
-      <ConsultationModal
-        isOpen={consultOpen}
-        onClose={() => setConsultOpen(false)}
-      />
     </>
   );
 }
