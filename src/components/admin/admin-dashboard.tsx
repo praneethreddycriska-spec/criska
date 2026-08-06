@@ -18,6 +18,7 @@ import { EmailWorkflowModal } from "./email-workflow-modal";
 import { ShareLinkModal } from "./share-link-modal";
 import { ThemeToggle } from "../theme-toggle";
 import { PasswordInput } from "../password-input";
+import { VisitorStats } from "./visitor-stats";
 
 export function AdminDashboard() {
   // Authentication is handled server-side (middleware session + email allowlist).
@@ -825,6 +826,7 @@ export function AdminDashboard() {
             {/* TAB 2: ANALYTICS OVERVIEW */}
             {activeTab === "overview" && (
               <div className="space-y-8">
+                <VisitorStats />
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <div className="rounded-2xl border border-border bg-surface p-6">
                     <span className="text-[12px] uppercase tracking-[0.14em] text-faint">

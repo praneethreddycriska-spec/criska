@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CKMark } from "@/components/logo";
 import { PasswordInput } from "@/components/password-input";
+import { GoogleSignIn, GOOGLE_SIGNIN_ENABLED } from "@/components/admin/google-signin";
 
 function AdminLoginForm() {
   const router = useRouter();
@@ -67,10 +68,23 @@ function AdminLoginForm() {
       </div>
       <h1 className="font-display mt-6 text-[26px]">Admin sign in</h1>
       <p className="mt-1 text-[14px] text-muted">
-        {step === "email"
+        {GOOGLE_SIGNIN_ENABLED
+          ? "Sign in with an authorized Google account."
+          : step === "email"
           ? "Enter your authorized admin email to continue."
           : "Enter the admin password to continue."}
       </p>
+
+      {GOOGLE_SIGNIN_ENABLED && (
+        <div className="mt-6">
+          <GoogleSignIn />
+          <div className="my-6 flex items-center gap-3 text-[12px] text-faint">
+            <span className="h-px flex-1 bg-border" />
+            OR USE PASSWORD
+            <span className="h-px flex-1 bg-border" />
+          </div>
+        </div>
+      )}
 
       {step === "email" ? (
         <>

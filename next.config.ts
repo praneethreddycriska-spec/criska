@@ -35,8 +35,10 @@ const nextConfig: NextConfig = {
             value: "on",
           },
           {
+            // "allow-popups" keeps cross-origin isolation while permitting the
+            // Google Sign-In popup to communicate back to the opener.
             key: "Cross-Origin-Opener-Policy",
-            value: "same-origin",
+            value: "same-origin-allow-popups",
           },
         ],
       },
