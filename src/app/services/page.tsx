@@ -4,6 +4,7 @@ import { Footer } from "@/components/sections/footer";
 import { PageHeader } from "@/components/page-header";
 import { ServiceIcon } from "@/components/icons";
 import { site } from "@/content/site";
+import { getServices } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Services & Capabilities — Criska Business Consulting",
@@ -11,8 +12,11 @@ export const metadata: Metadata = {
     "Full-spectrum enterprise technology & consulting services: AI/ML, Cloud Infrastructure, Cybersecurity, Software Engineering, Data Analytics, and IT Staffing.",
 };
 
-export default function ServicesPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ServicesPage() {
   const { services } = site;
+  const items = await getServices();
   return (
     <>
       <Nav />
@@ -22,9 +26,9 @@ export default function ServicesPage() {
         <section className="py-16 md:py-24">
           <div className="mx-auto max-w-[1200px] px-6 md:px-10">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {services.items.map((s, i) => (
+              {items.map((s, i) => (
                 <article
-                  key={s.title}
+                  key={s.id}
                   className="flex h-full flex-col rounded-[var(--radius)] border border-border bg-surface p-7 transition-all duration-300 hover:border-border-strong hover:shadow-[0_24px_60px_-34px_rgba(0,0,0,0.4)]"
                 >
                   <div className="flex items-center justify-between">

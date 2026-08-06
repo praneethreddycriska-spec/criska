@@ -6,8 +6,8 @@ import { ImageInput } from "./image-input";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-type FieldType = "text" | "textarea" | "number" | "bool" | "url" | "image" | "lines" | "tags";
-type Field = { key: string; label: string; type: FieldType; help?: string };
+type FieldType = "text" | "textarea" | "number" | "bool" | "url" | "image" | "lines" | "tags" | "select";
+type Field = { key: string; label: string; type: FieldType; help?: string; options?: { value: string; label: string }[] };
 
 type TabDef = {
   key: string;
@@ -18,6 +18,24 @@ type TabDef = {
   titleKey?: string;
   fields: Field[];
 };
+
+const ICON_OPTIONS = [
+  { value: "ai", label: "AI / Generative AI" },
+  { value: "cloud", label: "Cloud" },
+  { value: "security", label: "Cybersecurity" },
+  { value: "code", label: "Software / Code" },
+  { value: "mobile", label: "Mobile" },
+  { value: "product", label: "Product" },
+  { value: "data", label: "Data / Analytics" },
+  { value: "devops", label: "DevOps" },
+  { value: "digital", label: "Digital" },
+  { value: "infra", label: "Infrastructure" },
+  { value: "enterprise", label: "Enterprise" },
+  { value: "staffing", label: "Staffing" },
+  { value: "bpo", label: "BPO" },
+  { value: "consulting", label: "Consulting" },
+  { value: "managed", label: "Managed Services" },
+];
 
 const TABS: TabDef[] = [
   {
@@ -41,6 +59,18 @@ const TABS: TabDef[] = [
       { key: "overview", label: "Overview", type: "textarea" },
       { key: "image", label: "Image", type: "image" },
       { key: "link", label: "Link (optional)", type: "url" },
+      { key: "sort", label: "Sort order", type: "number" },
+    ],
+  },
+  {
+    key: "services", table: "services", label: "Services", titleKey: "title",
+    fields: [
+      { key: "title", label: "Service Title", type: "text" },
+      { key: "icon", label: "Icon", type: "select", options: ICON_OPTIONS, help: "Icon shown in the card" },
+      { key: "description", label: "Short description", type: "textarea" },
+      { key: "includes", label: "Includes (comma separated)", type: "tags", help: "The capability chips" },
+      { key: "extra_label", label: "Extra group label (optional)", type: "text", help: "e.g. Platforms, Compliance, Business Benefits" },
+      { key: "extra_items", label: "Extra group items (comma separated)", type: "tags" },
       { key: "sort", label: "Sort order", type: "number" },
     ],
   },
@@ -190,6 +220,7 @@ function CollectionList({ tab, rows, onAdd, onEdit, onDelete }: { tab: TabDef; r
                 {tab.key === "jobs" && [r.department, r.location, r.is_open ? "Open" : "Closed"].filter(Boolean).join(" · ")}
                 {tab.key === "events" && [r.tag, r.date_label].filter(Boolean).join(" · ")}
                 {tab.key === "leadership" && r.name}
+                {tab.key === "services" && (Array.isArray(r.includes) ? `${r.includes.length} capabilities` : "")}
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-2">
@@ -243,6 +274,13 @@ function RecordForm({ tab, initial, onSave, singleton }: { tab: TabDef; initial:
             )}
             {(f.type === "text" || f.type === "url" || f.type === "tags") && (
               <input type={f.type === "url" ? "url" : "text"} value={values[f.key] ?? ""} onChange={(e) => set(f.key, e.target.value)} className={inputCls} />
+            )}
+            {f.type === "select" && (
+              <select value={values[f.key] ?? (f.options?.[0]?.value ?? "")} onChange={(e) => set(f.key, e.target.value)} className={inputCls}>
+                {f.options?.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
             )}
             {f.type === "number" && (
               <input type="number" value={values[f.key] ?? 0} onChange={(e) => set(f.key, Number(e.target.value))} className={inputCls} />
@@ -300,6 +338,7 @@ function normalize(tab: TabDef, r: any) {
     if (f.type === "tags") v[f.key] = Array.isArray(r[f.key]) ? r[f.key].join(", ") : (r[f.key] ?? "");
     if (f.type === "bool") v[f.key] = r[f.key] ?? true;
     if (f.type === "number") v[f.key] = r[f.key] ?? 0;
+    if (f.type === "select") v[f.key] = r[f.key] ?? f.options?.[0]?.value ?? "";
   }
   return v;
 }

@@ -8,6 +8,7 @@ const TABLES: Record<string, string> = {
   jobs: "criska_jobs",
   events: "criska_events",
   leadership: "criska_leadership",
+  services: "criska_services",
   contact: "criska_contact",
   applications: "criska_applications",
   consultations: "criska_consultations",
@@ -55,6 +56,8 @@ export async function GET(_req: Request, ctx: { params: Promise<{ table: string 
       ? { col: "created_at", asc: false }
       : t.includes("contact")
       ? { col: "id", asc: true }
+      : t.includes("services")
+      ? { col: "sort", asc: true }
       : { col: "created_at", asc: false };
 
   try {

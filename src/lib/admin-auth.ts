@@ -1,6 +1,18 @@
 import { hashPassword, safeEqual } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
+/**
+ * Whether password (email + passcode) login is allowed at all.
+ * Once Google sign-in is configured, the password path is DISABLED server-side
+ * — the only way in is a Google-verified allowlisted account. A break-glass env
+ * var (`ADMIN_ALLOW_PASSWORD_LOGIN=true`) re-enables it if Google ever fails.
+ */
+export function isPasswordLoginEnabled(): boolean {
+  const googleConfigured = !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  if (!googleConfigured) return true; // no Google yet → password is the only way in
+  return process.env.ADMIN_ALLOW_PASSWORD_LOGIN === "true"; // break-glass override
+}
+
 /** Returns the stored password hash from the DB, or "" if none / unavailable. */
 export async function getStoredPasswordHash(): Promise<string> {
   const sb = getSupabaseAdmin();

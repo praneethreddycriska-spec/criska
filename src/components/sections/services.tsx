@@ -2,17 +2,19 @@ import { site } from "@/content/site";
 import { Reveal } from "@/components/reveal";
 import { ServiceIcon } from "@/components/icons";
 import { SectionHead } from "@/components/section-head";
+import { getServices } from "@/lib/data";
 
-export function Services() {
+export async function Services() {
   const { services } = site;
+  const items = await getServices();
   return (
     <section id="services" className="relative border-t border-border py-24 md:py-32">
       <div className="mx-auto max-w-[1200px] px-6 md:px-10">
         <SectionHead eyebrow={services.eyebrow} title={services.title} lead={services.lead} />
 
         <div className="mt-14 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {services.items.map((s, i) => (
-            <Reveal key={s.title} i={i % 3}>
+          {items.map((s, i) => (
+            <Reveal key={s.id} i={i % 3}>
               <article
                 className={`h-full flex-col rounded-[var(--radius)] border border-border bg-surface p-7 transition-all duration-300 hover:border-border-strong hover:shadow-[0_24px_60px_-34px_rgba(0,0,0,0.4)] ${
                   i >= 3 ? "hidden sm:flex" : "flex"
@@ -56,7 +58,7 @@ export function Services() {
         {/* Mobile: the grid shows only the first 3 — link out to the full page */}
         <div className="mt-8 text-center sm:hidden">
           <a href="/services" className="btn-pill btn-ghost">
-            View all {services.items.length} services →
+            View all {items.length} services →
           </a>
         </div>
       </div>

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { SESSION_COOKIE, signSession } from "@/lib/auth";
 import { currentSessionFingerprint } from "@/lib/session";
 import { isEmailAllowed } from "@/lib/admin-emails";
-import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { clientIp, limit } from "@/lib/rate-limit";
 
 /**
  * Secure admin sign-in via a Google Identity token.
@@ -10,7 +10,7 @@ import { clientIp, rateLimit } from "@/lib/rate-limit";
  * the admin allowlist. Any other account is rejected immediately.
  */
 export async function POST(req: Request) {
-  const { limited, retryAfter } = rateLimit(`google-login:${clientIp(req)}`, 15, 15 * 60 * 1000);
+  const { limited, retryAfter } = await limit(`google-login:${clientIp(req)}`, 15, 15 * 60 * 1000);
   if (limited) {
     return NextResponse.json(
       { error: "Too many attempts. Please try again later." },

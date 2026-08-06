@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { SESSION_COOKIE, signSession } from "@/lib/auth";
 import { currentSessionFingerprint } from "@/lib/session";
-import { verifyAdminPassword } from "@/lib/admin-auth";
+import { verifyAdminPassword, isPasswordLoginEnabled } from "@/lib/admin-auth";
 import { isEmailAllowed } from "@/lib/admin-emails";
 
 /** In-memory brute-force protection (per-IP, per-instance). */
@@ -16,6 +16,14 @@ function clientIp(req: Request): string {
 }
 
 export async function POST(req: Request) {
+  // Password login is switched OFF once Google sign-in is live.
+  if (!isPasswordLoginEnabled()) {
+    return NextResponse.json(
+      { error: "Password login is disabled. Please sign in with Google." },
+      { status: 403 },
+    );
+  }
+
   const ip = clientIp(req);
   const now = Date.now();
   const rec = attempts.get(ip);

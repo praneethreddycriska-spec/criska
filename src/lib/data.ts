@@ -44,6 +44,16 @@ export type ContactInfo = {
   website: string;
 };
 
+export type ServiceItem = {
+  id: string;
+  icon: string;
+  title: string;
+  desc: string;
+  includes: string[];
+  extra?: { label: string; items: string[] };
+  sort: number;
+};
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export async function getJobs(): Promise<Job[]> {
@@ -161,6 +171,40 @@ export async function getLeadership(): Promise<Member[]> {
     bio: m.bio ?? "",
     image: m.image ?? "",
     linkedin: m.linkedin ?? "#",
+    sort: i,
+  }));
+}
+
+export async function getServices(): Promise<ServiceItem[]> {
+  const sb = getSupabase();
+  if (sb) {
+    try {
+      const { data, error } = await sb.from("criska_services").select("*").order("sort");
+      if (!error && data && data.length > 0) {
+        return data.map((r: any) => ({
+          id: r.id,
+          icon: r.icon ?? "consulting",
+          title: r.title ?? "",
+          desc: r.description ?? "",
+          includes: Array.isArray(r.includes) ? r.includes : [],
+          extra:
+            r.extra_label && Array.isArray(r.extra_items) && r.extra_items.length > 0
+              ? { label: r.extra_label, items: r.extra_items }
+              : undefined,
+          sort: r.sort ?? 0,
+        }));
+      }
+    } catch {
+      // fall back to static content
+    }
+  }
+  return (site.services.items as any[]).map((s, i) => ({
+    id: String(i),
+    icon: s.icon,
+    title: s.title,
+    desc: s.desc,
+    includes: s.includes ?? [],
+    extra: s.extra,
     sort: i,
   }));
 }
