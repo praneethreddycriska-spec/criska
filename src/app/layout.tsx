@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { EB_Garamond, Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { IntroSplash } from "@/components/intro-splash";
+import { VisitTracker } from "@/components/visit-tracker";
 
 const ebGaramond = EB_Garamond({
   variable: "--font-eb-garamond",
@@ -50,6 +52,8 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>{children}</ThemeProvider>
+        <IntroSplash />
+        <VisitTracker />
         <div className="grain" aria-hidden />
       </body>
     </html>

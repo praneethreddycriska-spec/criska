@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ApplyModal, type ApplyJob } from "./apply-modal";
 import type { Job } from "@/lib/data";
 
-const HR_EMAIL = "hr@criskasecurity.com";
+const HR_EMAIL = "info2@criska.in";
 
 function gmailCompose(subject: string, body: string) {
   return `https://mail.google.com/mail/?view=cm&fs=1&to=${HR_EMAIL}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;

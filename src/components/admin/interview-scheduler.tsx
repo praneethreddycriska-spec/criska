@@ -19,7 +19,7 @@ export function InterviewScheduler({
   const [time, setTime] = useState<string>("14:00");
   const [durationMinutes, setDurationMinutes] = useState<number>(45);
   const [interviewerName, setInterviewerName] = useState<string>("Criska Lead Architect");
-  const [interviewerEmail, setInterviewerEmail] = useState<string>("hr@criskasecurity.com");
+  const [interviewerEmail, setInterviewerEmail] = useState<string>("info2@criska.in");
   const [meetingUrl, setMeetingUrl] = useState<string>("https://meet.google.com/criska-tech-interview");
   const [notes, setNotes] = useState<string>("System architecture, coding & ATS screening review.");
 

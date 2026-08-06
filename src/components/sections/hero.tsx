@@ -10,6 +10,11 @@ export function Hero() {
     <header id="top" className="relative isolate overflow-hidden">
       {/* soft pastel wash + faint guide lines */}
       <div className="pointer-events-none absolute inset-0 pastel-wash" />
+      {/* subtle drifting ambient orbs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+        <div className="aura-orb aura-orb--a" style={{ top: "-8%", left: "-6%", width: "42vw", height: "42vw", maxWidth: 560, maxHeight: 560 }} />
+        <div className="aura-orb aura-orb--b" style={{ top: "18%", right: "-8%", width: "38vw", height: "38vw", maxWidth: 520, maxHeight: 520 }} />
+      </div>
       <div className="pointer-events-none absolute inset-0 mx-auto max-w-[1200px] px-6 md:px-10">
         <div className="grid h-full grid-cols-2 md:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (

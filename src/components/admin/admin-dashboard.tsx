@@ -20,8 +20,9 @@ import { ThemeToggle } from "../theme-toggle";
 import { PasswordInput } from "../password-input";
 
 export function AdminDashboard() {
-  // Authentication state
-  const [authenticated, setAuthenticated] = useState<boolean>(false);
+  // Authentication is handled server-side (middleware session + email allowlist).
+  // Reaching this component already means the admin is signed in — no second gate.
+  const [authenticated, setAuthenticated] = useState<boolean>(true);
   const [passcode, setPasscode] = useState("");
   const [passError, setPassError] = useState("");
 

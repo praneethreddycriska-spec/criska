@@ -407,7 +407,7 @@ export const site = {
       "Telangana — 500081",
     ],
     phone: "+91 8121485444",
-    emails: ["info@criska.in", "hr@criskasecurity.com"],
+    emails: ["info@criska.in", "info2@criska.in"],
     website: "www.criska.in",
     formFields: [
       "Full Name",
@@ -745,7 +745,7 @@ export const site = {
       { area: "Talent & People", desc: "Leads staffing, recruitment, and the people-focused culture Criska is known for." },
       { area: "Client Success", desc: "Ensures responsive support, low escalations, and lasting client relationships." },
     ],
-    note: "For leadership introductions or partnership conversations, reach us at hr@criskasecurity.com.",
+    note: "For leadership introductions or partnership conversations, reach us at info2@criska.in.",
   },
 
   faq: {

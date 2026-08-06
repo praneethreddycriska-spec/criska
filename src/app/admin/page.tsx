@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AdminDashboard } from "@/components/admin/admin-dashboard";
 import { AdminPasswordReset } from "@/components/admin/password-reset";
+import { VisitorStats } from "@/components/admin/visitor-stats";
 import { supabaseAdminConfigured } from "@/lib/supabase";
 
 export const metadata: Metadata = {
@@ -19,6 +20,9 @@ export default function AdminPage() {
           Add <code>SUPABASE_SERVICE_ROLE_KEY</code> to <code>.env.local</code> to enable database write sync.
         </div>
       )}
+      <div className="mx-auto max-w-[1200px] px-6 pt-6 md:px-10">
+        <VisitorStats />
+      </div>
       <AdminDashboard />
       <a
         href="/admin/content"
