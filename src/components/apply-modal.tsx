@@ -145,19 +145,8 @@ export function ApplyModal({
                 </div>
                 <h3 className="font-display mt-5 text-[28px]">Application Received</h3>
                 <p className="mt-2 text-[15px] text-muted max-w-md mx-auto">
-                  Thank you for applying to <strong className="text-foreground">{job.title}</strong> at Criska. Your profile has been scanned and filed in our ATS.
+                  Thank you for applying to <strong className="text-foreground">{job.title}</strong> at Criska. Your application has been submitted successfully and our talent acquisition team will review your profile.
                 </p>
-
-                {/* Score & Match badge */}
-                <div className="mt-6 inline-flex flex-col items-center rounded-2xl border border-border bg-panel p-4 px-6">
-                  <span className="text-[12px] uppercase tracking-[0.14em] text-faint">Automated ATS Score Match</span>
-                  <div className="font-display mt-1 text-[36px] text-foreground tabular-nums">
-                    {submittedApp.atsScore}%
-                  </div>
-                  <span className="mt-1 rounded-full bg-accent-soft px-3 py-1 text-[12px] font-medium text-accent">
-                    {submittedApp.atsAnalysis.recommendation}
-                  </span>
-                </div>
 
                 <div className="mt-8 flex justify-center">
                   <button type="button" onClick={resetAndClose} className="btn-pill btn-primary">
