@@ -73,9 +73,29 @@ Criska Talent Acquisition`;
 
   const emailBody = generateEmailBody();
 
+  const emailSubject =
+    templateType === "offer"
+      ? `Offer of Employment — ${application.jobTitle} at Criska`
+      : templateType === "interview"
+      ? `Interview Invitation — ${application.jobTitle} at Criska`
+      : `Application Update — ${application.jobTitle} at Criska`;
+
   const handleCopy = () => {
     navigator.clipboard.writeText(emailBody);
     alert("Email text copied to clipboard!");
+  };
+
+  // Open Gmail's web compose in a new tab; fall back to the OS mail app (mailto:)
+  // if the browser blocks the popup. Reliable whether or not a default mail app is set.
+  const handleSend = () => {
+    const to = encodeURIComponent(application.email || "");
+    const su = encodeURIComponent(emailSubject);
+    const body = encodeURIComponent(emailBody);
+    const gmail = `https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${su}&body=${body}`;
+    const win = window.open(gmail, "_blank", "noopener,noreferrer");
+    if (!win) {
+      window.location.href = `mailto:${application.email || ""}?subject=${su}&body=${body}`;
+    }
   };
 
   return (
@@ -187,14 +207,13 @@ Criska Talent Acquisition`;
             <button type="button" onClick={handleCopy} className="btn-pill btn-ghost text-[13px]">
               📋 Copy Text
             </button>
-            <a
-              href={`mailto:${application.email}?subject=${encodeURIComponent(
-                `Criska ${templateType.toUpperCase()}: ${application.jobTitle}`
-              )}&body=${encodeURIComponent(emailBody)}`}
+            <button
+              type="button"
+              onClick={handleSend}
               className="btn-pill btn-primary text-[13.5px]"
             >
               ✉️ Send via Email Client →
-            </a>
+            </button>
           </div>
         </div>
       </div>
