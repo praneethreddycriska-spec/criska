@@ -147,3 +147,22 @@ ON CONFLICT (id) DO NOTHING;
 
 CREATE POLICY "Candidates can upload resumes" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'resumes');
 CREATE POLICY "Public / Admins can view resumes" ON storage.objects FOR SELECT USING (bucket_id = 'resumes');
+
+-- 8. SEED INITIAL DATA FOR QUICK START
+INSERT INTO public.job_postings (title, department, type, location, description, requirements, status)
+VALUES
+  ('Senior AI & ML Solutions Architect', 'Artificial Intelligence', 'Full-time', 'Hyderabad / Remote', 'Lead LLM, RAG, and agentic AI pipeline implementations for enterprise clients.', ARRAY['8+ years experience', 'Python, PyTorch, LangChain', 'Cloud deployment'], 'published'),
+  ('Lead Cyber Defense Specialist', 'Cybersecurity', 'Full-time', 'Hyderabad / On-site', 'Drive SOC, zero-trust architecture, and pentesting for financial services.', ARRAY['6+ years experience', 'CISSP / CEH preferred', 'SIEM & EDR mastery'], 'published'),
+  ('Principal Cloud Infrastructure Architect', 'Cloud & DevOps', 'Full-time', 'Hyderabad / Remote', 'Design multi-cloud architecture on AWS, Azure, and GCP with Terraform.', ARRAY['7+ years in Cloud Infrastructure', 'Kubernetes & Terraform', 'CI/CD automation'], 'published')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.criska_contact (id, company, office_label, address, phone, emails, website)
+VALUES (
+  1,
+  'Criska Business Consulting Pvt. Ltd.',
+  'Corporate Office',
+  ARRAY['Spacion Business Towers, 4th Floor', 'Next to Westin Hotel, Mindspace IT Park', 'Madhapur, Hyderabad, Telangana 500081, India'],
+  '+91 (040) 6789 1234',
+  ARRAY['contact@criskasecurity.com', 'hr@criskasecurity.com'],
+  'https://criska.in'
+) ON CONFLICT (id) DO NOTHING;
