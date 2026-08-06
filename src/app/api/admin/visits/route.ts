@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { SESSION_COOKIE, verifySession } from "@/lib/auth";
+import { SESSION_COOKIE } from "@/lib/auth";
+import { verifyFreshSession } from "@/lib/session";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
 /** Authed — returns real visit counts (total / today / last 7 days). */
 export async function GET() {
   const jar = await cookies();
-  if (!(await verifySession(jar.get(SESSION_COOKIE)?.value))) {
+  if (!(await verifyFreshSession(jar.get(SESSION_COOKIE)?.value))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const sb = getSupabaseAdmin();

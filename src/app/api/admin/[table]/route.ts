@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { SESSION_COOKIE, verifySession } from "@/lib/auth";
+import { SESSION_COOKIE } from "@/lib/auth";
+import { verifyFreshSession } from "@/lib/session";
 import { getSupabaseAdmin, getSupabase } from "@/lib/supabase";
 
 const TABLES: Record<string, string> = {
@@ -16,8 +17,7 @@ const TABLES: Record<string, string> = {
 
 async function guard() {
   const jar = await cookies();
-  const ok = await verifySession(jar.get(SESSION_COOKIE)?.value);
-  return ok;
+  return verifyFreshSession(jar.get(SESSION_COOKIE)?.value);
 }
 
 function resolve(table: string) {

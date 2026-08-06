@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { v2 as cloudinary } from "cloudinary";
-import { SESSION_COOKIE, verifySession } from "@/lib/auth";
+import { SESSION_COOKIE } from "@/lib/auth";
+import { verifyFreshSession } from "@/lib/session";
 
 const configured =
   process.env.CLOUDINARY_CLOUD_NAME &&
@@ -21,7 +22,7 @@ if (configured) {
 export async function POST(req: Request) {
   // Only logged-in admins can upload.
   const jar = await cookies();
-  if (!(await verifySession(jar.get(SESSION_COOKIE)?.value))) {
+  if (!(await verifyFreshSession(jar.get(SESSION_COOKIE)?.value))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   if (!configured) {

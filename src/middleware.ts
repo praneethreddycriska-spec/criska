@@ -1,11 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE, verifySession } from "@/lib/auth";
+import { SESSION_COOKIE } from "@/lib/auth";
+import { verifyFreshSession } from "@/lib/session";
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   // Only guard admin pages (not the login page or admin API — those self-check).
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
-    const ok = await verifySession(req.cookies.get(SESSION_COOKIE)?.value);
+    const ok = await verifyFreshSession(req.cookies.get(SESSION_COOKIE)?.value);
     if (!ok) {
       const url = req.nextUrl.clone();
       url.pathname = "/admin/login";

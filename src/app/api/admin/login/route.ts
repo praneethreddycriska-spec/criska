@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { SESSION_COOKIE, signSession } from "@/lib/auth";
+import { currentSessionFingerprint } from "@/lib/session";
 import { verifyAdminPassword } from "@/lib/admin-auth";
 import { isEmailAllowed } from "@/lib/admin-emails";
 
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
   }
 
   attempts.delete(ip);
-  const token = await signSession();
+  const token = await signSession(await currentSessionFingerprint());
   const res = NextResponse.json({ ok: true });
   res.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,

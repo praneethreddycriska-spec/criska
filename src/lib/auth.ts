@@ -1,5 +1,12 @@
 /** Minimal, dependency-free signed-session for the admin panel.
- *  Works in both Node and Edge runtimes (Web Crypto, no Buffer). */
+ *  Works in both Node and Edge runtimes (Web Crypto, no Buffer).
+ *
+ *  Token format:  `<exp>.<fp>.<sig>`
+ *    exp = expiry epoch ms
+ *    fp  = password fingerprint (changes whenever the admin password changes,
+ *          so a password reset invalidates every previously-issued session)
+ *    sig = HMAC-SHA256("<exp>.<fp>") keyed by ADMIN_SESSION_SECRET
+ */
 
 export const SESSION_COOKIE = "criska_admin";
 const TTL_MS = 1000 * 60 * 60 * 8; // 8 hours
@@ -25,6 +32,11 @@ async function hmac(data: string): Promise<string> {
   return b64url(new Uint8Array(sig));
 }
 
+/** Public signing helper (used to derive the password fingerprint). */
+export async function sessionSign(data: string): Promise<string> {
+  return hmac(data);
+}
+
 /**
  * Hash of an admin password — SHA-256 over a FIXED application salt + password.
  * Deliberately NOT keyed by ADMIN_SESSION_SECRET so a DB-stored password works
@@ -44,21 +56,30 @@ export function safeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
-export async function signSession(): Promise<string> {
+/** Issue a session bound to the given password fingerprint. */
+export async function signSession(fingerprint: string): Promise<string> {
   const exp = String(Date.now() + TTL_MS);
-  const sig = await hmac(exp);
-  return `${exp}.${sig}`;
+  const payload = `${exp}.${fingerprint}`;
+  const sig = await hmac(payload);
+  return `${payload}.${sig}`;
 }
 
+export type SessionClaims = { exp: number; fp: string };
+
+/** Verify signature + expiry (cheap, no DB). Returns claims or null. */
+export async function parseSession(token: string | undefined | null): Promise<SessionClaims | null> {
+  if (!token) return null;
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+  const [exp, fp, sig] = parts;
+  if (!exp || !fp || !sig) return null;
+  if (!Number.isFinite(Number(exp)) || Number(exp) < Date.now()) return null;
+  const expected = await hmac(`${exp}.${fp}`);
+  if (!safeEqual(expected, sig)) return null;
+  return { exp: Number(exp), fp };
+}
+
+/** Backwards-compatible boolean — signature + expiry only (no freshness check). */
 export async function verifySession(token: string | undefined | null): Promise<boolean> {
-  if (!token) return false;
-  const [exp, sig] = token.split(".");
-  if (!exp || !sig) return false;
-  if (Number(exp) < Date.now()) return false;
-  const expected = await hmac(exp);
-  // constant-ish time compare
-  if (expected.length !== sig.length) return false;
-  let diff = 0;
-  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ sig.charCodeAt(i);
-  return diff === 0;
+  return (await parseSession(token)) !== null;
 }

@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { SESSION_COOKIE, verifySession, hashPassword } from "@/lib/auth";
+import { SESSION_COOKIE, signSession, hashPassword } from "@/lib/auth";
+import { verifyFreshSession, currentSessionFingerprint } from "@/lib/session";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { verifyAdminPassword } from "@/lib/admin-auth";
 
 export async function POST(req: Request) {
-  // must be a logged-in admin
+  // must be a currently-valid logged-in admin
   const jar = await cookies();
-  if (!(await verifySession(jar.get(SESSION_COOKIE)?.value))) {
+  if (!(await verifyFreshSession(jar.get(SESSION_COOKIE)?.value))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -33,5 +34,17 @@ export async function POST(req: Request) {
     .upsert({ id: 1, password_hash: hash, updated_at: new Date().toISOString() });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ ok: true });
+  // The password just changed, so every existing session (bound to the OLD
+  // password fingerprint) is now invalid — everyone is logged out. Re-issue a
+  // fresh cookie to THIS admin so they stay signed in.
+  const token = await signSession(await currentSessionFingerprint());
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set(SESSION_COOKIE, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/",
+    maxAge: 60 * 60 * 8,
+  });
+  return res;
 }

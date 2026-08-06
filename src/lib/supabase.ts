@@ -99,6 +99,11 @@ async function adminApi(table: string, init?: RequestInit) {
       ...init,
       headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
     });
+    // Session was revoked (e.g. the admin password was changed) — force re-login.
+    if (res.status === 401 && typeof window !== "undefined") {
+      window.location.href = "/admin/login";
+      return { data: [], error: "Session expired" };
+    }
     const json = await res.json().catch(() => ({}));
     return json;
   } catch {

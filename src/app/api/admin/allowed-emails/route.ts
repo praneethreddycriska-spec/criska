@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { SESSION_COOKIE, verifySession } from "@/lib/auth";
+import { SESSION_COOKIE } from "@/lib/auth";
+import { verifyFreshSession } from "@/lib/session";
 import { getAllowedEmails, setAllowedEmails } from "@/lib/admin-emails";
 
 async function requireAdmin() {
   const jar = await cookies();
-  return verifySession(jar.get(SESSION_COOKIE)?.value);
+  return verifyFreshSession(jar.get(SESSION_COOKIE)?.value);
 }
 
 export async function GET() {
