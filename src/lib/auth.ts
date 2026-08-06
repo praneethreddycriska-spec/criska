@@ -25,6 +25,19 @@ async function hmac(data: string): Promise<string> {
   return b64url(new Uint8Array(sig));
 }
 
+/** Keyed hash of an admin password (HMAC-SHA256 with the session secret). */
+export async function hashPassword(password: string): Promise<string> {
+  return hmac(`pw:${password}`);
+}
+
+/** Constant-time string comparison. */
+export function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 export async function signSession(): Promise<string> {
   const exp = String(Date.now() + TTL_MS);
   const sig = await hmac(exp);

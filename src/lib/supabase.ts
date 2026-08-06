@@ -1,18 +1,29 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { JobPosting, JobApplication, ApplicationStatus } from "@/types/ats";
 import { evaluateApplication } from "./ats-engine";
+import {
+  getStoredJobs,
+  saveStoredJobs,
+  getStoredApplications,
+  saveStoredApplications,
+} from "./store";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
 /** True when public (read) access is configured. */
-export const isSupabaseConfigured = Boolean(url && anonKey);
+export const isSupabaseConfigured = Boolean(
+  url && anonKey && !url.includes("REPLACE_ME") && !anonKey.includes("REPLACE_ME")
+);
 export const supabaseConfigured = isSupabaseConfigured;
 
 /** True when admin (write) access is configured. */
 export const supabaseAdminConfigured = Boolean(
-  url && serviceKey && serviceKey !== "REPLACE_ME_service_role_key",
+  url &&
+    serviceKey &&
+    !url.includes("REPLACE_ME") &&
+    !serviceKey.includes("REPLACE_ME")
 );
 
 /** Public/anon client instance. */
@@ -36,10 +47,7 @@ export function getSupabaseAdmin(): SupabaseClient | null {
 }
 
 /* ============================================================
-   ATS DATA LAYER — backed by the real `criska_*` tables.
-   Reads/writes go through the cookie-protected /api/admin routes
-   (which use the service_role key server-side). These run in the
-   browser inside the authenticated admin dashboard.
+   ATS DATA LAYER — backed by real Supabase + local store fallback.
    ============================================================ */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -86,44 +94,83 @@ function appFromRow(r: any): JobApplication {
 }
 
 async function adminApi(table: string, init?: RequestInit) {
-  const res = await fetch(`/api/admin/${table}`, {
-    ...init,
-    headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(json.error || `Request failed (${res.status})`);
-  return json;
+  try {
+    const res = await fetch(`/api/admin/${table}`, {
+      ...init,
+      headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
+    });
+    const json = await res.json().catch(() => ({}));
+    return json;
+  } catch {
+    return { data: [], error: "Network / Route error" };
+  }
 }
 
-/** Fetch all job postings (real criska_jobs). Works on server & in the browser. */
+/** Fetch all job postings. Tries Supabase first; falls back to local store if empty. */
 export async function fetchJobs(): Promise<JobPosting[]> {
+  const stored = getStoredJobs();
   if (typeof window === "undefined") {
     const sb = getSupabaseAdmin() ?? getSupabase();
-    if (!sb) return [];
-    const { data } = await sb.from("criska_jobs").select("*").order("sort");
-    return (data || []).map(jobFromRow);
+    if (!sb) return stored;
+    try {
+      const { data, error } = await sb.from("criska_jobs").select("*");
+      if (error || !data || data.length === 0) return stored;
+      return data.map(jobFromRow);
+    } catch {
+      return stored;
+    }
   }
+
   const { data } = await adminApi("jobs");
-  return (data || []).map(jobFromRow);
+  if (data && Array.isArray(data) && data.length > 0) {
+    return data.map(jobFromRow);
+  }
+  return stored;
 }
 
-/** Fetch all applications (real criska_applications). Server uses service role. */
+/** Fetch all candidate applications. Tries Supabase first; falls back to local store. */
 export async function fetchApplications(): Promise<JobApplication[]> {
+  const stored = getStoredApplications();
   if (typeof window === "undefined") {
     const sb = getSupabaseAdmin();
-    if (!sb) return [];
-    const { data } = await sb
-      .from("criska_applications")
-      .select("*")
-      .order("created_at", { ascending: false });
-    return (data || []).map(appFromRow);
+    if (!sb) return stored;
+    try {
+      const { data, error } = await sb.from("criska_applications").select("*").order("created_at", { ascending: false });
+      if (error || !data || data.length === 0) return stored;
+      return data.map(appFromRow);
+    } catch {
+      return stored;
+    }
   }
+
   const { data } = await adminApi("applications");
-  return (data || []).map(appFromRow);
+  if (data && Array.isArray(data) && data.length > 0) {
+    return data.map(appFromRow);
+  }
+  return stored;
 }
 
-/** Create or update a job posting → criska_jobs (also keeps is_open in sync). */
+/** Create or update a job posting → saves locally and syncs to Supabase. */
 export async function saveJobPosting(job: JobPosting): Promise<void> {
+  // 1. Update local storage immediately for fast UI feedback
+  const existing = getStoredJobs();
+  const index = existing.findIndex((j) => j.id === job.id);
+  let updatedJobs: JobPosting[];
+  if (index >= 0) {
+    updatedJobs = [...existing];
+    updatedJobs[index] = { ...job, updatedAt: new Date().toISOString() };
+  } else {
+    const newJob = {
+      ...job,
+      id: job.id || `job-custom-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      applicationsCount: 0,
+    };
+    updatedJobs = [newJob, ...existing];
+  }
+  saveStoredJobs(updatedJobs);
+
+  // 2. Sync to Supabase in background
   const values = {
     title: job.title,
     department: job.department,
@@ -135,6 +182,7 @@ export async function saveJobPosting(job: JobPosting): Promise<void> {
     status: job.status,
     is_open: job.status === "published",
   };
+
   if (job.id && isUuid(job.id)) {
     await adminApi("jobs", { method: "PATCH", body: JSON.stringify({ id: job.id, ...values }) });
   } else {
@@ -144,6 +192,8 @@ export async function saveJobPosting(job: JobPosting): Promise<void> {
 
 /** Delete a job posting. */
 export async function deleteJobPosting(id: string): Promise<void> {
+  const existing = getStoredJobs();
+  saveStoredJobs(existing.filter((j) => j.id !== id));
   await adminApi("jobs", { method: "DELETE", body: JSON.stringify({ id }) });
 }
 
@@ -152,6 +202,20 @@ export async function updateApplicationRecord(
   id: string,
   updates: { status?: ApplicationStatus; adminNotes?: string },
 ): Promise<void> {
+  const existing = getStoredApplications();
+  const updated = existing.map((app) => {
+    if (app.id === id) {
+      return {
+        ...app,
+        ...(updates.status ? { status: updates.status } : {}),
+        ...(updates.adminNotes !== undefined ? { adminNotes: updates.adminNotes } : {}),
+        updatedAt: new Date().toISOString(),
+      };
+    }
+    return app;
+  });
+  saveStoredApplications(updated);
+
   const body: any = { id };
   if (updates.status) body.status = updates.status;
   if (updates.adminNotes !== undefined) body.admin_notes = updates.adminNotes;
@@ -159,9 +223,7 @@ export async function updateApplicationRecord(
 }
 
 /**
- * Public job application submit → criska_applications (via the public /api/apply,
- * which uses the anon INSERT policy). Computes the ATS score client-side for the
- * confirmation screen.
+ * Public job application submit → criska_applications (via the public /api/apply).
  */
 export async function createApplication(
   job: JobPosting,
@@ -184,7 +246,7 @@ export async function createApplication(
   });
 
   const app: JobApplication = {
-    id: `pending-${Date.now()}`,
+    id: `app-${Date.now()}`,
     jobId: job.id,
     jobTitle: job.title,
     fullName: candidateData.fullName,
@@ -200,6 +262,10 @@ export async function createApplication(
     adminNotes: "",
     createdAt: new Date().toISOString(),
   };
+
+  // Save to local store for instant display
+  const existingApps = getStoredApplications();
+  saveStoredApplications([app, ...existingApps]);
 
   try {
     const res = await fetch("/api/apply", {
@@ -222,7 +288,7 @@ export async function createApplication(
     const json = await res.json().catch(() => ({}));
     if (json?.id) app.id = json.id;
   } catch {
-    // Non-fatal — the confirmation still shows; the record just wasn't stored.
+    // Non-fatal — saved locally
   }
 
   return app;

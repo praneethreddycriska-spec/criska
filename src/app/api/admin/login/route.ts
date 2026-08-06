@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
 import { SESSION_COOKIE, signSession } from "@/lib/auth";
+import { verifyAdminPassword } from "@/lib/admin-auth";
 
-/**
- * In-memory brute-force protection (per-IP).
- * Note: resets on server restart and is per-instance. For multi-instance
- * production, back this with a shared store (e.g. Upstash Redis).
- */
-const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+/** In-memory brute-force protection (per-IP, per-instance). */
+const WINDOW_MS = 15 * 60 * 1000;
 const MAX_FAILS = 6;
 const attempts = new Map<string, { count: number; resetAt: number }>();
 
@@ -14,14 +11,6 @@ function clientIp(req: Request): string {
   const xff = req.headers.get("x-forwarded-for");
   if (xff) return xff.split(",")[0].trim();
   return req.headers.get("x-real-ip") || "unknown";
-}
-
-/** Constant-time string comparison to avoid timing leaks. */
-function safeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
 }
 
 export async function POST(req: Request) {
@@ -37,27 +26,23 @@ export async function POST(req: Request) {
   }
 
   const { password } = await req.json().catch(() => ({ password: "" }));
-  const expected = process.env.ADMIN_PASSWORD;
   const secret = process.env.ADMIN_SESSION_SECRET;
-
-  if (!expected || !secret) {
+  if (!secret) {
     return NextResponse.json(
-      { error: "Admin auth is not fully configured on the server (ADMIN_PASSWORD / ADMIN_SESSION_SECRET)." },
+      { error: "ADMIN_SESSION_SECRET is not set on the server." },
       { status: 500 },
     );
   }
 
-  if (typeof password !== "string" || !safeEqual(password, expected)) {
-    // record the failed attempt
+  const ok = typeof password === "string" && password.length > 0 && (await verifyAdminPassword(password));
+  if (!ok) {
     const cur = rec && now < rec.resetAt ? rec : { count: 0, resetAt: now + WINDOW_MS };
     cur.count += 1;
     attempts.set(ip, cur);
     return NextResponse.json({ error: "Incorrect password." }, { status: 401 });
   }
 
-  // success — clear any failure record
   attempts.delete(ip);
-
   const token = await signSession();
   const res = NextResponse.json({ ok: true });
   res.cookies.set(SESSION_COOKIE, token, {

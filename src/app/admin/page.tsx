@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AdminDashboard } from "@/components/admin/admin-dashboard";
+import { AdminPasswordReset } from "@/components/admin/password-reset";
 import { supabaseAdminConfigured } from "@/lib/supabase";
 
 export const metadata: Metadata = {
@@ -19,6 +20,7 @@ export default function AdminPage() {
         </div>
       )}
       <AdminDashboard />
+      <AdminPasswordReset />
     </>
   );
 }

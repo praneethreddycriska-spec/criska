@@ -1,200 +1,170 @@
 -- ============================================================
--- CRISKA ATS & ADMIN PORTAL — COMPLETE SUPABASE SCHEMA & SEED
+-- CRISKA — full database schema + seed (idempotent).
+-- Run this ONCE in the new project: Supabase Dashboard ->
+-- SQL Editor -> New query -> paste all -> Run.
+-- Project: zbvvbtzmvxlbmjxepqoy
 -- ============================================================
 
--- 1. ENUMS
-DO $$ BEGIN
-    CREATE TYPE job_status AS ENUM ('draft', 'published', 'closed');
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
-
-DO $$ BEGIN
-    CREATE TYPE application_status AS ENUM (
-      'new',
-      'under_review',
-      'shortlisted',
-      'interviewing',
-      'hired',
-      'rejected'
-    );
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
-
--- 2. ATS JOB POSTINGS TABLE
-CREATE TABLE IF NOT EXISTS public.job_postings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT NOT NULL,
-  department TEXT NOT NULL DEFAULT 'Engineering',
-  type TEXT NOT NULL DEFAULT 'Full-time',
-  location TEXT NOT NULL DEFAULT 'Hyderabad / Remote',
-  description TEXT NOT NULL,
-  requirements TEXT[] NOT NULL DEFAULT '{}',
-  screening_questions JSONB NOT NULL DEFAULT '[]'::jsonb,
-  status job_status NOT NULL DEFAULT 'published',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- ---------- TABLES ----------
+create table if not exists criska_jobs (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  department text default '',
+  type text default 'Full-time',
+  location text default 'Hyderabad',
+  description text default '',
+  apply_url text default '',
+  requirements jsonb not null default '[]'::jsonb,
+  screening_questions jsonb not null default '[]'::jsonb,
+  status text not null default 'published',
+  is_open boolean not null default true,
+  sort int not null default 0,
+  created_at timestamptz not null default now()
 );
 
--- 3. ATS CANDIDATE APPLICATIONS TABLE
-CREATE TABLE IF NOT EXISTS public.applications (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  job_id UUID REFERENCES public.job_postings(id) ON DELETE SET NULL,
-  full_name TEXT NOT NULL,
-  email TEXT NOT NULL,
-  phone TEXT NOT NULL,
-  portfolio_url TEXT,
-  linkedin_url TEXT,
-  technical_skills TEXT[] NOT NULL DEFAULT '{}',
-  resume_url TEXT,
-  resume_filename TEXT,
-  screening_answers JSONB NOT NULL DEFAULT '{}'::jsonb,
-  ats_score INT NOT NULL DEFAULT 0 CHECK (ats_score >= 0 AND ats_score <= 100),
-  ats_analysis JSONB NOT NULL DEFAULT '{}'::jsonb,
-  status application_status NOT NULL DEFAULT 'new',
-  admin_notes TEXT NOT NULL DEFAULT '',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+create table if not exists criska_events (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  tag text default '',
+  date_label text default '',
+  location text default '',
+  overview text default '',
+  image text default '',
+  link text default '',
+  sort int not null default 0,
+  created_at timestamptz not null default now()
 );
 
--- 4. SITE CONTENT & CMS TABLES (CRISKA)
-CREATE TABLE IF NOT EXISTS public.criska_jobs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT NOT NULL,
-  department TEXT DEFAULT '',
-  type TEXT DEFAULT '',
-  location TEXT DEFAULT '',
-  description TEXT DEFAULT '',
-  apply_url TEXT DEFAULT '',
-  is_open BOOLEAN DEFAULT true,
-  sort INT DEFAULT 0,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+create table if not exists criska_leadership (
+  id uuid primary key default gen_random_uuid(),
+  name text default '',
+  role text not null,
+  bio text default '',
+  image text default '',
+  linkedin text default '#',
+  sort int not null default 0,
+  created_at timestamptz not null default now()
 );
 
-CREATE TABLE IF NOT EXISTS public.criska_events (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT NOT NULL,
-  tag TEXT DEFAULT '',
-  date_label TEXT DEFAULT '',
-  location TEXT DEFAULT '',
-  overview TEXT DEFAULT '',
-  image TEXT DEFAULT '',
-  link TEXT DEFAULT '',
-  sort INT DEFAULT 0,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+create table if not exists criska_contact (
+  id int primary key default 1,
+  company text not null default 'Criska Business Consulting Pvt. Ltd.',
+  office_label text default 'Corporate Office',
+  address jsonb not null default '[]'::jsonb,
+  phone text default '',
+  emails jsonb not null default '[]'::jsonb,
+  website text default 'www.criska.in',
+  updated_at timestamptz not null default now(),
+  constraint criska_contact_singleton check (id = 1)
 );
 
-CREATE TABLE IF NOT EXISTS public.criska_leadership (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT DEFAULT '',
-  role TEXT NOT NULL,
-  bio TEXT DEFAULT '',
-  image TEXT DEFAULT '',
-  linkedin TEXT DEFAULT '#',
-  sort INT DEFAULT 0,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+create table if not exists criska_applications (
+  id uuid primary key default gen_random_uuid(),
+  job_id uuid references criska_jobs(id) on delete set null,
+  job_title text default '',
+  full_name text not null,
+  email text not null,
+  phone text default '',
+  current_company text default '',
+  linkedin text default '',
+  portfolio_url text default '',
+  experience_years text default '',
+  notice_period text default '',
+  project_summary text default '',
+  technical_skills jsonb not null default '[]'::jsonb,
+  screening_answers jsonb not null default '{}'::jsonb,
+  ats_score int default 0,
+  ats_analysis jsonb default '{}'::jsonb,
+  admin_notes text default '',
+  status text not null default 'new',
+  created_at timestamptz not null default now()
 );
 
-CREATE TABLE IF NOT EXISTS public.criska_contact (
-  id INT PRIMARY KEY DEFAULT 1,
-  company TEXT NOT NULL,
-  office_label TEXT DEFAULT 'Corporate Office',
-  address TEXT[] DEFAULT '{}',
-  phone TEXT DEFAULT '',
-  emails TEXT[] DEFAULT '{}',
-  website TEXT DEFAULT '',
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- single-row admin settings (for the in-app password reset)
+create table if not exists criska_admin_settings (
+  id int primary key default 1,
+  password_hash text default '',
+  updated_at timestamptz not null default now(),
+  constraint criska_admin_settings_singleton check (id = 1)
 );
+insert into criska_admin_settings (id) values (1) on conflict (id) do nothing;
 
-CREATE TABLE IF NOT EXISTS public.criska_applications (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  job_id UUID,
-  job_title TEXT DEFAULT '',
-  full_name TEXT NOT NULL,
-  email TEXT NOT NULL,
-  phone TEXT DEFAULT '',
-  current_company TEXT DEFAULT '',
-  linkedin TEXT DEFAULT '',
-  portfolio_url TEXT DEFAULT '',
-  experience_years TEXT DEFAULT '',
-  notice_period TEXT DEFAULT '',
-  project_summary TEXT DEFAULT '',
-  technical_skills TEXT[] DEFAULT '{}',
-  screening_answers JSONB DEFAULT '{}'::jsonb,
-  ats_score INT DEFAULT 0,
-  ats_analysis JSONB DEFAULT '{}'::jsonb,
-  status TEXT DEFAULT 'new',
-  admin_notes TEXT DEFAULT '',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+-- ---------- RLS ----------
+alter table criska_jobs enable row level security;
+alter table criska_events enable row level security;
+alter table criska_leadership enable row level security;
+alter table criska_contact enable row level security;
+alter table criska_applications enable row level security;
+alter table criska_admin_settings enable row level security;
 
--- 5. INDEXES FOR FAST QUERYING & SORTING
-CREATE INDEX IF NOT EXISTS idx_applications_job_id ON public.applications(job_id);
-CREATE INDEX IF NOT EXISTS idx_applications_ats_score ON public.applications(ats_score DESC);
-CREATE INDEX IF NOT EXISTS idx_applications_status ON public.applications(status);
-CREATE INDEX IF NOT EXISTS idx_criska_apps_created_at ON public.criska_applications(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_job_postings_status ON public.job_postings(status);
+-- public read for content tables
+drop policy if exists "criska_jobs_read" on criska_jobs;
+create policy "criska_jobs_read" on criska_jobs for select to anon, authenticated using (true);
+drop policy if exists "criska_events_read" on criska_events;
+create policy "criska_events_read" on criska_events for select to anon, authenticated using (true);
+drop policy if exists "criska_leadership_read" on criska_leadership;
+create policy "criska_leadership_read" on criska_leadership for select to anon, authenticated using (true);
+drop policy if exists "criska_contact_read" on criska_contact;
+create policy "criska_contact_read" on criska_contact for select to anon, authenticated using (true);
 
--- 6. ROW-LEVEL SECURITY (RLS) POLICIES
-ALTER TABLE public.job_postings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.applications ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.criska_jobs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.criska_events ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.criska_leadership ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.criska_contact ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.criska_applications ENABLE ROW LEVEL SECURITY;
+-- anyone may submit an application (insert only; no read)
+drop policy if exists "criska_applications_insert" on criska_applications;
+create policy "criska_applications_insert" on criska_applications for insert to anon, authenticated with check (true);
 
--- Public read policies
-CREATE POLICY "Public users can view published job postings" ON public.job_postings FOR SELECT USING (true);
-CREATE POLICY "Public users can view criska_jobs" ON public.criska_jobs FOR SELECT USING (true);
-CREATE POLICY "Public users can view criska_events" ON public.criska_events FOR SELECT USING (true);
-CREATE POLICY "Public users can view criska_leadership" ON public.criska_leadership FOR SELECT USING (true);
-CREATE POLICY "Public users can view criska_contact" ON public.criska_contact FOR SELECT USING (true);
+-- criska_admin_settings + all writes: no anon/authenticated policies ->
+-- only the service_role key (used server-side) can touch them.
 
--- Candidate submission policies
-CREATE POLICY "Anyone can submit a job application" ON public.applications FOR INSERT WITH CHECK (true);
-CREATE POLICY "Anyone can submit criska_applications" ON public.criska_applications FOR INSERT WITH CHECK (true);
+-- ---------- SEED: jobs ----------
+insert into criska_jobs (title, department, type, location, description, requirements, screening_questions, sort)
+select * from (values
+  ('AI / Machine Learning Engineer','Artificial Intelligence','Full-time','Hyderabad / Remote','Design and deploy production-grade Generative AI, LLM pipelines, and conversational AI agents for enterprise clients across finance and healthcare.',
+   '["Python, PyTorch/TensorFlow & LangChain/LlamaIndex","LLM fine-tuning, RAG architecture & Vector DBs","3+ years building AI/ML applications"]'::jsonb,
+   '[{"id":"q-exp","question":"Years of professional experience with AI/ML & LLMs?","type":"number","required":true},{"id":"q-notice","question":"What is your notice period / availability?","type":"select","options":["Immediate","15 Days","30 Days","60+ Days"],"required":true},{"id":"q-project","question":"Briefly describe an AI or LLM application you brought to production.","type":"text","required":true}]'::jsonb, 1),
+  ('Cloud & DevOps Engineer','Cloud Infrastructure','Full-time','Hyderabad / Remote','Manage multi-cloud infrastructure (AWS, Azure, GCP), automate CI/CD pipelines with GitHub Actions, and enforce Terraform Infrastructure-as-Code.',
+   '["AWS/Azure deep hands-on expertise","Docker, Kubernetes & Terraform IaC","CI/CD automation & monitoring"]'::jsonb,
+   '[{"id":"q-exp","question":"Years of experience with Kubernetes and Terraform?","type":"number","required":true},{"id":"q-notice","question":"Notice period / availability?","type":"select","options":["Immediate","15 Days","30 Days","60+ Days"],"required":true}]'::jsonb, 2),
+  ('Cybersecurity Analyst','Cybersecurity','Full-time','Hyderabad','Perform vulnerability management, penetration testing, SOC monitoring, and security compliance aligned to ISO 27001, SOC 2, and GDPR.',
+   '["SIEM tools, Wireshark, Burp Suite","ISO 27001, SOC 2, HIPAA knowledge","Incident response experience"]'::jsonb,
+   '[{"id":"q-cert","question":"Do you hold CEH, CISSP, or equivalent certifications?","type":"select","options":["Yes","In Progress","No"],"required":true},{"id":"q-notice","question":"Notice period / availability?","type":"select","options":["Immediate","15 Days","30 Days","60+ Days"],"required":true}]'::jsonb, 3),
+  ('Full-Stack Software Engineer','Software Engineering','Full-time','Hyderabad / Remote','Develop resilient web applications using Next.js, React 19, TypeScript, Node.js, and PostgreSQL with sleek UI/UX aesthetics.',
+   '["Next.js, React 19, TypeScript & Tailwind","Node.js backend & REST APIs","PostgreSQL / Supabase"]'::jsonb,
+   '[{"id":"q-stack","question":"Rate your expertise with Next.js and TypeScript.","type":"select","options":["Expert (4+ yrs)","Intermediate (2-4 yrs)","Beginner (<2 yrs)"],"required":true},{"id":"q-notice","question":"Notice period / availability?","type":"select","options":["Immediate","15 Days","30 Days","60+ Days"],"required":true}]'::jsonb, 4),
+  ('Data Engineer / BI Developer','Data Analytics','Full-time','Hyderabad / Remote','Build data pipelines, warehouses, and BI dashboards on Power BI, Tableau, Snowflake, and Databricks for data-driven decisions.',
+   '["Data engineering & warehousing","Power BI / Tableau","SQL & big data"]'::jsonb,
+   '[{"id":"q-exp","question":"Years of experience in data engineering / BI?","type":"number","required":true},{"id":"q-notice","question":"Notice period / availability?","type":"select","options":["Immediate","15 Days","30 Days","60+ Days"],"required":true}]'::jsonb, 5),
+  ('IT Recruiter / Talent Partner','Talent','Full-time','Hyderabad','Own end-to-end technical recruitment — sourcing, screening, and building strong candidate pipelines across engineering and consulting.',
+   '["Technical recruitment experience","Sourcing & screening","ATS familiarity"]'::jsonb,
+   '[{"id":"q-exp","question":"Years of IT recruitment experience?","type":"number","required":true},{"id":"q-notice","question":"Notice period / availability?","type":"select","options":["Immediate","15 Days","30 Days","60+ Days"],"required":true}]'::jsonb, 6)
+) as v
+where not exists (select 1 from criska_jobs);
 
--- Admin policies (Full Access via Service Role or Authenticated Admin)
-CREATE POLICY "Admins have full access to job_postings" ON public.job_postings FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Admins have full access to applications" ON public.applications FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Admins have full access to criska_jobs" ON public.criska_jobs FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Admins have full access to criska_events" ON public.criska_events FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Admins have full access to criska_leadership" ON public.criska_leadership FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Admins have full access to criska_contact" ON public.criska_contact FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Admins have full access to criska_applications" ON public.criska_applications FOR ALL USING (true) WITH CHECK (true);
+-- ---------- SEED: events ----------
+insert into criska_events (title, tag, date_label, location, overview, sort)
+select * from (values
+  ('Criska Tech Talk: Generative AI in the Enterprise','Tech Talk','March 2026','Hyderabad Office','An internal knowledge-sharing session on practical Generative AI use cases, LLM integration patterns, and responsible AI governance.',1),
+  ('Cybersecurity Awareness Week','Workshop','February 2026','Hyderabad Office','A week of hands-on workshops on secure coding, phishing awareness, and incident response.',2),
+  ('Cloud & DevOps Hackathon','Hackathon','January 2026','Hyderabad Office','Cross-functional teams built cloud-native prototypes in 24 hours, competing on automation and delivery speed.',3),
+  ('Annual Team Offsite & Innovation Day','Culture','December 2025','Hyderabad','Our yearly offsite for strategy, recognition, and an innovation showcase.',4),
+  ('Campus Connect & Recruitment Drive','Hiring','November 2025','Hyderabad','Engaging emerging talent through campus sessions and a recruitment drive.',5),
+  ('Festival Celebrations at the Office','Culture','October 2025','Hyderabad Office','Celebrating together — the people-focused culture that makes Criska a great place to work.',6)
+) as v
+where not exists (select 1 from criska_events);
 
--- 7. STORAGE BUCKET FOR RESUMES
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('resumes', 'resumes', true)
-ON CONFLICT (id) DO NOTHING;
+-- ---------- SEED: leadership ----------
+insert into criska_leadership (name, role, bio, linkedin, sort)
+select * from (values
+  ('','Founder & Managing Director','Sets Criska''s vision, partnerships, and standards of trust and quality.','#',1),
+  ('','Chief Technology Officer','Leads solution architecture, engineering, and delivery excellence.','#',2),
+  ('','Head of Security & Compliance','Drives our cybersecurity-first approach, ISO standards, and CMMI journey.','#',3),
+  ('','Head of People & Talent','Leads staffing, recruitment, and Criska''s people-focused culture.','#',4)
+) as v
+where not exists (select 1 from criska_leadership);
 
-CREATE POLICY "Candidates can upload resumes" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'resumes');
-CREATE POLICY "Public / Admins can view resumes" ON storage.objects FOR SELECT USING (bucket_id = 'resumes');
-
--- 8. SEED INITIAL DATA FOR QUICK START
-INSERT INTO public.job_postings (title, department, type, location, description, requirements, status)
-VALUES
-  ('Senior AI & ML Solutions Architect', 'Artificial Intelligence', 'Full-time', 'Hyderabad / Remote', 'Lead LLM, RAG, and agentic AI pipeline implementations for enterprise clients.', ARRAY['8+ years experience', 'Python, PyTorch, LangChain', 'Cloud deployment'], 'published'),
-  ('Lead Cyber Defense Specialist', 'Cybersecurity', 'Full-time', 'Hyderabad / On-site', 'Drive SOC, zero-trust architecture, and pentesting for financial services.', ARRAY['6+ years experience', 'CISSP / CEH preferred', 'SIEM & EDR mastery'], 'published'),
-  ('Principal Cloud Infrastructure Architect', 'Cloud & DevOps', 'Full-time', 'Hyderabad / Remote', 'Design multi-cloud architecture on AWS, Azure, and GCP with Terraform.', ARRAY['7+ years in Cloud Infrastructure', 'Kubernetes & Terraform', 'CI/CD automation'], 'published')
-ON CONFLICT DO NOTHING;
-
-INSERT INTO public.criska_jobs (title, department, type, location, description, apply_url, is_open, sort)
-VALUES
-  ('Senior AI & ML Solutions Architect', 'Artificial Intelligence', 'Full-time', 'Hyderabad / Remote', 'Lead LLM, RAG, and agentic AI pipeline implementations.', '', true, 1),
-  ('Lead Cyber Defense Specialist', 'Cybersecurity', 'Full-time', 'Hyderabad / On-site', 'Drive SOC, zero-trust architecture, and pentesting.', '', true, 2),
-  ('Principal Cloud Infrastructure Architect', 'Cloud & DevOps', 'Full-time', 'Hyderabad / Remote', 'Design multi-cloud architecture on AWS, Azure, and GCP.', '', true, 3)
-ON CONFLICT DO NOTHING;
-
-INSERT INTO public.criska_contact (id, company, office_label, address, phone, emails, website)
-VALUES (
-  1,
-  'Criska Business Consulting Pvt. Ltd.',
-  'Corporate Office',
-  ARRAY['Spacion Business Towers, 4th Floor', 'Next to Westin Hotel, Mindspace IT Park', 'Madhapur, Hyderabad, Telangana 500081, India'],
-  '+91 (040) 6789 1234',
-  ARRAY['contact@criskasecurity.com', 'hr@criskasecurity.com'],
-  'https://criska.in'
-) ON CONFLICT (id) DO NOTHING;
+-- ---------- SEED: contact ----------
+insert into criska_contact (id, company, office_label, address, phone, emails, website) values
+(1,'Criska Business Consulting Pvt. Ltd.','Corporate Office',
+ '["H No 1-98/5/2A, Spacion Business Towers","Madhapur, Shaikpet","Hyderabad, Rangareddy","Telangana — 500081"]'::jsonb,
+ '+91 8121485444',
+ '["info@criska.in","hr@criskasecurity.com"]'::jsonb,
+ 'www.criska.in')
+on conflict (id) do nothing;

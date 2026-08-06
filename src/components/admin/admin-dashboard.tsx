@@ -215,7 +215,22 @@ export function AdminDashboard() {
   };
 
   const handleSaveJob = async (job: JobPosting) => {
-    await saveJobPosting(job);
+    const newJob: JobPosting = {
+      ...job,
+      id: job.id || `job-custom-${Date.now()}`,
+      createdAt: job.createdAt || new Date().toISOString(),
+      applicationsCount: job.applicationsCount || 0,
+    };
+    setJobs((prev) => {
+      const idx = prev.findIndex((j) => j.id === newJob.id);
+      if (idx >= 0) {
+        const copy = [...prev];
+        copy[idx] = newJob;
+        return copy;
+      }
+      return [newJob, ...prev];
+    });
+    await saveJobPosting(newJob);
     await loadData();
   };
 
