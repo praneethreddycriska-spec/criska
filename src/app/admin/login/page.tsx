@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CKMark } from "@/components/logo";
+import { PasswordInput } from "@/components/password-input";
 
 function AdminLoginForm() {
   const router = useRouter();
@@ -40,13 +41,10 @@ function AdminLoginForm() {
       <p className="mt-1 text-[14px] text-muted">Enter the admin password to manage site content.</p>
 
       <label className="mt-6 block text-[12.5px] uppercase tracking-[0.12em] text-faint">Password</label>
-      <input
-        type="password"
-        value={password}
-        autoFocus
-        onChange={(e) => setPassword(e.target.value)}
-        className="mt-2 w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:border-foreground"
-      />
+      <div className="mt-2">
+        <PasswordInput value={password} onChange={setPassword} autoFocus
+          className="w-full rounded-xl border border-border bg-paper px-4 py-3 pr-11 text-[15px] text-foreground outline-none focus:border-foreground" />
+      </div>
       {err && <p className="mt-3 text-[13.5px]" style={{ color: "#c0564f" }}>{err}</p>}
       <button type="submit" disabled={loading} className="btn-pill btn-primary mt-6 w-full disabled:opacity-50">
         {loading ? "Signing in…" : "Sign in"}

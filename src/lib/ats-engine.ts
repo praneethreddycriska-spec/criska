@@ -1,17 +1,69 @@
 import { AtsAnalysis, JobPosting } from "@/types/ats";
 
-// Common stop words to exclude during keyword extraction
+/**
+ * ============================================================
+ * CRISKA ATS ENGINE — transparent, deterministic candidate scoring.
+ *
+ * Overall score (0–100) = the sum of four components:
+ *   • Skills match .......... up to 60  (how many of the JOB's required
+ *                                        skills the candidate's technical
+ *                                        skills / answers actually cover)
+ *   • Experience ............ up to 25  (years of relevant experience)
+ *   • Screening & notice .... up to 10  (answered required Qs + availability)
+ *   • Profile signals ....... up to  5  (LinkedIn / portfolio present)
+ *
+ * Recommendation tiers:
+ *   ≥ 80  High Priority Shortlist
+ *   ≥ 65  Strong Match
+ *   ≥ 45  Potential Match
+ *   <45   Does Not Meet Requirements
+ * ============================================================
+ */
+
 const STOP_WORDS = new Set([
-  "with", "from", "that", "this", "have", "more", "than", "years", "year", "and", "or",
-  "for", "the", "in", "of", "to", "a", "an", "is", "are", "be", "must", "preferred",
-  "experience", "deep", "hands", "on", "building", "design", "manage", "enforce"
+  "with", "from", "that", "this", "have", "more", "than", "years", "year", "and",
+  "or", "for", "the", "in", "of", "to", "a", "an", "is", "are", "be", "must",
+  "preferred", "experience", "deep", "hands", "on", "building", "design", "manage",
+  "enforce", "using", "strong", "good", "plus", "etc", "knowledge", "understanding",
+  "ability", "work", "team", "role", "you", "your", "our", "we", "will",
 ]);
 
-/**
- * Automated ATS (Applicant Tracking System) Engine
- * Accurately evaluates candidate application profiles against job requirements,
- * technical skill tags, experience levels, and screening answers.
- */
+/** Split text into a set of meaningful, comparable tokens. */
+function tokenSet(text: string): Set<string> {
+  return new Set(
+    text
+      .toLowerCase()
+      .replace(/[^a-z0-9+#.\s]/g, " ")
+      .split(/\s+/)
+      .map((w) => w.replace(/^\.+|\.+$/g, ""))
+      .filter((w) => w.length >= 2 && !STOP_WORDS.has(w)),
+  );
+}
+
+/** Significant keywords from a single requirement phrase. */
+function keywords(req: string): string[] {
+  return [...tokenSet(req)];
+}
+
+/** Best-effort parse of years of experience from an explicit field or numeric answers. */
+function parseYears(explicit: string | undefined, answers: Record<string, string>): number | null {
+  const tryNum = (s: string) => {
+    const m = String(s).match(/(\d+(?:\.\d+)?)/);
+    if (!m) return null;
+    const n = parseFloat(m[1]);
+    return n >= 0 && n <= 50 ? n : null;
+  };
+  if (explicit) {
+    const n = tryNum(explicit);
+    if (n !== null) return n;
+  }
+  for (const [, v] of Object.entries(answers)) {
+    const n = tryNum(v);
+    if (n !== null) return n;
+  }
+  return null;
+}
+
 export function evaluateApplication(
   job: JobPosting,
   candidate: {
@@ -23,146 +75,118 @@ export function evaluateApplication(
     currentCompany?: string;
     experienceYears?: string;
     projectSummary?: string;
-  }
+  },
 ): AtsAnalysis {
-  const requirements = job.requirements || [];
+  const requirements = (job.requirements || []).filter(Boolean);
   const answers = candidate.screeningAnswers || {};
+  const skills = (candidate.technicalSkills || []).map((s) => s.trim()).filter(Boolean);
 
-  // Normalize candidate text profile
-  const rawSkills = Array.isArray(candidate.technicalSkills)
-    ? candidate.technicalSkills.join(" ")
-    : String(candidate.technicalSkills || "");
-
-  const candidateText = [
-    candidate.fullName,
-    rawSkills,
-    candidate.linkedinUrl || "",
-    candidate.portfolioUrl || "",
-    candidate.currentCompany || "",
-    candidate.experienceYears || "",
+  // Candidate text corpus (skills + answers + project + company) as a token set.
+  const candidateCorpus = [
+    skills.join(", "),
     candidate.projectSummary || "",
+    candidate.currentCompany || "",
     ...Object.values(answers),
   ]
     .join(" ")
     .toLowerCase();
+  const candidateTokens = tokenSet(candidateCorpus);
 
-  // Tokenize candidate text for fast lookup
-  const candidateWords = new Set(
-    candidateText
-      .replace(/[^a-z0-9+#.\s]/g, " ")
-      .split(/\s+/)
-      .filter(Boolean)
-  );
-
-  // 1. Skill & Keyword Requirement Matching (Max 55 Points)
-  const skillsMatched: string[] = [];
-  const skillsMissing: string[] = [];
-
-  requirements.forEach((req) => {
-    // Tokenize requirement string into meaningful tech keywords
-    const keywords = req
-      .toLowerCase()
-      .replace(/[^a-z0-9+#.\s]/g, " ")
-      .split(/\s+/)
-      .filter((w) => w.length >= 2 && !STOP_WORDS.has(w));
-
-    if (keywords.length === 0) {
-      skillsMatched.push(req);
-      return;
-    }
-
-    // Check if candidate profile matches keywords in requirement
-    const isMatched = keywords.some((kw) => {
-      if (candidateWords.has(kw)) return true;
-      if (candidateText.includes(kw)) return true;
-      return false;
-    });
-
-    if (isMatched) {
-      skillsMatched.push(req);
-    } else {
-      skillsMissing.push(req);
-    }
-  });
-
-  const skillMatchRatio = requirements.length > 0 ? skillsMatched.length / requirements.length : 0.8;
-  const skillScore = Math.round(skillMatchRatio * 55);
-
-  // 2. Screening Questions & Experience Evaluation (Max 30 Points)
-  let screeningScore = 20; // Default baseline out of 30
   const strengths: string[] = [];
   const redFlags: string[] = [];
 
-  job.screeningQuestions.forEach((q) => {
-    const answer = (answers[q.id] || answers[q.question] || "").toString().trim();
-    if (!answer) {
-      if (q.required) {
-        screeningScore -= 6;
-        redFlags.push(`Missing response for required question: "${q.question}"`);
-      }
+  // ---------- 1. SKILLS MATCH (0–60) ----------
+  const skillsMatched: string[] = [];
+  const skillsMissing: string[] = [];
+  let evaluable = 0;
+
+  requirements.forEach((req) => {
+    const kws = keywords(req);
+    if (kws.length === 0) {
+      skillsMatched.push(req); // no keywords to test → don't penalise
       return;
     }
-
-    // Parse numeric experience answers
-    const num = parseFloat(answer.replace(/[^\d.]/g, ""));
-    if (!isNaN(num)) {
-      if (num >= 4) {
-        screeningScore += 5;
-        strengths.push(`Senior experience level indicated (${num}+ years)`);
-      } else if (num >= 2) {
-        screeningScore += 3;
-        strengths.push(`${num} years of relevant experience`);
-      } else if (num < 1) {
-        screeningScore -= 4;
-        redFlags.push(`Junior experience reported (${num} years)`);
-      }
-    }
-
-    const lowerAns = answer.toLowerCase();
-    if (lowerAns.includes("immediate") || lowerAns.includes("15 days") || lowerAns.includes("ready")) {
-      screeningScore += 2;
-      strengths.push("Quick availability / Immediate notice period");
-    }
+    evaluable += 1;
+    const hit = kws.some((kw) => candidateTokens.has(kw) || candidateCorpus.includes(kw));
+    if (hit) skillsMatched.push(req);
+    else skillsMissing.push(req);
   });
 
-  screeningScore = Math.max(0, Math.min(30, screeningScore));
-
-  // 3. Profile & Portfolio Bonus (Max 15 Points)
-  let bonusScore = 0;
-  if (candidate.technicalSkills && candidate.technicalSkills.length > 0) bonusScore += 7;
-  if (candidate.linkedinUrl && candidate.linkedinUrl.includes("linkedin")) bonusScore += 4;
-  if (candidate.portfolioUrl && candidate.portfolioUrl.length > 5) bonusScore += 4;
-
-  // Calculate Overall ATS Score (0 - 100)
-  const overallScore = Math.min(100, Math.max(20, Math.round(skillScore + screeningScore + bonusScore)));
-
-  // Generate Recommendation Tier
-  let recommendation: AtsAnalysis["recommendation"];
-  if (overallScore >= 85) {
-    recommendation = "High Priority Shortlist";
-  } else if (overallScore >= 70) {
-    recommendation = "Strong Match";
-  } else if (overallScore >= 50) {
-    recommendation = "Potential Match";
+  let coverage: number;
+  if (evaluable > 0) {
+    const matchedEvaluable = evaluable - skillsMissing.length;
+    coverage = matchedEvaluable / evaluable;
   } else {
-    recommendation = "Does Not Meet Requirements";
+    // No usable requirements on the job — grade on how substantial the skill list is.
+    coverage = Math.min(1, skills.length / 5);
+  }
+  const skillScore = Math.round(coverage * 60);
+
+  if (skillsMatched.length) strengths.push(`Matches ${skillsMatched.length} of ${requirements.length || 1} required skills`);
+  if (evaluable > 0 && skillsMissing.length >= Math.ceil(evaluable / 2)) redFlags.push(`Missing ${skillsMissing.length} key requirement(s)`);
+  if (skills.length === 0) redFlags.push("No technical skills provided");
+
+  // ---------- 2. EXPERIENCE (0–25) ----------
+  const years = parseYears(candidate.experienceYears, answers);
+  let expScore: number;
+  if (years === null) {
+    expScore = 10; // unknown → neutral
+  } else {
+    expScore = Math.round(Math.min(1, years / 6) * 25);
+    if (years >= 5) strengths.push(`${years}+ years of experience`);
+    else if (years < 1) redFlags.push(`Very limited experience (${years} yr)`);
   }
 
-  if (strengths.length === 0) {
-    strengths.push("Candidate profile submitted with verified contact details");
-  }
-  if (skillsMatched.length > 0) {
-    strengths.push(`Matches ${skillsMatched.length} of ${requirements.length || 1} target role requirements`);
-  }
+  // ---------- 3. SCREENING & AVAILABILITY (0–10) ----------
+  const requiredQs = (job.screeningQuestions || []).filter((q) => q.required);
+  let answered = 0;
+  requiredQs.forEach((q) => {
+    const a = (answers[q.id] || answers[q.question] || "").toString().trim();
+    if (a) answered += 1;
+    else redFlags.push(`No answer for: "${q.question}"`);
+  });
+  const answeredRatio = requiredQs.length ? answered / requiredQs.length : 1;
+  let screeningScore = answeredRatio * 6;
 
-  const matchSummary = `${candidate.fullName} scored ${overallScore}% ATS match. Matches ${skillsMatched.length}/${requirements.length || 1} key skill requirements for ${job.title}. Recommended for ${recommendation.toLowerCase()}.`;
+  const noticeText = Object.values(answers).join(" ").toLowerCase();
+  if (/immediate|ready|15 ?day/.test(noticeText)) {
+    screeningScore += 4;
+    strengths.push("Immediate / short notice period");
+  } else if (/30 ?day/.test(noticeText)) {
+    screeningScore += 2;
+  }
+  screeningScore = Math.max(0, Math.min(10, Math.round(screeningScore)));
+
+  // ---------- 4. PROFILE SIGNALS (0–5) ----------
+  let profileScore = 0;
+  if (candidate.linkedinUrl && candidate.linkedinUrl.toLowerCase().includes("linkedin")) {
+    profileScore += 3;
+    strengths.push("LinkedIn profile provided");
+  }
+  if (candidate.portfolioUrl && candidate.portfolioUrl.length > 5) profileScore += 2;
+
+  // ---------- TOTAL ----------
+  const overallScore = Math.max(0, Math.min(100, skillScore + expScore + screeningScore + profileScore));
+
+  let recommendation: AtsAnalysis["recommendation"];
+  if (overallScore >= 80) recommendation = "High Priority Shortlist";
+  else if (overallScore >= 65) recommendation = "Strong Match";
+  else if (overallScore >= 45) recommendation = "Potential Match";
+  else recommendation = "Does Not Meet Requirements";
+
+  if (strengths.length === 0) strengths.push("Application submitted with valid contact details");
+
+  const matchSummary =
+    `${candidate.fullName} scored ${overallScore}% — skills ${skillScore}/60, ` +
+    `experience ${expScore}/25, screening ${screeningScore}/10, profile ${profileScore}/5. ` +
+    `Matched ${skillsMatched.length}/${requirements.length || 1} required skills for ${job.title}.`;
 
   const experienceEvaluation =
     overallScore >= 80
-      ? "Strong technical alignment with role requirements and tech stack."
-      : overallScore >= 60
-      ? "Demonstrates core technical background; suitable for interview evaluation."
-      : "Below primary technical threshold; additional manual resume review recommended.";
+      ? "Strong alignment with the role's required skills and experience."
+      : overallScore >= 55
+      ? "Meets core requirements; recommended for interview screening."
+      : "Below the primary threshold for this role's requirements.";
 
   return {
     overallScore,

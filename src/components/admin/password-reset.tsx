@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PasswordInput } from "@/components/password-input";
 
 export function AdminPasswordReset() {
   const [open, setOpen] = useState(false);
@@ -56,16 +57,13 @@ export function AdminPasswordReset() {
             <p className="mt-1 text-[13px] text-muted">Saved securely to the database — used the next time anyone signs in.</p>
 
             <label className="mt-5 block text-[12px] uppercase tracking-[0.12em] text-faint">Current password</label>
-            <input type="password" value={cur} onChange={(e) => setCur(e.target.value)} required
-              className="mt-2 w-full rounded-xl border border-border bg-paper px-4 py-2.5 text-[15px] text-foreground outline-none focus:border-foreground" />
+            <div className="mt-2"><PasswordInput value={cur} onChange={setCur} required /></div>
 
             <label className="mt-4 block text-[12px] uppercase tracking-[0.12em] text-faint">New password (min 8)</label>
-            <input type="password" value={next} onChange={(e) => setNext(e.target.value)} required
-              className="mt-2 w-full rounded-xl border border-border bg-paper px-4 py-2.5 text-[15px] text-foreground outline-none focus:border-foreground" />
+            <div className="mt-2"><PasswordInput value={next} onChange={setNext} required /></div>
 
             <label className="mt-4 block text-[12px] uppercase tracking-[0.12em] text-faint">Confirm new password</label>
-            <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required
-              className="mt-2 w-full rounded-xl border border-border bg-paper px-4 py-2.5 text-[15px] text-foreground outline-none focus:border-foreground" />
+            <div className="mt-2"><PasswordInput value={confirm} onChange={setConfirm} required /></div>
 
             {msg && (
               <p className="mt-3 text-[13.5px]" style={{ color: msg.ok ? "#3e9c7c" : "#c0564f" }}>{msg.text}</p>

@@ -128,26 +128,60 @@ export async function fetchJobs(): Promise<JobPosting[]> {
   return stored;
 }
 
+/**
+ * Recompute each application's ATS score LIVE against the current job
+ * requirements, so the number always reflects the real candidate↔job fit
+ * (not a stale value stored at apply-time).
+ */
+async function enrichWithLiveAts(rows: any[]): Promise<JobApplication[]> {
+  const jobs = await fetchJobs().catch(() => [] as JobPosting[]);
+  const jobMap = new Map(jobs.map((j) => [j.id, j]));
+  return rows.map((r) => {
+    const app = appFromRow(r);
+    const job = jobMap.get(app.jobId);
+    if (job) {
+      const analysis = evaluateApplication(job, {
+        fullName: app.fullName,
+        technicalSkills: app.technicalSkills,
+        screeningAnswers: app.screeningAnswers,
+        linkedinUrl: app.linkedinUrl,
+        portfolioUrl: app.portfolioUrl,
+        currentCompany: r.current_company,
+        experienceYears: r.experience_years,
+        projectSummary: r.project_summary,
+      });
+      app.atsScore = analysis.overallScore;
+      app.atsAnalysis = analysis;
+    }
+    return app;
+  });
+}
+
 /** Fetch all candidate applications. Tries Supabase first; falls back to local store. */
 export async function fetchApplications(): Promise<JobApplication[]> {
   const stored = getStoredApplications();
+  let rows: any[] | null = null;
+
   if (typeof window === "undefined") {
     const sb = getSupabaseAdmin();
-    if (!sb) return stored;
-    try {
-      const { data, error } = await sb.from("criska_applications").select("*").order("created_at", { ascending: false });
-      if (error || !data || data.length === 0) return stored;
-      return data.map(appFromRow);
-    } catch {
-      return stored;
+    if (sb) {
+      try {
+        const { data, error } = await sb
+          .from("criska_applications")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (!error && data) rows = data;
+      } catch {
+        /* fall through */
+      }
     }
+  } else {
+    const { data } = await adminApi("applications");
+    if (data && Array.isArray(data)) rows = data;
   }
 
-  const { data } = await adminApi("applications");
-  if (data && Array.isArray(data) && data.length > 0) {
-    return data.map(appFromRow);
-  }
-  return stored;
+  if (!rows || rows.length === 0) return stored;
+  return enrichWithLiveAts(rows);
 }
 
 /** Create or update a job posting → saves locally and syncs to Supabase. */

@@ -21,8 +21,8 @@
   --border-strong: #d7d7d7;
   --ink: #171717; /* dark buttons / dark section */
   --on-ink: #ffffff; /* text on dark */
-  --accent: #8b93c4; /* soft periwinkle — used sparingly */
-  --accent-soft: #edeef7;
+  --accent: #6d74e6; /* vivid periwinkle/indigo — brand accent */
+  --accent-soft: #eceefe;
 
   /* Navy-slate palette for DARK sections (constant in both themes) */
   --navy-bg: #0a1a24; /* between #06141B and #11212D */
@@ -51,8 +51,8 @@
   --border-strong: rgba(255, 255, 255, 0.16);
   --ink: #f2efe8; /* buttons invert: light pill on dark */
   --on-ink: #171717;
-  --accent: #a6afdd;
-  --accent-soft: rgba(139, 147, 196, 0.16);
+  --accent: #9096f2;
+  --accent-soft: rgba(109, 116, 230, 0.2);
 }
 
 @theme inline {

@@ -9,6 +9,8 @@ const TABLES: Record<string, string> = {
   leadership: "criska_leadership",
   contact: "criska_contact",
   applications: "criska_applications",
+  consultations: "criska_consultations",
+  inquiries: "criska_consultations",
   job_postings: "job_postings",
 };
 

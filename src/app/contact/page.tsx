@@ -106,43 +106,47 @@ export default async function ContactPage() {
               </div>
             </div>
 
-            {/* Location panel */}
+            {/* Location panel with Dark Navy Styled Map */}
             <div className="mt-4 overflow-hidden rounded-[var(--radius)] border border-border">
               <div
-                className="relative h-[300px] md:h-[400px]"
-                style={{ background: "var(--navy-bg)", colorScheme: "dark" }}
+                className="relative h-[320px] md:h-[420px] overflow-hidden"
+                style={{ background: "#0a151d", colorScheme: "dark" }}
               >
-                {/* map grid */}
-                <div
-                  className="absolute inset-0"
+                {/* Live Google Map with Dark Navy Styling */}
+                <iframe
+                  title="Criska Office Location Map"
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(MAP_QUERY)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                  className="absolute inset-0 h-full w-full border-0 opacity-80 transition-opacity duration-300 hover:opacity-100"
                   style={{
-                    backgroundImage:
-                      "linear-gradient(rgba(245,242,236,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(245,242,236,0.05) 1px, transparent 1px)",
-                    backgroundSize: "46px 46px",
+                    filter: "invert(92%) hue-rotate(195deg) contrast(115%) saturate(75%) brightness(85%)",
+                    mixBlendMode: "luminosity",
+                  }}
+                  loading="lazy"
+                />
+
+                {/* Dark Navy Gradient Vignette Overlay */}
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  style={{
+                    background: "radial-gradient(ellipse at center, transparent 40%, rgba(10,21,29,0.75) 100%), linear-gradient(to bottom, rgba(10,21,29,0.3), transparent 30%, rgba(10,21,29,0.6))",
                   }}
                 />
-                {/* diagonal 'roads' */}
-                <div className="absolute -inset-x-10 top-1/3 h-px rotate-[8deg]" style={{ background: "rgba(245,242,236,0.09)" }} />
-                <div className="absolute -inset-x-10 top-2/3 h-px -rotate-[6deg]" style={{ background: "rgba(245,242,236,0.07)" }} />
-                <div className="absolute inset-y-0 left-[38%] w-px" style={{ background: "rgba(245,242,236,0.07)" }} />
-                {/* glow */}
-                <div className="absolute inset-0" style={{ background: "radial-gradient(40% 45% at 50% 50%, rgba(169,192,205,0.18), transparent 70%)" }} />
 
-                {/* pin */}
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                {/* Pin Overlay */}
+                <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
                   <div className="relative grid place-items-center">
-                    <span className="absolute h-16 w-16 rounded-full animate-ping" style={{ background: "rgba(169,192,205,0.25)" }} />
-                    <span className="absolute h-24 w-24 rounded-full" style={{ border: "1px solid rgba(169,192,205,0.2)" }} />
-                    <span className="relative grid h-11 w-11 place-items-center rounded-full shadow-[0_10px_30px_-6px_rgba(0,0,0,0.7)]" style={{ background: "var(--navy-accent)", color: "#0a151d" }}>
+                    <span className="absolute h-16 w-16 rounded-full animate-ping bg-accent/30" />
+                    <span className="absolute h-24 w-24 rounded-full border border-accent/40" />
+                    <span className="relative grid h-12 w-12 place-items-center rounded-full bg-accent text-[#0a151d] font-bold shadow-[0_10px_30px_-6px_rgba(0,0,0,0.8)]">
                       <PinIcon />
                     </span>
                   </div>
                 </div>
 
-                {/* floating address chip */}
-                <div className="absolute left-5 top-5 max-w-[75%] rounded-xl px-4 py-3 backdrop-blur-md" style={{ background: "rgba(22,40,53,0.72)", border: "1px solid var(--navy-border-strong)" }}>
-                  <div className="text-[11px] uppercase tracking-[0.14em]" style={{ color: "var(--navy-faint)" }}>Corporate Office</div>
-                  <div className="mt-0.5 text-[14px] font-medium" style={{ color: "var(--navy-text)" }}>Spacion Business Towers, Madhapur</div>
+                {/* Floating address chip */}
+                <div className="absolute left-5 top-5 max-w-[85%] rounded-xl px-4 py-3 backdrop-blur-md z-10 shadow-lg" style={{ background: "rgba(10,21,29,0.88)", border: "1px solid var(--navy-border-strong)" }}>
+                  <div className="text-[11px] uppercase tracking-[0.14em] font-semibold" style={{ color: "var(--navy-faint)" }}>Corporate Office · Madhapur</div>
+                  <div className="mt-0.5 text-[14px] font-medium text-white">Spacion Business Towers, Madhapur, Hyderabad</div>
                 </div>
               </div>
 

@@ -8,10 +8,32 @@ const services = site.services.items.map((s) => s.title);
 export function ContactForm() {
   const { contact } = site;
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    // Front-end only for now — wired to a backend in the admin/API phase.
+    setSending(true);
+    const fd = new FormData(e.currentTarget);
+    const payload = {
+      full_name: fd.get("name") || "",
+      company: fd.get("company") || "",
+      email: fd.get("email") || "",
+      phone: fd.get("phone") || "",
+      service: fd.get("service") || "",
+      requirements: fd.get("requirements") || "",
+      message: fd.get("message") || "",
+      source: "contact",
+    };
+    try {
+      await fetch("/api/inquiry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } catch {
+      /* non-fatal */
+    }
+    setSending(false);
     setSent(true);
   }
 
@@ -77,8 +99,8 @@ export function ContactForm() {
         </div>
       </div>
       <div className="mt-7 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-        <button type="submit" className="btn-pill btn-primary w-full sm:w-auto">
-          {contact.submitLabel}
+        <button type="submit" disabled={sending} className="btn-pill btn-primary w-full disabled:opacity-50 sm:w-auto">
+          {sending ? "Sending…" : contact.submitLabel}
         </button>
         <span className="text-[12.5px] text-faint">We respect your privacy. No spam, ever.</span>
       </div>

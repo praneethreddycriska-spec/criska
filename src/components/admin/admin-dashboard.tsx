@@ -17,6 +17,7 @@ import { InterviewScheduler } from "./interview-scheduler";
 import { EmailWorkflowModal } from "./email-workflow-modal";
 import { ShareLinkModal } from "./share-link-modal";
 import { ThemeToggle } from "../theme-toggle";
+import { PasswordInput } from "../password-input";
 
 export function AdminDashboard() {
   // Authentication state
@@ -251,13 +252,12 @@ export function AdminDashboard() {
               <label className="block text-[12px] uppercase tracking-[0.12em] text-faint mb-1.5 font-medium">
                 Admin Passcode
               </label>
-              <input
-                type="password"
-                required
+              <PasswordInput
                 value={passcode}
-                onChange={(e) => setPasscode(e.target.value)}
+                onChange={setPasscode}
                 placeholder="Enter passcode (Default: criska2026)"
-                className="w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:ring-2 focus:ring-accent/30"
+                required
+                className="w-full rounded-xl border border-border bg-paper px-4 py-3 pr-11 text-[15px] text-foreground outline-none focus:border-accent"
               />
               {passError && <p className="text-red-500 text-[13px] mt-1.5">{passError}</p>}
             </div>
@@ -330,6 +330,12 @@ export function AdminDashboard() {
             >
               Job Postings ({jobs.length})
             </button>
+            <a
+              href="/admin/content"
+              className="rounded-full px-4 py-1.5 text-[13.5px] font-medium text-muted hover:text-foreground transition flex items-center gap-1.5"
+            >
+              🖼️ Edit Site Photos & Content
+            </a>
           </div>
 
           <div className="flex items-center gap-3">

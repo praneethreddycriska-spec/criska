@@ -20,6 +20,12 @@ export default function AdminPage() {
         </div>
       )}
       <AdminDashboard />
+      <a
+        href="/admin/content"
+        className="fixed bottom-5 left-5 z-40 rounded-full border border-border bg-surface px-4 py-2.5 text-[13px] font-medium text-foreground shadow-[0_10px_30px_-12px_rgba(0,0,0,0.4)] hover:bg-panel"
+      >
+        🖼️ Manage Site Content
+      </a>
       <AdminPasswordReset />
     </>
   );

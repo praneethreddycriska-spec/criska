@@ -21,15 +21,13 @@ type TabDef = {
 
 const TABS: TabDef[] = [
   {
-    key: "jobs", table: "jobs", label: "Job Openings", titleKey: "title",
+    key: "leadership", table: "leadership", label: "Meet the Board", titleKey: "role",
     fields: [
-      { key: "title", label: "Job Title", type: "text" },
-      { key: "department", label: "Department / Category", type: "text" },
-      { key: "type", label: "Employment Type", type: "text", help: "e.g. Full-time" },
-      { key: "location", label: "Location", type: "text", help: "e.g. Hyderabad / Remote" },
-      { key: "description", label: "Description", type: "textarea" },
-      { key: "apply_url", label: "External Apply URL (optional)", type: "url", help: "Leave blank to use the built-in application form" },
-      { key: "is_open", label: "Open (visible on site)", type: "bool" },
+      { key: "name", label: "Name", type: "text", help: "Leave blank to show the role only" },
+      { key: "role", label: "Role / Title", type: "text" },
+      { key: "bio", label: "Short bio (text below the photo)", type: "textarea" },
+      { key: "image", label: "Photo", type: "image", help: "Upload to Cloudinary or paste an image URL" },
+      { key: "linkedin", label: "LinkedIn URL", type: "url" },
       { key: "sort", label: "Sort order", type: "number" },
     ],
   },
@@ -47,17 +45,6 @@ const TABS: TabDef[] = [
     ],
   },
   {
-    key: "leadership", table: "leadership", label: "Leadership (Board)", titleKey: "role",
-    fields: [
-      { key: "name", label: "Name", type: "text", help: "Leave blank to show the role only" },
-      { key: "role", label: "Role / Title", type: "text" },
-      { key: "bio", label: "Short bio", type: "textarea" },
-      { key: "image", label: "Photo", type: "image" },
-      { key: "linkedin", label: "LinkedIn URL", type: "url" },
-      { key: "sort", label: "Sort order", type: "number" },
-    ],
-  },
-  {
     key: "contact", table: "contact", label: "Contact Details", singleton: true,
     fields: [
       { key: "company", label: "Company", type: "text" },
@@ -69,13 +56,13 @@ const TABS: TabDef[] = [
     ],
   },
   {
-    key: "applications", table: "applications", label: "Applications", readonly: true, fields: [],
+    key: "inquiries", table: "inquiries", label: "Inquiries", readonly: true, fields: [],
   },
 ];
 
 export function AdminDashboard() {
   const router = useRouter();
-  const [tabKey, setTabKey] = useState("jobs");
+  const [tabKey, setTabKey] = useState("leadership");
   const tab = TABS.find((t) => t.key === tabKey)!;
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -138,8 +125,9 @@ export function AdminDashboard() {
       {/* Top bar */}
       <header className="sticky top-0 z-20 border-b border-border bg-paper/85 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-[1100px] items-center justify-between px-6">
-          <div className="font-display text-[20px]">Criska Admin</div>
+          <div className="font-display text-[20px]">Site Content</div>
           <div className="flex items-center gap-3">
+            <a href="/admin" className="text-[14px] text-muted hover:text-foreground">← ATS Portal</a>
             <a href="/" target="_blank" className="text-[14px] text-muted hover:text-foreground">View site ↗</a>
             <button onClick={logout} className="btn-pill btn-ghost !py-2 !px-4 text-[14px]">Log out</button>
           </div>
@@ -168,7 +156,7 @@ export function AdminDashboard() {
           {loading ? (
             <p className="text-[15px] text-muted">Loading…</p>
           ) : tab.readonly ? (
-            <ApplicationsTable rows={rows} />
+            <InquiriesTable rows={rows} />
           ) : tab.singleton ? (
             <RecordForm tab={tab} initial={editing || {}} onSave={save} singleton />
           ) : editing !== null ? (
@@ -270,36 +258,31 @@ function RecordForm({ tab, initial, onSave, singleton }: { tab: TabDef; initial:
   );
 }
 
-function ApplicationsTable({ rows }: { rows: any[] }) {
+function InquiriesTable({ rows }: { rows: any[] }) {
   return (
     <div>
-      <h2 className="font-display text-[24px]">Applications <span className="text-muted">({rows.length})</span></h2>
+      <h2 className="font-display text-[24px]">Inquiries <span className="text-muted">({rows.length})</span></h2>
+      <p className="mt-1 text-[13.5px] text-muted">Messages from the Contact / Schedule Consultation form.</p>
       {rows.length === 0 ? (
-        <p className="mt-4 text-[15px] text-muted">No applications yet.</p>
+        <p className="mt-4 text-[15px] text-muted">No inquiries yet.</p>
       ) : (
         <div className="mt-5 space-y-3">
           {rows.map((r) => (
             <div key={r.id} className="rounded-[var(--radius)] border border-border bg-surface p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="font-medium text-foreground">{r.full_name} <span className="text-muted">· {r.job_title || "General"}</span></div>
-                <div className="text-[12.5px] text-faint">{new Date(r.created_at).toLocaleDateString()}</div>
+                <div className="font-medium text-foreground">
+                  {r.full_name}{r.company ? <span className="text-muted"> · {r.company}</span> : null}
+                </div>
+                <div className="text-[12.5px] text-faint">{r.created_at ? new Date(r.created_at).toLocaleString() : ""}</div>
               </div>
               <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[13.5px] text-muted">
                 <a href={`mailto:${r.email}`} className="hover:text-foreground">{r.email}</a>
                 {r.phone && <span>{r.phone}</span>}
-                {r.current_company && <span>{r.current_company}</span>}
-                {r.experience_years && <span>{r.experience_years} yrs</span>}
-                {r.notice_period && <span>Notice: {r.notice_period}</span>}
-                {r.linkedin && <a href={r.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-foreground">LinkedIn ↗</a>}
+                {r.service && <span>Service: {r.service}</span>}
+                {r.source && <span className="rounded-full bg-panel px-2 py-0.5 text-[11.5px]">{r.source}</span>}
               </div>
-              {Array.isArray(r.technical_skills) && r.technical_skills.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {r.technical_skills.map((s: string, i: number) => (
-                    <span key={i} className="rounded-full bg-panel px-2.5 py-1 text-[12px] text-foreground">{s}</span>
-                  ))}
-                </div>
-              )}
-              {r.project_summary && <p className="mt-2 text-[13.5px] leading-relaxed text-muted">{r.project_summary}</p>}
+              {r.requirements && <p className="mt-2 text-[13.5px] leading-relaxed text-foreground/80"><span className="text-faint">Requirements: </span>{r.requirements}</p>}
+              {r.message && <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted">{r.message}</p>}
             </div>
           ))}
         </div>

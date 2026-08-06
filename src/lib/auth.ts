@@ -25,9 +25,15 @@ async function hmac(data: string): Promise<string> {
   return b64url(new Uint8Array(sig));
 }
 
-/** Keyed hash of an admin password (HMAC-SHA256 with the session secret). */
+/**
+ * Hash of an admin password — SHA-256 over a FIXED application salt + password.
+ * Deliberately NOT keyed by ADMIN_SESSION_SECRET so a DB-stored password works
+ * across environments (local & Vercel) regardless of their session secrets.
+ */
+const PW_SALT = "criska-admin-pw-v1";
 export async function hashPassword(password: string): Promise<string> {
-  return hmac(`pw:${password}`);
+  const digest = await crypto.subtle.digest("SHA-256", enc.encode(`${PW_SALT}:${password}`));
+  return b64url(new Uint8Array(digest));
 }
 
 /** Constant-time string comparison. */

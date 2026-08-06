@@ -60,7 +60,7 @@ create table if not exists criska_contact (
 
 create table if not exists criska_applications (
   id uuid primary key default gen_random_uuid(),
-  job_id uuid references criska_jobs(id) on delete set null,
+  job_id uuid,
   job_title text default '',
   full_name text not null,
   email text not null,
@@ -73,46 +73,60 @@ create table if not exists criska_applications (
   project_summary text default '',
   technical_skills jsonb not null default '[]'::jsonb,
   screening_answers jsonb not null default '{}'::jsonb,
-  ats_score int default 0,
-  ats_analysis jsonb default '{}'::jsonb,
-  admin_notes text default '',
+  ats_score int not null default 0,
+  ats_analysis jsonb not null default '{}'::jsonb,
   status text not null default 'new',
+  admin_notes text default '',
   created_at timestamptz not null default now()
 );
 
--- single-row admin settings (for the in-app password reset)
-create table if not exists criska_admin_settings (
-  id int primary key default 1,
-  password_hash text default '',
-  updated_at timestamptz not null default now(),
-  constraint criska_admin_settings_singleton check (id = 1)
+create table if not exists criska_consultations (
+  id uuid primary key default gen_random_uuid(),
+  full_name text not null,
+  email text not null,
+  phone text default '',
+  company text default '',
+  service_interest text default '',
+  preferred_date text default '',
+  message text default '',
+  status text default 'new',
+  admin_notes text default '',
+  created_at timestamptz not null default now()
 );
-insert into criska_admin_settings (id) values (1) on conflict (id) do nothing;
 
--- ---------- RLS ----------
+-- ---------- RLS & POLICIES ----------
 alter table criska_jobs enable row level security;
 alter table criska_events enable row level security;
 alter table criska_leadership enable row level security;
 alter table criska_contact enable row level security;
 alter table criska_applications enable row level security;
-alter table criska_admin_settings enable row level security;
+alter table criska_consultations enable row level security;
 
--- public read for content tables
-drop policy if exists "criska_jobs_read" on criska_jobs;
-create policy "criska_jobs_read" on criska_jobs for select to anon, authenticated using (true);
-drop policy if exists "criska_events_read" on criska_events;
-create policy "criska_events_read" on criska_events for select to anon, authenticated using (true);
-drop policy if exists "criska_leadership_read" on criska_leadership;
-create policy "criska_leadership_read" on criska_leadership for select to anon, authenticated using (true);
-drop policy if exists "criska_contact_read" on criska_contact;
-create policy "criska_contact_read" on criska_contact for select to anon, authenticated using (true);
+-- Public reads
+create policy "criska_jobs_public_read" on criska_jobs for select using (true);
+create policy "criska_events_public_read" on criska_events for select using (true);
+create policy "criska_leadership_public_read" on criska_leadership for select using (true);
+create policy "criska_contact_public_read" on criska_contact for select using (true);
 
--- anyone may submit an application (insert only; no read)
-drop policy if exists "criska_applications_insert" on criska_applications;
-create policy "criska_applications_insert" on criska_applications for insert to anon, authenticated with check (true);
+-- Public inserts
+create policy "criska_apps_public_insert" on criska_applications for insert with check (true);
+create policy "criska_consultations_public_insert" on criska_consultations for insert with check (true);
 
--- criska_admin_settings + all writes: no anon/authenticated policies ->
--- only the service_role key (used server-side) can touch them.
+-- Service-role full control
+create policy "criska_jobs_admin_all" on criska_jobs for all using (true) with check (true);
+create policy "criska_events_admin_all" on criska_events for all using (true) with check (true);
+create policy "criska_leadership_admin_all" on criska_leadership for all using (true) with check (true);
+create policy "criska_contact_admin_all" on criska_contact for all using (true) with check (true);
+create policy "criska_apps_admin_all" on criska_applications for all using (true) with check (true);
+create policy "criska_consultations_admin_all" on criska_consultations for all using (true) with check (true);
+
+-- ---------- RESUMES BUCKET ----------
+insert into storage.buckets (id, name, public)
+values ('resumes', 'resumes', true)
+on conflict (id) do nothing;
+
+create policy "resumes_insert" on storage.objects for insert with check (bucket_id = 'resumes');
+create policy "resumes_select" on storage.objects for select using (bucket_id = 'resumes');
 
 -- ---------- SEED: jobs ----------
 insert into criska_jobs (title, department, type, location, description, requirements, screening_questions, sort)
