@@ -1,5 +1,5 @@
 -- ============================================================
--- CRISKA ATS & ADMIN PORTAL — SUPABASE DATABASE SCHEMA
+-- CRISKA ATS & ADMIN PORTAL — COMPLETE SUPABASE SCHEMA & SEED
 -- ============================================================
 
 -- 1. ENUMS
@@ -22,7 +22,7 @@ EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
 
--- 2. JOB POSTINGS TABLE
+-- 2. ATS JOB POSTINGS TABLE
 CREATE TABLE IF NOT EXISTS public.job_postings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS public.job_postings (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 3. APPLICATIONS TABLE
+-- 3. ATS CANDIDATE APPLICATIONS TABLE
 CREATE TABLE IF NOT EXISTS public.applications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   job_id UUID REFERENCES public.job_postings(id) ON DELETE SET NULL,
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS public.applications (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 4. SITE CONTENT TABLES (CRISKA)
+-- 4. SITE CONTENT & CMS TABLES (CRISKA)
 CREATE TABLE IF NOT EXISTS public.criska_jobs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
@@ -107,11 +107,33 @@ CREATE TABLE IF NOT EXISTS public.criska_contact (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 5. INDEXES FOR FAST QUERYING, FILTERING & SORTING
+CREATE TABLE IF NOT EXISTS public.criska_applications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  job_id UUID,
+  job_title TEXT DEFAULT '',
+  full_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT DEFAULT '',
+  current_company TEXT DEFAULT '',
+  linkedin TEXT DEFAULT '',
+  portfolio_url TEXT DEFAULT '',
+  experience_years TEXT DEFAULT '',
+  notice_period TEXT DEFAULT '',
+  project_summary TEXT DEFAULT '',
+  technical_skills TEXT[] DEFAULT '{}',
+  screening_answers JSONB DEFAULT '{}'::jsonb,
+  ats_score INT DEFAULT 0,
+  ats_analysis JSONB DEFAULT '{}'::jsonb,
+  status TEXT DEFAULT 'new',
+  admin_notes TEXT DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 5. INDEXES FOR FAST QUERYING & SORTING
 CREATE INDEX IF NOT EXISTS idx_applications_job_id ON public.applications(job_id);
 CREATE INDEX IF NOT EXISTS idx_applications_ats_score ON public.applications(ats_score DESC);
 CREATE INDEX IF NOT EXISTS idx_applications_status ON public.applications(status);
-CREATE INDEX IF NOT EXISTS idx_applications_created_at ON public.applications(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_criska_apps_created_at ON public.criska_applications(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_job_postings_status ON public.job_postings(status);
 
 -- 6. ROW-LEVEL SECURITY (RLS) POLICIES
@@ -121,16 +143,18 @@ ALTER TABLE public.criska_jobs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.criska_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.criska_leadership ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.criska_contact ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.criska_applications ENABLE ROW LEVEL SECURITY;
 
--- Allow public users to read data
+-- Public read policies
 CREATE POLICY "Public users can view published job postings" ON public.job_postings FOR SELECT USING (true);
 CREATE POLICY "Public users can view criska_jobs" ON public.criska_jobs FOR SELECT USING (true);
 CREATE POLICY "Public users can view criska_events" ON public.criska_events FOR SELECT USING (true);
 CREATE POLICY "Public users can view criska_leadership" ON public.criska_leadership FOR SELECT USING (true);
 CREATE POLICY "Public users can view criska_contact" ON public.criska_contact FOR SELECT USING (true);
 
--- Allow candidates to submit applications
+-- Candidate submission policies
 CREATE POLICY "Anyone can submit a job application" ON public.applications FOR INSERT WITH CHECK (true);
+CREATE POLICY "Anyone can submit criska_applications" ON public.criska_applications FOR INSERT WITH CHECK (true);
 
 -- Admin policies (Full Access via Service Role or Authenticated Admin)
 CREATE POLICY "Admins have full access to job_postings" ON public.job_postings FOR ALL USING (true) WITH CHECK (true);
@@ -139,6 +163,7 @@ CREATE POLICY "Admins have full access to criska_jobs" ON public.criska_jobs FOR
 CREATE POLICY "Admins have full access to criska_events" ON public.criska_events FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Admins have full access to criska_leadership" ON public.criska_leadership FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Admins have full access to criska_contact" ON public.criska_contact FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Admins have full access to criska_applications" ON public.criska_applications FOR ALL USING (true) WITH CHECK (true);
 
 -- 7. STORAGE BUCKET FOR RESUMES
 INSERT INTO storage.buckets (id, name, public)
@@ -154,6 +179,13 @@ VALUES
   ('Senior AI & ML Solutions Architect', 'Artificial Intelligence', 'Full-time', 'Hyderabad / Remote', 'Lead LLM, RAG, and agentic AI pipeline implementations for enterprise clients.', ARRAY['8+ years experience', 'Python, PyTorch, LangChain', 'Cloud deployment'], 'published'),
   ('Lead Cyber Defense Specialist', 'Cybersecurity', 'Full-time', 'Hyderabad / On-site', 'Drive SOC, zero-trust architecture, and pentesting for financial services.', ARRAY['6+ years experience', 'CISSP / CEH preferred', 'SIEM & EDR mastery'], 'published'),
   ('Principal Cloud Infrastructure Architect', 'Cloud & DevOps', 'Full-time', 'Hyderabad / Remote', 'Design multi-cloud architecture on AWS, Azure, and GCP with Terraform.', ARRAY['7+ years in Cloud Infrastructure', 'Kubernetes & Terraform', 'CI/CD automation'], 'published')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.criska_jobs (title, department, type, location, description, apply_url, is_open, sort)
+VALUES
+  ('Senior AI & ML Solutions Architect', 'Artificial Intelligence', 'Full-time', 'Hyderabad / Remote', 'Lead LLM, RAG, and agentic AI pipeline implementations.', '', true, 1),
+  ('Lead Cyber Defense Specialist', 'Cybersecurity', 'Full-time', 'Hyderabad / On-site', 'Drive SOC, zero-trust architecture, and pentesting.', '', true, 2),
+  ('Principal Cloud Infrastructure Architect', 'Cloud & DevOps', 'Full-time', 'Hyderabad / Remote', 'Design multi-cloud architecture on AWS, Azure, and GCP.', '', true, 3)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO public.criska_contact (id, company, office_label, address, phone, emails, website)
