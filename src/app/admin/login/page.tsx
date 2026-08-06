@@ -6,7 +6,28 @@ import { CKMark } from "@/components/logo";
 import { PasswordInput } from "@/components/password-input";
 import { GoogleSignIn, GOOGLE_SIGNIN_ENABLED } from "@/components/admin/google-signin";
 
-function AdminLoginForm() {
+/** Google-only sign in — the sole method once a Google Client ID is configured. */
+function GoogleOnly() {
+  return (
+    <div className="w-full max-w-sm rounded-[var(--radius)] border border-border bg-surface p-8 shadow-[0_30px_80px_-50px_rgba(10,22,34,0.4)]">
+      <div className="flex items-center gap-2.5 text-foreground">
+        <CKMark className="h-8 w-auto" />
+        <span className="text-lg font-semibold uppercase tracking-[0.2em]">Criska</span>
+      </div>
+      <h1 className="font-display mt-6 text-[26px]">Admin sign in</h1>
+      <p className="mt-1 text-[14px] text-muted">
+        Sign in with an authorized Google account. Access is restricted — any other
+        account is rejected automatically.
+      </p>
+      <div className="mt-7 flex justify-center">
+        <GoogleSignIn />
+      </div>
+    </div>
+  );
+}
+
+/** Password fallback — only used when Google sign-in is not configured. */
+function PasswordLogin() {
   const router = useRouter();
   const params = useSearchParams();
   const [step, setStep] = useState<"email" | "password">("email");
@@ -26,11 +47,8 @@ function AdminLoginForm() {
         body: JSON.stringify({ email }),
       });
       const j = await res.json().catch(() => ({}));
-      if (res.ok && j.allowed) {
-        setStep("password");
-      } else {
-        setErr(j.error || "This email is not authorized.");
-      }
+      if (res.ok && j.allowed) setStep("password");
+      else setErr(j.error || "This email is not authorized.");
     } catch {
       setErr("Could not verify email. Try again.");
     } finally {
@@ -68,23 +86,10 @@ function AdminLoginForm() {
       </div>
       <h1 className="font-display mt-6 text-[26px]">Admin sign in</h1>
       <p className="mt-1 text-[14px] text-muted">
-        {GOOGLE_SIGNIN_ENABLED
-          ? "Sign in with an authorized Google account."
-          : step === "email"
+        {step === "email"
           ? "Enter your authorized admin email to continue."
           : "Enter the admin password to continue."}
       </p>
-
-      {GOOGLE_SIGNIN_ENABLED && (
-        <div className="mt-6">
-          <GoogleSignIn />
-          <div className="my-6 flex items-center gap-3 text-[12px] text-faint">
-            <span className="h-px flex-1 bg-border" />
-            OR USE PASSWORD
-            <span className="h-px flex-1 bg-border" />
-          </div>
-        </div>
-      )}
 
       {step === "email" ? (
         <>
@@ -136,7 +141,7 @@ export default function AdminLogin() {
   return (
     <div className="grid min-h-screen place-items-center bg-paper px-6">
       <Suspense fallback={<div className="text-muted text-[14px]">Loading...</div>}>
-        <AdminLoginForm />
+        {GOOGLE_SIGNIN_ENABLED ? <GoogleOnly /> : <PasswordLogin />}
       </Suspense>
     </div>
   );

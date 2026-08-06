@@ -17,15 +17,12 @@ import { InterviewScheduler } from "./interview-scheduler";
 import { EmailWorkflowModal } from "./email-workflow-modal";
 import { ShareLinkModal } from "./share-link-modal";
 import { ThemeToggle } from "../theme-toggle";
-import { PasswordInput } from "../password-input";
 import { VisitorStats } from "./visitor-stats";
 
 export function AdminDashboard() {
-  // Authentication is handled server-side (middleware session + email allowlist).
-  // Reaching this component already means the admin is signed in — no second gate.
-  const [authenticated, setAuthenticated] = useState<boolean>(true);
-  const [passcode, setPasscode] = useState("");
-  const [passError, setPassError] = useState("");
+  // Authentication is handled entirely server-side (signed session cookie +
+  // middleware + email allowlist). Reaching this component means the admin is
+  // already signed in — there is no client-side passcode gate.
 
   // Navigation & Data state
   const [activeTab, setActiveTab] = useState<"applicants" | "overview" | "jobs">("applicants");
@@ -56,23 +53,14 @@ export function AdminDashboard() {
   const [editingJob, setEditingJob] = useState<JobPosting | null>(null);
   const [jobModalOpen, setJobModalOpen] = useState(false);
 
-  // Check auth session
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const auth = sessionStorage.getItem("criska_admin_auth");
-      if (auth === "true") setAuthenticated(true);
+  // Real logout — clears the server session cookie, then returns to the login page.
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/admin/logout", { method: "POST" });
+    } catch {
+      /* ignore */
     }
-  }, []);
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (passcode === "criska2026" || passcode === "admin") {
-      sessionStorage.setItem("criska_admin_auth", "true");
-      setAuthenticated(true);
-      setPassError("");
-    } else {
-      setPassError("Invalid admin passcode. Try 'criska2026'.");
-    }
+    window.location.href = "/admin/login";
   };
 
   // Load Data
@@ -93,10 +81,8 @@ export function AdminDashboard() {
   };
 
   useEffect(() => {
-    if (authenticated) {
-      loadData();
-    }
-  }, [authenticated]);
+    loadData();
+  }, []);
 
   // Filter Applications
   const filteredApplications = useMemo(() => {
@@ -237,46 +223,6 @@ export function AdminDashboard() {
     await loadData();
   };
 
-  if (!authenticated) {
-    return (
-      <div className="min-h-screen bg-paper flex items-center justify-center p-6 text-foreground">
-        <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-8 shadow-2xl">
-          <div className="text-center mb-6">
-            <span className="eyebrow">Criska Security Control</span>
-            <h1 className="font-display text-[28px] mt-2 leading-tight">Admin Portal Sign In</h1>
-            <p className="mt-2 text-[14px] text-muted">
-              Enter your admin passcode to manage job postings, view candidates, and inspect ATS scores.
-            </p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-[12px] uppercase tracking-[0.12em] text-faint mb-1.5 font-medium">
-                Admin Passcode
-              </label>
-              <PasswordInput
-                value={passcode}
-                onChange={setPasscode}
-                placeholder="Enter passcode (Default: criska2026)"
-                required
-                className="w-full rounded-xl border border-border bg-paper px-4 py-3 pr-11 text-[15px] text-foreground outline-none focus:border-accent"
-              />
-              {passError && <p className="text-red-500 text-[13px] mt-1.5">{passError}</p>}
-            </div>
-
-            <button type="submit" className="btn-pill btn-primary w-full text-[14.5px] py-3">
-              Unlock Portal →
-            </button>
-          </form>
-
-          <div className="mt-6 text-center border-t border-border pt-4 text-[12.5px] text-faint">
-            Criska ATS v2.0 Enterprise · Protected Session
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-paper text-foreground">
       {/* Top Admin Header Bar */}
@@ -343,13 +289,10 @@ export function AdminDashboard() {
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <button
-              onClick={() => {
-                sessionStorage.removeItem("criska_admin_auth");
-                setAuthenticated(false);
-              }}
+              onClick={handleLogout}
               className="btn-pill btn-ghost !px-3 !py-1.5 text-[12.5px]"
             >
-              Lock 🔒
+              Log out 🔒
             </button>
             <a href="/careers" className="btn-pill btn-primary !px-4 !py-1.5 text-[13px]">
               View Careers Page ↗

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { SESSION_COOKIE, signSession } from "@/lib/auth";
 import { currentSessionFingerprint } from "@/lib/session";
 import { isEmailAllowed } from "@/lib/admin-emails";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 /**
  * Secure admin sign-in via a Google Identity token.
@@ -9,6 +10,14 @@ import { isEmailAllowed } from "@/lib/admin-emails";
  * the admin allowlist. Any other account is rejected immediately.
  */
 export async function POST(req: Request) {
+  const { limited, retryAfter } = rateLimit(`google-login:${clientIp(req)}`, 15, 15 * 60 * 1000);
+  if (limited) {
+    return NextResponse.json(
+      { error: "Too many attempts. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } },
+    );
+  }
+
   const secret = process.env.ADMIN_SESSION_SECRET;
   if (!secret) {
     return NextResponse.json({ error: "ADMIN_SESSION_SECRET is not set on the server." }, { status: 500 });
