@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { JobPosting, JobApplication, ApplicationStatus, ScheduledInterview } from "@/types/ats";
+import { JobPosting, JobApplication, ApplicationStatus } from "@/types/ats";
 import {
   fetchJobs,
   fetchApplications,
@@ -199,7 +199,7 @@ export function AdminDashboard() {
     }
   };
 
-  const handleScheduleSuccess = (interview: ScheduledInterview) => {
+  const handleScheduleSuccess = () => {
     if (scheduleTargetApp) {
       handleUpdateStatus(scheduleTargetApp.id, "interviewing");
     }

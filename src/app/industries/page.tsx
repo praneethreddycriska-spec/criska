@@ -139,7 +139,7 @@ export default function IndustriesPage() {
           <div className="mx-auto max-w-[1200px] px-6 md:px-10">
             {/* Grid of detailed sector cards */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2">
-              {SECTORS.map((sector, i) => (
+              {SECTORS.map((sector) => (
                 <article
                   key={sector.title}
                   className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-surface p-8 transition-all duration-300 hover:border-accent/40 hover:shadow-[0_24px_60px_-20px_rgba(0,0,0,0.35)]"
