@@ -49,6 +49,50 @@ export function useCountryList() {
   }, []);
 }
 
+/**
+ * Per-country cap on the number of national significant digits a user may type.
+ * Keeps the input from accepting absurdly long numbers while staying lenient.
+ * Countries not listed fall back to E.164's max of 15 national digits.
+ */
+const NATIONAL_DIGIT_CAP: Partial<Record<string, number>> = {
+  IN: 10,
+  US: 10,
+  GB: 10,
+  AE: 9,
+  AU: 9,
+  CA: 10,
+  SG: 8,
+  DE: 11,
+  FR: 9,
+};
+
+/** E.164 caps national significant digits at 15; use that as a safe default. */
+const DEFAULT_DIGIT_CAP = 15;
+
+function digitCapFor(country: string): number {
+  return NATIONAL_DIGIT_CAP[country] ?? DEFAULT_DIGIT_CAP;
+}
+
+/**
+ * Strip disallowed characters, then truncate so the string carries at most
+ * `cap` digits. Formatting characters (space, parens, +, -) are preserved but
+ * anything trailing beyond the last allowed digit is dropped once the cap is hit.
+ */
+function sanitizePhoneInput(raw: string, cap: number): string {
+  const cleaned = raw.replace(/[^\d\s()+-]/g, "");
+  let digitCount = 0;
+  let out = "";
+  for (const ch of cleaned) {
+    const isDigit = ch >= "0" && ch <= "9";
+    if (isDigit) {
+      if (digitCount >= cap) continue; // drop extra digits beyond the cap
+      digitCount += 1;
+    }
+    out += ch;
+  }
+  return out;
+}
+
 /** Build the E.164 string (e.g. "+919876543210") from a country + typed number. */
 export function toE164(country: string, national: string): string {
   const digits = national.replace(/\D/g, "");
@@ -80,6 +124,7 @@ export function PhoneField({
   labelClass?: string;
 }) {
   const countries = useCountryList();
+  const digitCap = digitCapFor(country);
 
   const base =
     "rounded-xl border bg-paper text-[15px] text-foreground outline-none transition focus:ring-2";
@@ -112,7 +157,8 @@ export function PhoneField({
           autoComplete="tel-national"
           aria-invalid={!!error}
           value={value}
-          onChange={(e) => onChange(e.target.value.replace(/[^\d\s()+-]/g, ""))}
+          onChange={(e) => onChange(sanitizePhoneInput(e.target.value, digitCap))}
+          maxLength={digitCap + 6}
           placeholder="98765 43210"
           className={`${base} ${state} w-full px-4 py-3`}
         />

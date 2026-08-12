@@ -2,13 +2,22 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { JobPosting, JobApplication } from "@/types/ats";
+import { JobPosting, JobApplication, ScreeningQuestion } from "@/types/ats";
 import { createApplication } from "@/lib/supabase";
 import { parseResumeData } from "@/lib/resume-parser";
 import { cleanText, isBlank, validateLead, type FieldErrors } from "@/lib/validation";
 import { PhoneField, toE164 } from "@/components/phone-field";
 
-export type ApplyJob = { id: string; title: string };
+export type ApplyJob = {
+  id: string;
+  title: string;
+  department?: string;
+  type?: string;
+  location?: string;
+  description?: string;
+  requirements?: string[];
+  screeningQuestions?: ScreeningQuestion[];
+};
 
 export function ApplyModal({
   job,
@@ -48,15 +57,19 @@ export function ApplyModal({
     setStep(2);
   };
 
-  const fullJob: JobPosting = (job && "department" in job) ? (job as JobPosting) : {
-    id: job?.id || "",
-    title: job?.title || "",
-    department: "Engineering",
-    type: "Full-time",
-    location: "Remote / Hybrid",
-    description: "Job opportunity at Criska.",
-    requirements: ["Relevant experience"],
-    screeningQuestions: [],
+  // Build the scoring job from whatever the caller passed. The careers page now
+  // passes the real requirements + screeningQuestions so the apply form shows the
+  // right questions and the ATS scores against the real requirements.
+  const j = job as ApplyJob & Partial<JobPosting>;
+  const fullJob: JobPosting = {
+    id: j.id || "",
+    title: j.title || "",
+    department: j.department || "Engineering",
+    type: j.type || "Full-time",
+    location: j.location || "Remote / Hybrid",
+    description: j.description || "Job opportunity at Criska.",
+    requirements: j.requirements || [],
+    screeningQuestions: j.screeningQuestions || [],
     status: "published",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

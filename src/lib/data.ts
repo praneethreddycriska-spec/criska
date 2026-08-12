@@ -1,5 +1,6 @@
 import { getSupabase } from "./supabase";
 import { site } from "@/content/site";
+import type { ScreeningQuestion } from "@/types/ats";
 
 export type Job = {
   id: string;
@@ -11,6 +12,8 @@ export type Job = {
   applyUrl: string;
   isOpen: boolean;
   sort: number;
+  requirements: string[];
+  screeningQuestions: ScreeningQuestion[];
 };
 
 export type EventItem = {
@@ -72,6 +75,8 @@ export async function getJobs(): Promise<Job[]> {
           applyUrl: r.apply_url ?? "",
           isOpen: r.is_open ?? true,
           sort: r.sort ?? 0,
+          requirements: Array.isArray(r.requirements) ? r.requirements : [],
+          screeningQuestions: Array.isArray(r.screening_questions) ? r.screening_questions : [],
         }));
       }
 
@@ -88,6 +93,8 @@ export async function getJobs(): Promise<Job[]> {
           applyUrl: "",
           isOpen: r.status === "published",
           sort: i,
+          requirements: Array.isArray(r.requirements) ? r.requirements : [],
+          screeningQuestions: Array.isArray(r.screening_questions) ? r.screening_questions : [],
         }));
       }
     } catch {
@@ -106,6 +113,8 @@ export async function getJobs(): Promise<Job[]> {
     applyUrl: r.applyUrl ?? "",
     isOpen: true,
     sort: i,
+    requirements: [],
+    screeningQuestions: [],
   }));
 }
 

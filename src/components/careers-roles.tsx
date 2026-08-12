@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ApplyModal, type ApplyJob } from "./apply-modal";
+import { ApplyModal } from "./apply-modal";
 import type { Job } from "@/lib/data";
 
 const HR_EMAIL = "info2@criska.in";
@@ -11,7 +11,7 @@ function gmailCompose(subject: string, body: string) {
 }
 
 export function CareersRoles({ jobs, ctaNote }: { jobs: Job[]; ctaNote: string }) {
-  const [active, setActive] = useState<ApplyJob | null>(null);
+  const [active, setActive] = useState<Job | null>(null);
   const open = jobs.filter((j) => j.isOpen);
 
   return (
@@ -55,7 +55,7 @@ export function CareersRoles({ jobs, ctaNote }: { jobs: Job[]; ctaNote: string }
                 </a>
               ) : (
                 <button
-                  onClick={() => setActive({ id: r.id, title: r.title })}
+                  onClick={() => setActive(r)}
                   className="btn-pill btn-ghost whitespace-nowrap"
                 >
                   Apply →
