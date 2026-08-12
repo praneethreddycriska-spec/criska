@@ -578,7 +578,6 @@ export const site = {
       { label: "Technology Insights", href: "/blog" },
       { label: "Case Studies", href: "/case-studies" },
       { label: "FAQs", href: "/faq" },
-      { label: "Admin ATS Portal", href: "/admin" },
     ] as NavLink[],
     fine: "© 2026 CRISKA BUSINESS CONSULTING PVT. LTD. · HYDERABAD · INDIA / UK / US",
   },
@@ -664,7 +663,7 @@ export const site = {
   events: {
     eyebrow: "Events",
     title: "Life & events at Criska",
-    lead: "Tech talks, workshops, hackathons, and celebrations — a look at the events we host at our Hyderabad office and beyond. Add your own photos and details for each event.",
+    lead: "Tech talks, workshops, hackathons, and celebrations — a look at the events we host at our Hyderabad office and beyond.",
     // Replace `image` with a file in /public (e.g. "/events/tech-talk.jpg"); empty shows a placeholder.
     items: [
       {

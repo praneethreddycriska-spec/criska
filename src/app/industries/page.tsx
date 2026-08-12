@@ -22,7 +22,7 @@ const SECTORS = [
       "Core Banking Modernization",
       "Real-time Payment Gateways",
     ],
-    techStack: "Python · PostgreSQL · AWS FinTech · Kafka · Microservices",
+    techStack: "Python · PostgreSQL · AWS · Kafka · Microservices",
   },
   {
     title: "Healthcare, MedTech & Life Sciences",
@@ -36,7 +36,7 @@ const SECTORS = [
       "EHR Interoperability (FHIR/HL7)",
       "Remote Patient Monitoring",
     ],
-    techStack: "Next.js · FastHealth API · PyTorch · AWS HealthLake · Docker",
+    techStack: "Next.js · FHIR APIs · PyTorch · AWS HealthLake · Docker",
   },
   {
     title: "Manufacturing, Automotive & Industrial IoT",
@@ -78,7 +78,7 @@ const SECTORS = [
       "Real-time Inventory Sync",
       "Omnichannel Loyalty Engine",
     ],
-    techStack: "Next.js 19 · GraphQL · Stripe · Redis · Supabase",
+    techStack: "Next.js · GraphQL · Stripe · Redis · Supabase",
   },
   {
     title: "High-Tech, SaaS & AI Enterprises",

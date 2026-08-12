@@ -308,23 +308,21 @@ export const INITIAL_APPLICATIONS: JobApplication[] = [
 ];
 
 // Local Storage Keys
-const STORE_JOBS_KEY = "criska_ats_jobs_v1";
-const STORE_APPS_KEY = "criska_ats_apps_v1";
+// v2: invalidates older caches that may contain seeded demo data.
+const STORE_JOBS_KEY = "criska_ats_jobs_v2";
+const STORE_APPS_KEY = "criska_ats_apps_v2";
 
 /**
- * Get all job postings (combines initial seed + user edits)
+ * Get all job postings from the local cache. This is only a fallback used when
+ * Supabase is unreachable — it must NEVER seed demo/sample data on a live site.
  */
 export function getStoredJobs(): JobPosting[] {
-  if (typeof window === "undefined") return INITIAL_JOBS;
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORE_JOBS_KEY);
-    if (!raw) {
-      localStorage.setItem(STORE_JOBS_KEY, JSON.stringify(INITIAL_JOBS));
-      return INITIAL_JOBS;
-    }
-    return JSON.parse(raw);
+    return raw ? JSON.parse(raw) : [];
   } catch {
-    return INITIAL_JOBS;
+    return [];
   }
 }
 
@@ -337,19 +335,16 @@ export function saveStoredJobs(jobs: JobPosting[]): void {
 }
 
 /**
- * Get all applications
+ * Get all applications from the local cache. Fallback only — never seeds the
+ * fictional demo applicants into a real admin view.
  */
 export function getStoredApplications(): JobApplication[] {
-  if (typeof window === "undefined") return INITIAL_APPLICATIONS;
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORE_APPS_KEY);
-    if (!raw) {
-      localStorage.setItem(STORE_APPS_KEY, JSON.stringify(INITIAL_APPLICATIONS));
-      return INITIAL_APPLICATIONS;
-    }
-    return JSON.parse(raw);
+    return raw ? JSON.parse(raw) : [];
   } catch {
-    return INITIAL_APPLICATIONS;
+    return [];
   }
 }
 
