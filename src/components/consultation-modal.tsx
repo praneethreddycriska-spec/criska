@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { cleanText, validateLead, type FieldErrors } from "@/lib/validation";
 
 export function ConsultationModal({
   isOpen,
@@ -22,26 +23,36 @@ export function ConsultationModal({
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const clearError = (k: string) => setErrors((e) => (e[k] ? { ...e, [k]: "" } : e));
 
   if (!isOpen) return null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitting(true);
     setErrorMsg("");
+
+    const lead = { full_name: cleanText(fullName), email: cleanText(email), phone: cleanText(phone) };
+    const errs = validateLead(lead);
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
+    }
+    setErrors({});
+    setSubmitting(true);
 
     try {
       const res = await fetch("/api/consultation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          full_name: fullName,
-          email,
-          phone,
-          company,
+          full_name: lead.full_name,
+          email: lead.email,
+          phone: lead.phone,
+          company: cleanText(company),
           service_interest: service,
           preferred_date: date,
-          message,
+          message: cleanText(message),
         }),
       });
 
@@ -116,7 +127,7 @@ export function ConsultationModal({
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form noValidate onSubmit={handleSubmit} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-[11.5px] font-medium uppercase tracking-[0.12em] text-faint">
@@ -124,12 +135,13 @@ export function ConsultationModal({
                   </label>
                   <input
                     type="text"
-                    required
                     value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
+                    aria-invalid={!!errors.full_name}
+                    onChange={(e) => { setFullName(e.target.value); clearError("full_name"); }}
                     placeholder="e.g. Vivek Shaganti"
-                    className="mt-1.5 w-full rounded-xl border border-border bg-paper px-3.5 py-2.5 text-[14px] text-foreground outline-none focus:border-foreground"
+                    className={`mt-1.5 w-full rounded-xl border bg-paper px-3.5 py-2.5 text-[14px] text-foreground outline-none ${errors.full_name ? "border-[#c0564f] focus:border-[#c0564f]" : "border-border focus:border-foreground"}`}
                   />
+                  {errors.full_name && <p className="mt-1 text-[12px]" style={{ color: "#c0564f" }}>{errors.full_name}</p>}
                 </div>
                 <div>
                   <label className="block text-[11.5px] font-medium uppercase tracking-[0.12em] text-faint">
@@ -137,12 +149,13 @@ export function ConsultationModal({
                   </label>
                   <input
                     type="email"
-                    required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    aria-invalid={!!errors.email}
+                    onChange={(e) => { setEmail(e.target.value); clearError("email"); }}
                     placeholder="vivek@company.com"
-                    className="mt-1.5 w-full rounded-xl border border-border bg-paper px-3.5 py-2.5 text-[14px] text-foreground outline-none focus:border-foreground"
+                    className={`mt-1.5 w-full rounded-xl border bg-paper px-3.5 py-2.5 text-[14px] text-foreground outline-none ${errors.email ? "border-[#c0564f] focus:border-[#c0564f]" : "border-border focus:border-foreground"}`}
                   />
+                  {errors.email && <p className="mt-1 text-[12px]" style={{ color: "#c0564f" }}>{errors.email}</p>}
                 </div>
               </div>
 
@@ -154,10 +167,12 @@ export function ConsultationModal({
                   <input
                     type="tel"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    aria-invalid={!!errors.phone}
+                    onChange={(e) => { setPhone(e.target.value); clearError("phone"); }}
                     placeholder="+91 98765 43210"
-                    className="mt-1.5 w-full rounded-xl border border-border bg-paper px-3.5 py-2.5 text-[14px] text-foreground outline-none focus:border-foreground"
+                    className={`mt-1.5 w-full rounded-xl border bg-paper px-3.5 py-2.5 text-[14px] text-foreground outline-none ${errors.phone ? "border-[#c0564f] focus:border-[#c0564f]" : "border-border focus:border-foreground"}`}
                   />
+                  {errors.phone && <p className="mt-1 text-[12px]" style={{ color: "#c0564f" }}>{errors.phone}</p>}
                 </div>
                 <div>
                   <label className="block text-[11.5px] font-medium uppercase tracking-[0.12em] text-faint">

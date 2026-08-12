@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { site } from "@/content/site";
+import { cleanText, validateLead, type FieldErrors } from "@/lib/validation";
 
 const services = site.services.items.map((s) => s.title);
 
@@ -9,29 +10,47 @@ export function ContactForm() {
   const { contact } = site;
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const clearError = (k: string) => setErrors((e) => (e[k] ? { ...e, [k]: "" } : e));
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSending(true);
     const fd = new FormData(e.currentTarget);
     const payload = {
-      full_name: fd.get("name") || "",
-      company: fd.get("company") || "",
-      email: fd.get("email") || "",
-      phone: fd.get("phone") || "",
-      service: fd.get("service") || "",
-      requirements: fd.get("requirements") || "",
-      message: fd.get("message") || "",
+      full_name: cleanText(fd.get("name")),
+      company: cleanText(fd.get("company")),
+      email: cleanText(fd.get("email")),
+      phone: cleanText(fd.get("phone")),
+      service: cleanText(fd.get("service")),
+      requirements: cleanText(fd.get("requirements")),
+      message: cleanText(fd.get("message")),
       source: "contact",
     };
+
+    // Client-side validation (server re-checks identically).
+    const errs = validateLead(payload);
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
+    }
+    setErrors({});
+    setSending(true);
     try {
-      await fetch("/api/inquiry", {
+      const res = await fetch("/api/inquiry", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setErrors(j.errors || { email: j.error || "Something went wrong. Please try again." });
+        setSending(false);
+        return;
+      }
     } catch {
-      /* non-fatal */
+      setErrors({ email: "Network error. Please try again." });
+      setSending(false);
+      return;
     }
     setSending(false);
     setSent(true);
@@ -55,6 +74,7 @@ export function ContactForm() {
 
   return (
     <form
+      noValidate
       onSubmit={onSubmit}
       className="rounded-[var(--radius)] border border-border bg-surface p-7 shadow-[0_30px_80px_-50px_rgba(10,22,34,0.4)] md:p-9"
     >
@@ -63,10 +83,10 @@ export function ContactForm() {
         <p className="mt-1.5 text-[14px] text-muted">Fill in the details below and our team will get back to you.</p>
       </div>
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <Field label="Full Name" name="name" required />
+        <Field label="Full Name" name="name" required error={errors.full_name} onInput={() => clearError("full_name")} />
         <Field label="Company Name" name="company" />
-        <Field label="Email Address" name="email" type="email" required />
-        <Field label="Phone Number" name="phone" type="tel" />
+        <Field label="Email Address" name="email" type="email" required error={errors.email} onInput={() => clearError("email")} />
+        <Field label="Phone Number" name="phone" type="tel" error={errors.phone} onInput={() => clearError("phone")} />
         <div className="sm:col-span-2">
           <Label>Service Interested In</Label>
           <select
@@ -117,21 +137,32 @@ function Field({
   name,
   type = "text",
   required = false,
+  error,
+  onInput,
 }: {
   label: string;
   name: string;
   type?: string;
   required?: boolean;
+  error?: string;
+  onInput?: () => void;
 }) {
   return (
     <div>
-      <Label>{label}</Label>
+      <Label>{label}{required && <span className="text-accent"> *</span>}</Label>
       <input
         type={type}
         name={name}
         required={required}
-        className="mt-2 w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none transition hover:border-border-strong focus:border-foreground focus:ring-2 focus:ring-accent/30"
+        aria-invalid={!!error}
+        onInput={onInput}
+        className={`mt-2 w-full rounded-xl border bg-paper px-4 py-3 text-[15px] text-foreground outline-none transition focus:ring-2 ${
+          error
+            ? "border-[#c0564f] focus:border-[#c0564f] focus:ring-[#c0564f]/30"
+            : "border-border hover:border-border-strong focus:border-foreground focus:ring-accent/30"
+        }`}
       />
+      {error && <p className="mt-1.5 text-[12.5px]" style={{ color: "#c0564f" }}>{error}</p>}
     </div>
   );
 }

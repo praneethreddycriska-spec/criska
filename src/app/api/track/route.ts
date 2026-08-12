@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { clientIp, limit } from "@/lib/rate-limit";
 
 /** Public endpoint — records one site visit. Soft-fails until the table exists. */
 export async function POST(req: Request) {
+  // Prevent visit-count inflation; generous enough for real navigation.
+  const { limited } = await limit(`track:${clientIp(req)}`, 40, 10 * 60 * 1000);
+  if (limited) return NextResponse.json({ ok: false });
+
   const sb = getSupabaseAdmin();
   if (!sb) return NextResponse.json({ ok: false });
   const { path } = await req.json().catch(() => ({ path: "" }));

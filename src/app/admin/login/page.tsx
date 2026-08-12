@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { CKMark } from "@/components/logo";
 import { PasswordInput } from "@/components/password-input";
 import { GoogleSignIn, GOOGLE_SIGNIN_ENABLED } from "@/components/admin/google-signin";
+import { safeAdminRedirect } from "@/lib/safe-path";
 
 /** Google-only sign in — the sole method once a Google Client ID is configured. */
 function GoogleOnly() {
@@ -66,7 +67,7 @@ function PasswordLogin() {
       body: JSON.stringify({ email, password }),
     });
     if (res.ok) {
-      router.push(params.get("from") || "/admin");
+      router.push(safeAdminRedirect(params.get("from")));
       router.refresh();
     } else {
       const j = await res.json().catch(() => ({}));

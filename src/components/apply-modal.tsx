@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { JobPosting, JobApplication } from "@/types/ats";
 import { createApplication } from "@/lib/supabase";
 import { parseResumeData } from "@/lib/resume-parser";
+import { cleanText, isBlank, validateLead, type FieldErrors } from "@/lib/validation";
 
 export type ApplyJob = { id: string; title: string };
 
@@ -30,8 +31,19 @@ export function ApplyModal({
   const [screeningAnswers, setScreeningAnswers] = useState<Record<string, string>>({});
   const [technicalSkills, setTechnicalSkills] = useState("");
   const [fileError, setFileError] = useState("");
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const clearError = (k: string) => setErrors((e) => (e[k] ? { ...e, [k]: "" } : e));
 
   if (!isOpen || !job) return null;
+
+  // Validate the contact step before advancing (name, email, phone required).
+  const goToScreening = () => {
+    const errs = validateLead({ full_name: fullName, email, phone });
+    if (isBlank(phone)) errs.phone = errs.phone || "Please enter your phone number.";
+    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    setErrors({});
+    setStep(2);
+  };
 
   const fullJob: JobPosting = (job && "department" in job) ? (job as JobPosting) : {
     id: job?.id || "",
@@ -65,11 +77,11 @@ export function ApplyModal({
       const parsedResume = parseResumeData(fullName, skills.join(" "), screeningAnswers);
 
       const newApp = await createApplication(fullJob, {
-        fullName,
-        email,
-        phone,
-        linkedinUrl,
-        portfolioUrl,
+        fullName: cleanText(fullName),
+        email: cleanText(email).toLowerCase(),
+        phone: cleanText(phone),
+        linkedinUrl: cleanText(linkedinUrl),
+        portfolioUrl: cleanText(portfolioUrl),
         technicalSkills: skills,
         screeningAnswers,
       });
@@ -180,12 +192,13 @@ export function ApplyModal({
                       </label>
                       <input
                         type="text"
-                        required
                         value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
+                        aria-invalid={!!errors.full_name}
+                        onChange={(e) => { setFullName(e.target.value); clearError("full_name"); }}
                         placeholder="e.g. Alex Morgan"
-                        className="w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:ring-2 focus:ring-accent/30"
+                        className={`w-full rounded-xl border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:ring-2 ${errors.full_name ? "border-[#c0564f] focus:ring-[#c0564f]/30" : "border-border focus:ring-accent/30"}`}
                       />
+                      {errors.full_name && <p className="mt-1 text-[12.5px]" style={{ color: "#c0564f" }}>{errors.full_name}</p>}
                     </div>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>
@@ -194,12 +207,13 @@ export function ApplyModal({
                         </label>
                         <input
                           type="email"
-                          required
                           value={email}
-                          onChange={(e) => setEmail(e.target.value)}
+                          aria-invalid={!!errors.email}
+                          onChange={(e) => { setEmail(e.target.value); clearError("email"); }}
                           placeholder="alex@example.com"
-                          className="w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:ring-2 focus:ring-accent/30"
+                          className={`w-full rounded-xl border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:ring-2 ${errors.email ? "border-[#c0564f] focus:ring-[#c0564f]/30" : "border-border focus:ring-accent/30"}`}
                         />
+                        {errors.email && <p className="mt-1 text-[12.5px]" style={{ color: "#c0564f" }}>{errors.email}</p>}
                       </div>
                       <div>
                         <label className="block text-[12.5px] uppercase tracking-[0.12em] text-faint mb-1">
@@ -207,12 +221,13 @@ export function ApplyModal({
                         </label>
                         <input
                           type="tel"
-                          required
                           value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
+                          aria-invalid={!!errors.phone}
+                          onChange={(e) => { setPhone(e.target.value); clearError("phone"); }}
                           placeholder="+91 98765 43210"
-                          className="w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:ring-2 focus:ring-accent/30"
+                          className={`w-full rounded-xl border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:ring-2 ${errors.phone ? "border-[#c0564f] focus:ring-[#c0564f]/30" : "border-border focus:ring-accent/30"}`}
                         />
+                        {errors.phone && <p className="mt-1 text-[12.5px]" style={{ color: "#c0564f" }}>{errors.phone}</p>}
                       </div>
                     </div>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -325,8 +340,7 @@ export function ApplyModal({
                   {step < 3 ? (
                     <button
                       type="button"
-                      disabled={step === 1 && (!fullName || !email || !phone)}
-                      onClick={() => setStep((s) => (s + 1) as 1 | 2 | 3)}
+                      onClick={() => (step === 1 ? goToScreening() : setStep((s) => (s + 1) as 1 | 2 | 3))}
                       className="btn-pill btn-primary text-[14px] disabled:opacity-50"
                     >
                       Next Step →

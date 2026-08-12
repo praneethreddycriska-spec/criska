@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { safeAdminRedirect } from "@/lib/safe-path";
 
 /* Minimal typing for Google Identity Services. */
 declare global {
@@ -40,7 +41,7 @@ export function GoogleSignIn() {
         });
         const j = await r.json().catch(() => ({}));
         if (r.ok) {
-          router.push(params.get("from") || "/admin");
+          router.push(safeAdminRedirect(params.get("from")));
           router.refresh();
         } else {
           setErr(j.error || "This account is not authorized.");

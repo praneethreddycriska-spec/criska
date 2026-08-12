@@ -1,7 +1,17 @@
 import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { clientIp, limit } from "@/lib/rate-limit";
+import { cleanText, validateLead } from "@/lib/validation";
 
 export async function POST(req: Request) {
+  const { limited, retryAfter } = await limit(`apply:${clientIp(req)}`, 8, 60 * 60 * 1000);
+  if (limited) {
+    return NextResponse.json(
+      { error: "Too many submissions. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } },
+    );
+  }
+
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
@@ -23,13 +33,9 @@ export async function POST(req: Request) {
     ats_analysis,
   } = body;
 
-  if (!full_name || !email) {
-    return NextResponse.json({ error: "Name and email are required." }, { status: 400 });
-  }
-
-  // basic length guards
-  if (String(full_name).length > 200 || String(email).length > 200) {
-    return NextResponse.json({ error: "Input too long." }, { status: 400 });
+  const errors = validateLead({ full_name, email, phone });
+  if (Object.keys(errors).length > 0) {
+    return NextResponse.json({ error: Object.values(errors)[0], errors }, { status: 400 });
   }
 
   const skills = Array.isArray(technical_skills)
@@ -49,8 +55,8 @@ export async function POST(req: Request) {
   const { error } = await sb.from("criska_applications").insert({
     job_id: job_id || null,
     job_title: job_title || "",
-    full_name: String(full_name).slice(0, 200),
-    email: String(email).slice(0, 200),
+    full_name: cleanText(full_name).slice(0, 200),
+    email: cleanText(email).slice(0, 200).toLowerCase(),
     phone: String(phone || "").slice(0, 60),
     current_company: String(current_company || "").slice(0, 200),
     linkedin: String(linkedin || "").slice(0, 400),
