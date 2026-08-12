@@ -33,24 +33,24 @@ export async function POST(req: Request) {
   const sb = getSupabase();
   if (sb) {
     try {
-      const { data, error } = await sb
-        .from("criska_consultations")
-        .insert({
-          full_name: cleanText(full_name).slice(0, 200),
-          email: cleanText(email).slice(0, 200).toLowerCase(),
-          phone: cleanText(phone).slice(0, 50),
-          company: cleanText(company).slice(0, 200),
-          service_interest: cleanText(service_interest).slice(0, 200),
-          preferred_date: cleanText(preferred_date).slice(0, 100),
-          message: cleanText(message).slice(0, 4000),
-          status: "new",
-        })
-        .select()
-        .single();
-
-      if (!error && data) {
-        return NextResponse.json({ ok: true, id: data.id });
-      }
+      // Store consultations in the same criska_inquiries inbox (source tag lets
+      // admins tell them apart). The preferred date is folded into requirements.
+      const reqParts = [
+        preferred_date ? `Preferred date: ${cleanText(preferred_date)}` : "",
+        cleanText(message),
+      ].filter(Boolean);
+      const { error } = await sb.from("criska_inquiries").insert({
+        full_name: cleanText(full_name).slice(0, 200),
+        email: cleanText(email).slice(0, 200).toLowerCase(),
+        phone: cleanText(phone).slice(0, 60),
+        company: cleanText(company).slice(0, 200),
+        service: cleanText(service_interest).slice(0, 200),
+        requirements: reqParts.join("\n").slice(0, 4000),
+        message: cleanText(message).slice(0, 4000),
+        source: "consultation",
+        status: "new",
+      });
+      if (!error) return NextResponse.json({ ok: true });
     } catch {
       // fallback
     }

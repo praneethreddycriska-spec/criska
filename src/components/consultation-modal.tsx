@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { cleanText, validateLead, type FieldErrors } from "@/lib/validation";
+import { PhoneField, toE164 } from "@/components/phone-field";
 
 export function ConsultationModal({
   isOpen,
@@ -15,6 +16,7 @@ export function ConsultationModal({
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [phoneCountry, setPhoneCountry] = useState("IN");
   const [company, setCompany] = useState("");
   const [service, setService] = useState(initialService);
   const [date, setDate] = useState("");
@@ -32,7 +34,8 @@ export function ConsultationModal({
     e.preventDefault();
     setErrorMsg("");
 
-    const lead = { full_name: cleanText(fullName), email: cleanText(email), phone: cleanText(phone) };
+    const e164 = toE164(phoneCountry, phone);
+    const lead = { full_name: cleanText(fullName), email: cleanText(email), phone: e164 };
     const errs = validateLead(lead);
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
@@ -74,6 +77,7 @@ export function ConsultationModal({
     setFullName("");
     setEmail("");
     setPhone("");
+    setPhoneCountry("IN");
     setCompany("");
     setMessage("");
     onClose();
@@ -160,20 +164,15 @@ export function ConsultationModal({
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-[11.5px] font-medium uppercase tracking-[0.12em] text-faint">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    aria-invalid={!!errors.phone}
-                    onChange={(e) => { setPhone(e.target.value); clearError("phone"); }}
-                    placeholder="+91 98765 43210"
-                    className={`mt-1.5 w-full rounded-xl border bg-paper px-3.5 py-2.5 text-[14px] text-foreground outline-none ${errors.phone ? "border-[#c0564f] focus:border-[#c0564f]" : "border-border focus:border-foreground"}`}
-                  />
-                  {errors.phone && <p className="mt-1 text-[12px]" style={{ color: "#c0564f" }}>{errors.phone}</p>}
-                </div>
+                <PhoneField
+                  label="Phone Number"
+                  labelClass="block text-[11.5px] font-medium uppercase tracking-[0.12em] text-faint"
+                  country={phoneCountry}
+                  onCountryChange={setPhoneCountry}
+                  value={phone}
+                  onChange={(v) => { setPhone(v); clearError("phone"); }}
+                  error={errors.phone}
+                />
                 <div>
                   <label className="block text-[11.5px] font-medium uppercase tracking-[0.12em] text-faint">
                     Company / Organization

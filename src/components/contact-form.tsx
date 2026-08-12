@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { site } from "@/content/site";
 import { cleanText, validateLead, type FieldErrors } from "@/lib/validation";
+import { PhoneField, toE164 } from "@/components/phone-field";
 
 const services = site.services.items.map((s) => s.title);
 
@@ -11,6 +12,8 @@ export function ContactForm() {
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
+  const [phone, setPhone] = useState("");
+  const [phoneCountry, setPhoneCountry] = useState("IN");
   const clearError = (k: string) => setErrors((e) => (e[k] ? { ...e, [k]: "" } : e));
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -20,7 +23,7 @@ export function ContactForm() {
       full_name: cleanText(fd.get("name")),
       company: cleanText(fd.get("company")),
       email: cleanText(fd.get("email")),
-      phone: cleanText(fd.get("phone")),
+      phone: toE164(phoneCountry, phone),
       service: cleanText(fd.get("service")),
       requirements: cleanText(fd.get("requirements")),
       message: cleanText(fd.get("message")),
@@ -86,7 +89,13 @@ export function ContactForm() {
         <Field label="Full Name" name="name" required error={errors.full_name} onInput={() => clearError("full_name")} />
         <Field label="Company Name" name="company" />
         <Field label="Email Address" name="email" type="email" required error={errors.email} onInput={() => clearError("email")} />
-        <Field label="Phone Number" name="phone" type="tel" error={errors.phone} onInput={() => clearError("phone")} />
+        <PhoneField
+          country={phoneCountry}
+          onCountryChange={setPhoneCountry}
+          value={phone}
+          onChange={(v) => { setPhone(v); clearError("phone"); }}
+          error={errors.phone}
+        />
         <div className="sm:col-span-2">
           <Label>Service Interested In</Label>
           <select

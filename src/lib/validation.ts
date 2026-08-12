@@ -1,4 +1,5 @@
 /** Shared input validation — used on BOTH the client (forms) and the server (APIs). */
+import { isValidPhoneNumber } from "libphonenumber-js";
 
 // Reasonable, strict-enough email pattern: no spaces, a dot-tld of 2+ chars.
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -18,13 +19,19 @@ export function isValidEmail(v: unknown): boolean {
   return s.length >= 5 && s.length <= 254 && EMAIL_RE.test(s);
 }
 
-/** Phone is optional; if present it must look like a real phone number. */
+/**
+ * Phone is optional; if present it must be a valid E.164 number
+ * (i.e. include the country calling code, e.g. "+919876543210").
+ * The PhoneField always submits this format.
+ */
 export function isValidPhone(v: unknown): boolean {
   const s = cleanText(v);
   if (!s) return true;
-  if (!/^[+\d][\d\s()-]{5,20}$/.test(s)) return false;
-  const digits = s.replace(/\D/g, "");
-  return digits.length >= 7 && digits.length <= 15;
+  try {
+    return isValidPhoneNumber(s);
+  } catch {
+    return false;
+  }
 }
 
 /** A required free-text field: non-blank and within a max length. */

@@ -6,6 +6,7 @@ import { JobPosting, JobApplication } from "@/types/ats";
 import { createApplication } from "@/lib/supabase";
 import { parseResumeData } from "@/lib/resume-parser";
 import { cleanText, isBlank, validateLead, type FieldErrors } from "@/lib/validation";
+import { PhoneField, toE164 } from "@/components/phone-field";
 
 export type ApplyJob = { id: string; title: string };
 
@@ -26,6 +27,7 @@ export function ApplyModal({
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [phoneCountry, setPhoneCountry] = useState("IN");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [portfolioUrl, setPortfolioUrl] = useState("");
   const [screeningAnswers, setScreeningAnswers] = useState<Record<string, string>>({});
@@ -38,8 +40,9 @@ export function ApplyModal({
 
   // Validate the contact step before advancing (name, email, phone required).
   const goToScreening = () => {
-    const errs = validateLead({ full_name: fullName, email, phone });
-    if (isBlank(phone)) errs.phone = errs.phone || "Please enter your phone number.";
+    const e164 = toE164(phoneCountry, phone);
+    const errs = validateLead({ full_name: fullName, email, phone: e164 });
+    if (isBlank(phone)) errs.phone = "Please enter your phone number.";
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     setErrors({});
     setStep(2);
@@ -79,7 +82,7 @@ export function ApplyModal({
       const newApp = await createApplication(fullJob, {
         fullName: cleanText(fullName),
         email: cleanText(email).toLowerCase(),
-        phone: cleanText(phone),
+        phone: toE164(phoneCountry, phone),
         linkedinUrl: cleanText(linkedinUrl),
         portfolioUrl: cleanText(portfolioUrl),
         technicalSkills: skills,
@@ -103,6 +106,7 @@ export function ApplyModal({
     setFullName("");
     setEmail("");
     setPhone("");
+    setPhoneCountry("IN");
     setLinkedinUrl("");
     setPortfolioUrl("");
     setScreeningAnswers({});
@@ -215,20 +219,16 @@ export function ApplyModal({
                         />
                         {errors.email && <p className="mt-1 text-[12.5px]" style={{ color: "#c0564f" }}>{errors.email}</p>}
                       </div>
-                      <div>
-                        <label className="block text-[12.5px] uppercase tracking-[0.12em] text-faint mb-1">
-                          Phone Number <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="tel"
-                          value={phone}
-                          aria-invalid={!!errors.phone}
-                          onChange={(e) => { setPhone(e.target.value); clearError("phone"); }}
-                          placeholder="+91 98765 43210"
-                          className={`w-full rounded-xl border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:ring-2 ${errors.phone ? "border-[#c0564f] focus:ring-[#c0564f]/30" : "border-border focus:ring-accent/30"}`}
-                        />
-                        {errors.phone && <p className="mt-1 text-[12.5px]" style={{ color: "#c0564f" }}>{errors.phone}</p>}
-                      </div>
+                      <PhoneField
+                        label="Phone Number"
+                        required
+                        labelClass="block text-[12.5px] uppercase tracking-[0.12em] text-faint"
+                        country={phoneCountry}
+                        onCountryChange={setPhoneCountry}
+                        value={phone}
+                        onChange={(v) => { setPhone(v); clearError("phone"); }}
+                        error={errors.phone}
+                      />
                     </div>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>

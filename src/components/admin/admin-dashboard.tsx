@@ -7,6 +7,7 @@ import {
   fetchApplications,
   updateApplicationRecord,
   saveJobPosting,
+  deleteJobPosting,
   isSupabaseConfigured,
 } from "@/lib/supabase";
 import { exportApplicationsToCSV, printCandidateDossier } from "@/lib/export-utils";
@@ -220,6 +221,13 @@ export function AdminDashboard() {
       return [newJob, ...prev];
     });
     await saveJobPosting(newJob);
+    await loadData();
+  };
+
+  const handleDeleteJob = async (job: JobPosting) => {
+    if (!confirm(`Remove the "${job.title || "Untitled"}" position? This cannot be undone.`)) return;
+    setJobs((prev) => prev.filter((j) => j.id !== job.id));
+    await deleteJobPosting(job.id);
     await loadData();
   };
 
@@ -535,7 +543,7 @@ export function AdminDashboard() {
                                       </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                      <span className="rounded-full bg-accent-soft px-3 py-1 text-[12px] font-medium text-accent">
+                                      <span className="inline-flex items-center whitespace-nowrap rounded-full bg-accent-soft px-2.5 py-1 text-[11.5px] font-medium leading-none text-accent">
                                         {app.atsAnalysis?.recommendation || "Evaluated"}
                                       </span>
                                     </td>
@@ -680,7 +688,7 @@ export function AdminDashboard() {
                                   </div>
                                 </td>
                                 <td className="px-6 py-4">
-                                  <span className="rounded-full bg-accent-soft px-3 py-1 text-[12px] font-medium text-accent">
+                                  <span className="inline-flex items-center whitespace-nowrap rounded-full bg-accent-soft px-2.5 py-1 text-[11.5px] font-medium leading-none text-accent">
                                     {app.atsAnalysis?.recommendation || "Evaluated"}
                                   </span>
                                 </td>
@@ -909,16 +917,25 @@ export function AdminDashboard() {
                         <span className="text-muted">
                           <strong>{j.applicationsCount || 0}</strong> Applicants
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingJob(j);
-                            setJobModalOpen(true);
-                          }}
-                          className="btn-pill btn-ghost !px-3 !py-1 text-[13px]"
-                        >
-                          Edit Position ⚙️
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingJob(j);
+                              setJobModalOpen(true);
+                            }}
+                            className="btn-pill btn-ghost !px-3 !py-1 text-[13px]"
+                          >
+                            Edit ⚙️
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteJob(j)}
+                            className="rounded-full border border-border px-3 py-1 text-[13px] text-[#c0564f] hover:bg-red-500/10"
+                          >
+                            Remove 🗑️
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
