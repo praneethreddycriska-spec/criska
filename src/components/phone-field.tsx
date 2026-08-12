@@ -4,8 +4,10 @@ import { useMemo } from "react";
 import {
   getCountries,
   getCountryCallingCode,
+  getExampleNumber,
   type CountryCode,
 } from "libphonenumber-js";
+import examples from "libphonenumber-js/examples.mobile.json";
 
 /** ISO-3166 alpha-2 → 🇮🇳 flag emoji via regional-indicator code points. */
 function flagOf(iso: string): string {
@@ -49,28 +51,34 @@ export function useCountryList() {
   }, []);
 }
 
-/**
- * Per-country cap on the number of national significant digits a user may type.
- * Keeps the input from accepting absurdly long numbers while staying lenient.
- * Countries not listed fall back to E.164's max of 15 national digits.
- */
-const NATIONAL_DIGIT_CAP: Partial<Record<string, number>> = {
-  IN: 10,
-  US: 10,
-  GB: 10,
-  AE: 9,
-  AU: 9,
-  CA: 10,
-  SG: 8,
-  DE: 11,
-  FR: 9,
-};
-
 /** E.164 caps national significant digits at 15; use that as a safe default. */
 const DEFAULT_DIGIT_CAP = 15;
 
+/** Cache of derived national-digit caps, computed once per country ISO code. */
+const digitCapCache = new Map<string, number>();
+
+/**
+ * Derive the expected national-number digit length for a country from
+ * libphonenumber-js example (mobile) metadata. This covers ALL supported
+ * countries dynamically instead of a hardcoded list. Results are cached so the
+ * example lookup runs at most once per country. Falls back to E.164's max of
+ * 15 national significant digits if no example is available or the lookup throws.
+ */
 function digitCapFor(country: string): number {
-  return NATIONAL_DIGIT_CAP[country] ?? DEFAULT_DIGIT_CAP;
+  const cached = digitCapCache.get(country);
+  if (cached !== undefined) return cached;
+
+  let cap = DEFAULT_DIGIT_CAP;
+  try {
+    const len = getExampleNumber(country as CountryCode, examples)?.nationalNumber
+      .length;
+    if (typeof len === "number" && len > 0) cap = len;
+  } catch {
+    cap = DEFAULT_DIGIT_CAP;
+  }
+
+  digitCapCache.set(country, cap);
+  return cap;
 }
 
 /**

@@ -19,6 +19,7 @@ import { EmailWorkflowModal } from "./email-workflow-modal";
 import { ShareLinkModal } from "./share-link-modal";
 import { ThemeToggle } from "../theme-toggle";
 import { VisitorStats } from "./visitor-stats";
+import { InquiriesPanel } from "./inquiries-panel";
 
 export function AdminDashboard() {
   // Authentication is handled entirely server-side (signed session cookie +
@@ -26,7 +27,7 @@ export function AdminDashboard() {
   // already signed in — there is no client-side passcode gate.
 
   // Navigation & Data state
-  const [activeTab, setActiveTab] = useState<"applicants" | "overview" | "jobs">("applicants");
+  const [activeTab, setActiveTab] = useState<"applicants" | "overview" | "jobs" | "inquiries">("applicants");
   const [viewMode, setViewMode] = useState<"grouped" | "table">("grouped");
   const [jobs, setJobs] = useState<JobPosting[]>([]);
   const [applications, setApplications] = useState<JobApplication[]>([]);
@@ -285,6 +286,17 @@ export function AdminDashboard() {
               }`}
             >
               Job Postings ({jobs.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("inquiries")}
+              className={`rounded-full px-4 py-1.5 text-[13.5px] font-medium transition ${
+                activeTab === "inquiries"
+                  ? "bg-ink text-on-ink shadow-xs"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              📥 Inquiries
             </button>
             <a
               href="/admin/content"
@@ -942,6 +954,9 @@ export function AdminDashboard() {
                 </div>
               </div>
             )}
+
+            {/* TAB 4: WEBSITE INQUIRIES INBOX */}
+            {activeTab === "inquiries" && <InquiriesPanel />}
           </>
         )}
       </main>
