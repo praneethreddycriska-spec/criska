@@ -312,12 +312,24 @@ export const INITIAL_APPLICATIONS: JobApplication[] = [
 const STORE_JOBS_KEY = "criska_ats_jobs_v2";
 const STORE_APPS_KEY = "criska_ats_apps_v2";
 
+/** Remove legacy v1 caches (which may hold seeded demo data) from the browser. */
+function purgeLegacyStorage() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem("criska_ats_jobs_v1");
+    localStorage.removeItem("criska_ats_apps_v1");
+  } catch {
+    /* ignore */
+  }
+}
+
 /**
  * Get all job postings from the local cache. This is only a fallback used when
  * Supabase is unreachable — it must NEVER seed demo/sample data on a live site.
  */
 export function getStoredJobs(): JobPosting[] {
   if (typeof window === "undefined") return [];
+  purgeLegacyStorage();
   try {
     const raw = localStorage.getItem(STORE_JOBS_KEY);
     return raw ? JSON.parse(raw) : [];
@@ -340,6 +352,7 @@ export function saveStoredJobs(jobs: JobPosting[]): void {
  */
 export function getStoredApplications(): JobApplication[] {
   if (typeof window === "undefined") return [];
+  purgeLegacyStorage();
   try {
     const raw = localStorage.getItem(STORE_APPS_KEY);
     return raw ? JSON.parse(raw) : [];
