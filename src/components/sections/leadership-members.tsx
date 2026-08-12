@@ -14,6 +14,7 @@ export async function LeadershipMembers({
   lead?: string;
 }) {
   const members = await getLeadership();
+  if (members.length === 0) return null;
   return (
     <section
       className="relative isolate overflow-hidden py-24 md:py-32"

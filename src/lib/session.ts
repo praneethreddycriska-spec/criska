@@ -36,13 +36,52 @@ export async function currentSessionFingerprint(): Promise<string> {
   return sig.slice(0, 32);
 }
 
+/* ---- Per-session revocation denylist (logout) ----
+ * Uses Upstash Redis when configured (shared across all serverless instances,
+ * survives redeploys); falls back to an in-memory set per instance. A revoked
+ * jti only needs to be remembered until the token would expire anyway. */
+const revokedMem = new Map<string, number>(); // jti -> expiry ms
+
+async function upstash(command: string[]): Promise<unknown> {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return undefined;
+  try {
+    const r = await fetch(`${url}/${command.map(encodeURIComponent).join("/")}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!r.ok) return undefined;
+    return (await r.json())?.result;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Revoke a session id until it would have expired. Called on logout. */
+export async function revokeSession(jti: string, expMs: number): Promise<void> {
+  if (!jti) return;
+  revokedMem.set(jti, expMs);
+  const ttl = Math.max(1, Math.ceil((expMs - Date.now()) / 1000));
+  await upstash(["SET", `revoked:${jti}`, "1", "EX", String(ttl)]);
+}
+
+async function isRevoked(jti: string): Promise<boolean> {
+  const now = Date.now();
+  for (const [k, exp] of revokedMem) if (exp <= now) revokedMem.delete(k);
+  if (revokedMem.has(jti)) return true;
+  const v = await upstash(["GET", `revoked:${jti}`]);
+  return v === "1" || v === 1;
+}
+
 /**
- * Full session check: signature + expiry + password fingerprint.
- * Returns false for tampered, expired, OR password-superseded sessions.
+ * Full session check: signature + expiry + password fingerprint + not revoked.
+ * Returns false for tampered, expired, password-superseded, OR logged-out sessions.
  */
 export async function verifyFreshSession(token: string | undefined | null): Promise<boolean> {
   const claims = await parseSession(token);
   if (!claims) return false;
+  if (await isRevoked(claims.jti)) return false;
   const fp = await currentSessionFingerprint();
   return safeEqual(claims.fp, fp);
 }

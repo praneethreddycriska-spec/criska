@@ -159,29 +159,33 @@ export async function getLeadership(): Promise<Member[]> {
     try {
       const { data, error } = await sb.from("criska_leadership").select("*").order("sort");
       if (!error && data && data.length > 0) {
-        return data.map((r: any) => ({
-          id: r.id,
-          name: r.name ?? "",
-          role: r.role,
-          bio: r.bio ?? "",
-          image: r.image ?? "",
-          linkedin: r.linkedin ?? "#",
-          sort: r.sort ?? 0,
-        }));
+        return data
+          .map((r: any) => ({
+            id: r.id,
+            name: r.name ?? "",
+            role: r.role,
+            bio: r.bio ?? "",
+            image: r.image ?? "",
+            linkedin: r.linkedin ?? "#",
+            sort: r.sort ?? 0,
+          }))
+          .filter((m) => (m.name || "").trim().length > 0);
       }
     } catch {
       // fallback
     }
   }
-  return site.leadership.members.map((m: any, i: number) => ({
-    id: String(i),
-    name: m.name ?? "",
-    role: m.role,
-    bio: m.bio ?? "",
-    image: m.image ?? "",
-    linkedin: m.linkedin ?? "#",
-    sort: i,
-  }));
+  return site.leadership.members
+    .map((m: any, i: number) => ({
+      id: String(i),
+      name: m.name ?? "",
+      role: m.role,
+      bio: m.bio ?? "",
+      image: m.image ?? "",
+      linkedin: m.linkedin ?? "#",
+      sort: i,
+    }))
+    .filter((m) => (m.name || "").trim().length > 0);
 }
 
 export async function getServices(): Promise<ServiceItem[]> {

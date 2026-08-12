@@ -56,27 +56,32 @@ export function safeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
-/** Issue a session bound to the given password fingerprint. */
+/**
+ * Issue a session bound to the given password fingerprint. Each session carries
+ * a unique id (jti) so it can be individually revoked at logout.
+ * Token format: `<exp>.<fp>.<jti>.<sig>`.
+ */
 export async function signSession(fingerprint: string): Promise<string> {
   const exp = String(Date.now() + TTL_MS);
-  const payload = `${exp}.${fingerprint}`;
+  const jti = crypto.randomUUID().replace(/-/g, "");
+  const payload = `${exp}.${fingerprint}.${jti}`;
   const sig = await hmac(payload);
   return `${payload}.${sig}`;
 }
 
-export type SessionClaims = { exp: number; fp: string };
+export type SessionClaims = { exp: number; fp: string; jti: string };
 
 /** Verify signature + expiry (cheap, no DB). Returns claims or null. */
 export async function parseSession(token: string | undefined | null): Promise<SessionClaims | null> {
   if (!token) return null;
   const parts = token.split(".");
-  if (parts.length !== 3) return null;
-  const [exp, fp, sig] = parts;
-  if (!exp || !fp || !sig) return null;
+  if (parts.length !== 4) return null;
+  const [exp, fp, jti, sig] = parts;
+  if (!exp || !fp || !jti || !sig) return null;
   if (!Number.isFinite(Number(exp)) || Number(exp) < Date.now()) return null;
-  const expected = await hmac(`${exp}.${fp}`);
+  const expected = await hmac(`${exp}.${fp}.${jti}`);
   if (!safeEqual(expected, sig)) return null;
-  return { exp: Number(exp), fp };
+  return { exp: Number(exp), fp, jti };
 }
 
 /** Backwards-compatible boolean — signature + expiry only (no freshness check). */
