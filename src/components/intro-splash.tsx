@@ -1,20 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { CKMark } from "@/components/logo";
 
 /**
  * Brief branded intro. It renders opaque on the very first paint so the page
  * never flashes underneath it, then fades away to reveal the site. Shown once
- * per browser session; repeat views dismiss it instantly.
+ * per browser session; repeat views dismiss it instantly. Skipped entirely on
+ * the admin surface so the dashboard opens instantly.
  */
 export function IntroSplash() {
+  const pathname = usePathname();
+  const isAdmin = pathname?.startsWith("/admin");
   // Start visible so it covers content from the first paint (no flash-then-cover).
   const [show, setShow] = useState(true);
   const [instant, setInstant] = useState(false);
 
   useEffect(() => {
+    if (isAdmin) { setShow(false); return; }
     let seen = false;
     try {
       seen = !!sessionStorage.getItem("criska_intro_seen");
@@ -30,7 +35,9 @@ export function IntroSplash() {
     }
     const t = setTimeout(() => setShow(false), 1200);
     return () => clearTimeout(t);
-  }, []);
+  }, [isAdmin]);
+
+  if (isAdmin) return null;
 
   return (
     <AnimatePresence>
