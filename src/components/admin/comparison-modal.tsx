@@ -58,19 +58,27 @@ export function ComparisonModal({
                   <td className="p-4 font-medium text-foreground bg-panel/30">ATS Match Score</td>
                   {candidates.map((cand) => (
                     <td key={cand.id} className="p-4 border-l border-border">
-                      <span
-                        className={`inline-flex items-center justify-center font-display text-[22px] rounded-lg px-3 py-1 font-semibold border ${
-                          cand.atsScore >= 80
-                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                            : cand.atsScore >= 60
-                            ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                            : "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
-                        }`}
-                      >
-                        {cand.atsScore}%
-                      </span>
+                      {cand.atsAnalysis?.insufficientData ? (
+                        <span className="inline-flex items-center justify-center font-display text-[22px] text-faint">
+                          —
+                        </span>
+                      ) : (
+                        <span
+                          className={`inline-flex items-center justify-center font-display text-[22px] rounded-lg px-3 py-1 font-semibold border ${
+                            cand.atsScore >= 80
+                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                              : cand.atsScore >= 60
+                              ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                              : "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
+                          }`}
+                        >
+                          {cand.atsScore}%
+                        </span>
+                      )}
                       <span className="block text-[12px] text-muted mt-1">
-                        {cand.atsAnalysis?.recommendation}
+                        {cand.atsAnalysis?.insufficientData
+                          ? "Insufficient data"
+                          : cand.atsAnalysis?.recommendation}
                       </span>
                     </td>
                   ))}

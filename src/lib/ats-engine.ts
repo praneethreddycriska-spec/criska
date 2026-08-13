@@ -81,6 +81,29 @@ export function evaluateApplication(
   const answers = candidate.screeningAnswers || {};
   const skills = (candidate.technicalSkills || []).map((s) => s.trim()).filter(Boolean);
 
+  // ---------- INSUFFICIENT DATA GUARD ----------
+  // If the candidate has effectively nothing to score against — no technical
+  // skills, no (non-blank) screening answers, no experience, no project summary —
+  // we must NOT fabricate a match percentage.
+  const hasAnswers = Object.values(answers).some((v) => String(v ?? "").trim() !== "");
+  const hasExperience = String(candidate.experienceYears ?? "").trim() !== "";
+  const hasProject = String(candidate.projectSummary ?? "").trim() !== "";
+  const insufficientData = skills.length === 0 && !hasAnswers && !hasExperience && !hasProject;
+
+  if (insufficientData) {
+    return {
+      overallScore: 0,
+      skillsMatched: [],
+      skillsMissing: [],
+      experienceEvaluation: "Not enough candidate information to evaluate this application.",
+      matchSummary: `Insufficient data to score ${candidate.fullName} — no skills, screening answers, experience, or project details were provided.`,
+      recommendation: "Insufficient Data",
+      strengths: [],
+      redFlags: ["No evaluable candidate data provided"],
+      insufficientData: true,
+    };
+  }
+
   // Candidate text corpus (skills + answers + project + company) as a token set.
   const candidateCorpus = [
     skills.join(", "),
@@ -197,5 +220,6 @@ export function evaluateApplication(
     recommendation,
     strengths,
     redFlags,
+    insufficientData: false,
   };
 }

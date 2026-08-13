@@ -114,10 +114,15 @@ export function CandidateDrawer({
               <div className="rounded-2xl border border-border bg-panel p-5 text-center">
                 <span className="text-[12px] uppercase tracking-[0.14em] text-faint">Automated ATS Score</span>
                 <div className="font-display mt-1 text-[44px] leading-none text-foreground tabular-nums">
-                  {application.atsScore}%
+                  {application.atsAnalysis?.insufficientData ? "—" : `${application.atsScore}%`}
                 </div>
+                {application.atsAnalysis?.insufficientData && (
+                  <div className="text-[12px] text-muted">Insufficient data</div>
+                )}
                 <span className="mt-2 inline-block rounded-full bg-accent-soft px-3 py-1 text-[12px] font-semibold text-accent">
-                  {application.atsAnalysis?.recommendation || "Evaluated Candidate"}
+                  {application.atsAnalysis?.insufficientData
+                    ? "Insufficient Data"
+                    : application.atsAnalysis?.recommendation || "Evaluated Candidate"}
                 </span>
               </div>
 

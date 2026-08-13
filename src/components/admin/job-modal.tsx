@@ -89,6 +89,10 @@ export function JobModal({
     if (screeningQuestions.some((q) => isBlank(q.question))) {
       errs.questions = "Remove or fill in the empty screening question(s).";
     }
+    // At least one real screening question is required per posting.
+    if (screeningQuestions.filter((q) => !isBlank(q.question)).length === 0) {
+      errs.questions = "Add at least one screening question.";
+    }
     // Select-type questions need at least two options.
     if (screeningQuestions.some((q) => q.type === "select" && (q.options || []).filter((o) => cleanText(o)).length < 2)) {
       errs.questions = "Select questions need at least two options (comma separated).";

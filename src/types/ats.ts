@@ -40,9 +40,10 @@ export interface AtsAnalysis {
   skillsMissing: string[];
   experienceEvaluation: string;
   matchSummary: string;
-  recommendation: 'High Priority Shortlist' | 'Strong Match' | 'Potential Match' | 'Does Not Meet Requirements';
+  recommendation: 'High Priority Shortlist' | 'Strong Match' | 'Potential Match' | 'Does Not Meet Requirements' | 'Insufficient Data';
   strengths: string[];
   redFlags: string[];
+  insufficientData?: boolean;
 }
 
 export interface ParsedResumeData {

@@ -21,6 +21,20 @@ import { ThemeToggle } from "../theme-toggle";
 import { VisitorStats } from "./visitor-stats";
 import { InquiriesPanel } from "./inquiries-panel";
 
+/**
+ * A candidate has no evaluable data when there are no technical skills and no
+ * (non-blank) screening answers. In that case the ATS must NOT show a numeric %.
+ * Prefers the engine's own `insufficientData` flag, with a structural fallback.
+ */
+function isInsufficientData(app: JobApplication): boolean {
+  if (app.atsAnalysis?.insufficientData) return true;
+  const hasSkills = !!app.technicalSkills?.length;
+  const hasAnswers =
+    !!app.screeningAnswers &&
+    Object.values(app.screeningAnswers).some((v) => String(v ?? "").trim() !== "");
+  return !hasSkills && !hasAnswers;
+}
+
 export function AdminDashboard() {
   // Authentication is handled entirely server-side (signed session cookie +
   // middleware + email allowlist). Reaching this component means the admin is
@@ -492,11 +506,9 @@ export function AdminDashboard() {
                             <span className="rounded-full bg-accent-soft px-3 py-1 text-[12px] font-semibold text-accent">
                               {apps.length} Candidate{apps.length === 1 ? "" : "s"}
                             </span>
-                            {apps.length > 0 && (
-                              <span className="text-[12.5px] text-faint font-mono">
-                                Top ATS: {apps[0].atsScore}%
-                              </span>
-                            )}
+                            <span className="text-[12.5px] text-faint font-mono">
+                              Top ATS: {apps.length === 0 || isInsufficientData(apps[0]) ? "—" : `${apps[0].atsScore}%`}
+                            </span>
                           </div>
                         </div>
 
@@ -542,21 +554,28 @@ export function AdminDashboard() {
                                       <div className="text-[12.5px] text-muted">{app.email}</div>
                                     </td>
                                     <td className="px-6 py-4">
-                                      <div
-                                        className={`inline-flex items-center justify-center font-display text-[16px] tabular-nums rounded-lg px-2.5 py-1 font-semibold border ${
-                                          app.atsScore >= 80
-                                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                                            : app.atsScore >= 60
-                                            ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                                            : "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
-                                        }`}
-                                      >
-                                        {app.atsScore}%
-                                      </div>
+                                      {isInsufficientData(app) ? (
+                                        <div className="inline-flex flex-col">
+                                          <span className="font-display text-[16px] tabular-nums text-faint">—</span>
+                                          <span className="text-[11px] text-muted">Insufficient data</span>
+                                        </div>
+                                      ) : (
+                                        <div
+                                          className={`inline-flex items-center justify-center font-display text-[16px] tabular-nums rounded-lg px-2.5 py-1 font-semibold border ${
+                                            app.atsScore >= 80
+                                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                                              : app.atsScore >= 60
+                                              ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                                              : "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
+                                          }`}
+                                        >
+                                          {app.atsScore}%
+                                        </div>
+                                      )}
                                     </td>
                                     <td className="px-6 py-4">
                                       <span className="inline-flex items-center whitespace-nowrap rounded-full bg-accent-soft px-2.5 py-1 text-[11.5px] font-medium leading-none text-accent">
-                                        {app.atsAnalysis?.recommendation || "Evaluated"}
+                                        {isInsufficientData(app) ? "Insufficient Data" : app.atsAnalysis?.recommendation || "Evaluated"}
                                       </span>
                                     </td>
                                     <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
@@ -687,21 +706,28 @@ export function AdminDashboard() {
                                   <div className="font-medium text-foreground">{app.jobTitle}</div>
                                 </td>
                                 <td className="px-6 py-4">
-                                  <div
-                                    className={`inline-flex items-center justify-center font-display text-[16px] tabular-nums rounded-lg px-2.5 py-1 font-semibold border ${
-                                      app.atsScore >= 80
-                                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                                        : app.atsScore >= 60
-                                        ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                                        : "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
-                                    }`}
-                                  >
-                                    {app.atsScore}%
-                                  </div>
+                                  {isInsufficientData(app) ? (
+                                    <div className="inline-flex flex-col">
+                                      <span className="font-display text-[16px] tabular-nums text-faint">—</span>
+                                      <span className="text-[11px] text-muted">Insufficient data</span>
+                                    </div>
+                                  ) : (
+                                    <div
+                                      className={`inline-flex items-center justify-center font-display text-[16px] tabular-nums rounded-lg px-2.5 py-1 font-semibold border ${
+                                        app.atsScore >= 80
+                                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                                          : app.atsScore >= 60
+                                          ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                                          : "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
+                                      }`}
+                                    >
+                                      {app.atsScore}%
+                                    </div>
+                                  )}
                                 </td>
                                 <td className="px-6 py-4">
                                   <span className="inline-flex items-center whitespace-nowrap rounded-full bg-accent-soft px-2.5 py-1 text-[11.5px] font-medium leading-none text-accent">
-                                    {app.atsAnalysis?.recommendation || "Evaluated"}
+                                    {isInsufficientData(app) ? "Insufficient Data" : app.atsAnalysis?.recommendation || "Evaluated"}
                                   </span>
                                 </td>
                                 <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
