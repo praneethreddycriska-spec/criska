@@ -22,18 +22,31 @@ export function InterviewScheduler({
   const [interviewerEmail] = useState<string>("info2@criska.in");
   const [meetingUrl, setMeetingUrl] = useState<string>("https://meet.google.com/criska-tech-interview");
   const [notes, setNotes] = useState<string>("System architecture, coding & ATS screening review.");
+  const [error, setError] = useState<string>("");
 
   if (!isOpen || !application) return null;
 
   const handleScheduleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+
+    const startDateTime = new Date(`${date}T${time}:00`);
+    if (isNaN(startDateTime.getTime()) || startDateTime.getTime() < Date.now()) {
+      setError("Interview date/time cannot be in the past.");
+      return;
+    }
+
+    // Clamp duration to a sane positive range (5–480 mins); fall back to 30 if invalid.
+    const safeDuration = Number.isFinite(durationMinutes)
+      ? Math.min(480, Math.max(5, durationMinutes))
+      : 30;
 
     const newInterview: ScheduledInterview = {
       id: `interview-${Date.now()}`,
       interviewType,
       date,
       time,
-      durationMinutes,
+      durationMinutes: safeDuration,
       interviewerName,
       interviewerEmail,
       meetingUrl,
@@ -48,6 +61,13 @@ export function InterviewScheduler({
     onClose();
   };
 
+  const escapeIcs = (s: string) =>
+    s
+      .replace(/\\/g, "\\\\")
+      .replace(/;/g, "\\;")
+      .replace(/,/g, "\\,")
+      .replace(/\r\n|\n|\r/g, "\\n");
+
   const downloadIcsFile = (app: JobApplication, interview: ScheduledInterview) => {
     const startDateTime = new Date(`${interview.date}T${interview.time}:00`)
       .toISOString()
@@ -61,13 +81,13 @@ export function InterviewScheduler({
       "VERSION:2.0",
       "PRODID:-//Criska ATS//Interview Scheduler//EN",
       "BEGIN:VEVENT",
-      `SUMMARY:Criska Interview (${interview.interviewType}): ${app.fullName} - ${app.jobTitle}`,
-      `DESCRIPTION:${interview.notes} | Meeting Link: ${interview.meetingUrl}`,
-      `LOCATION:${interview.meetingUrl}`,
+      `SUMMARY:Criska Interview (${escapeIcs(interview.interviewType)}): ${escapeIcs(app.fullName)} - ${escapeIcs(app.jobTitle ?? "")}`,
+      `DESCRIPTION:${escapeIcs(interview.notes)} | Meeting Link: ${escapeIcs(interview.meetingUrl)}`,
+      `LOCATION:${escapeIcs(interview.meetingUrl)}`,
       `DTSTART:${startDateTime}`,
       `DTEND:${endDateTime}`,
-      `ORGANIZER;CN=${interview.interviewerName}:mailto:${interview.interviewerEmail}`,
-      `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=${app.fullName}:mailto:${app.email}`,
+      `ORGANIZER;CN=${escapeIcs(interview.interviewerName)}:mailto:${interview.interviewerEmail}`,
+      `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=${escapeIcs(app.fullName)}:mailto:${app.email}`,
       "END:VEVENT",
       "END:VCALENDAR",
     ].join("\r\n");
@@ -125,6 +145,7 @@ export function InterviewScheduler({
               <input
                 type="date"
                 required
+                min={new Date().toISOString().slice(0, 10)}
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 className="w-full rounded-xl border border-border bg-paper px-3 py-2 text-[14px] text-foreground outline-none"
@@ -151,6 +172,7 @@ export function InterviewScheduler({
               </label>
               <input
                 type="number"
+                min={5}
                 value={durationMinutes}
                 onChange={(e) => setDurationMinutes(parseInt(e.target.value) || 30)}
                 className="w-full rounded-xl border border-border bg-paper px-3 py-2 text-[14px] text-foreground outline-none"
@@ -192,6 +214,10 @@ export function InterviewScheduler({
               className="w-full rounded-xl border border-border bg-paper p-2.5 text-[13.5px] text-foreground outline-none"
             />
           </div>
+
+          {error && (
+            <p className="text-[13px] text-red-500">{error}</p>
+          )}
 
           <div className="pt-4 border-t border-border flex justify-end gap-3">
             <button type="button" onClick={onClose} className="btn-pill btn-ghost text-[14px]">

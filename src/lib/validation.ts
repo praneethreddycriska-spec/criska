@@ -1,8 +1,9 @@
 /** Shared input validation — used on BOTH the client (forms) and the server (APIs). */
 import { isValidPhoneNumber } from "libphonenumber-js";
 
-// Reasonable, strict-enough email pattern: no spaces, a dot-tld of 2+ chars.
-export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+// Local + domain with a letters-only TLD of 2+ chars. Dots allowed but not at
+// the edges of a label (the `..` / leading / trailing checks below enforce that).
+export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
 
 /** Trim; treat null/undefined as "". */
 export function cleanText(v: unknown): string {
@@ -16,7 +17,16 @@ export function isBlank(v: unknown): boolean {
 
 export function isValidEmail(v: unknown): boolean {
   const s = cleanText(v);
-  return s.length >= 5 && s.length <= 254 && EMAIL_RE.test(s);
+  if (s.length < 5 || s.length > 254) return false;
+  if (s.includes("..")) return false; // reject consecutive dots (a@b.....com)
+  const at = s.indexOf("@");
+  if (at < 1 || at !== s.lastIndexOf("@")) return false; // exactly one @, not first char
+  const local = s.slice(0, at);
+  const domain = s.slice(at + 1);
+  // No dot at the edge of the local part or the domain.
+  if (local.startsWith(".") || local.endsWith(".")) return false;
+  if (domain.startsWith(".") || domain.endsWith(".") || domain.startsWith("-")) return false;
+  return EMAIL_RE.test(s);
 }
 
 /**
@@ -40,6 +50,39 @@ export function isValidText(v: unknown, min = 1, max = 4000): boolean {
   return s.length >= min && s.length <= max;
 }
 
+/** A person name: has at least one letter (rejects "!!", "12", "----"). */
+export function isValidName(v: unknown): boolean {
+  const s = cleanText(v);
+  return s.length >= 2 && s.length <= 200 && /\p{L}/u.test(s);
+}
+
+/** Optional URL field: empty is OK, otherwise must be a real http(s) URL. */
+export function isValidHttpUrl(v: unknown): boolean {
+  const s = cleanText(v);
+  if (!s) return true;
+  try {
+    const u = new URL(s);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Returns the URL only if it is a safe http(s) URL, else "". Use at render time
+ * so a stored `javascript:`/`data:` URL can never become a live/clickable link.
+ */
+export function safeHttpUrl(v: unknown): string {
+  const s = cleanText(v);
+  if (!s) return "";
+  try {
+    const u = new URL(s);
+    return u.protocol === "http:" || u.protocol === "https:" ? s : "";
+  } catch {
+    return "";
+  }
+}
+
 export type FieldErrors = Record<string, string>;
 
 /**
@@ -54,7 +97,7 @@ export function validateLead(input: {
 }): FieldErrors {
   const errors: FieldErrors = {};
   if (isBlank(input.full_name)) errors.full_name = "Please enter your name.";
-  else if (!isValidText(input.full_name, 2, 200)) errors.full_name = "Name looks too short or too long.";
+  else if (!isValidName(input.full_name)) errors.full_name = "Please enter a valid name.";
   if (isBlank(input.email)) errors.email = "Please enter your email.";
   else if (!isValidEmail(input.email)) errors.email = "Please enter a valid email address.";
   if (!isValidPhone(input.phone)) errors.phone = "Please enter a valid phone number.";

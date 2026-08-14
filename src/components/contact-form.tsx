@@ -32,6 +32,8 @@ export function ContactForm() {
 
     // Client-side validation (server re-checks identically).
     const errs = validateLead(payload);
+    // A phone typed as only separators (e.g. "-----") yields no digits — reject it.
+    if (cleanText(phone) && !payload.phone) errs.phone = "Please enter a valid phone number.";
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       return;

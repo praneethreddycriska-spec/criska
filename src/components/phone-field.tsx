@@ -154,8 +154,11 @@ export function PhoneField({
           className={`${base} ${state} w-[7.5rem] shrink-0 px-2.5 py-3`}
         >
           {countries.map((c) => (
+            // Flag + dial only. On systems that render flag emoji you get "🇮🇳 +91";
+            // on systems that DON'T (e.g. Windows), the flag falls back to the ISO
+            // letters ("IN +91") — so we must NOT also print c.iso or it shows twice.
             <option key={c.iso} value={c.iso}>
-              {c.flag} {c.iso} +{c.dial}
+              {c.flag} +{c.dial}
             </option>
           ))}
         </select>

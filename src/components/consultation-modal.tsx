@@ -37,6 +37,8 @@ export function ConsultationModal({
     const e164 = toE164(phoneCountry, phone);
     const lead = { full_name: cleanText(fullName), email: cleanText(email), phone: e164 };
     const errs = validateLead(lead);
+    // Reject a phone typed as only separators ("-----") — no digits.
+    if (cleanText(phone) && !e164) errs.phone = "Please enter a valid phone number.";
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       return;
@@ -212,6 +214,7 @@ export function ConsultationModal({
                   <input
                     type="date"
                     value={date}
+                    min={new Date().toISOString().slice(0, 10)}
                     onChange={(e) => setDate(e.target.value)}
                     className="mt-1.5 w-full rounded-xl border border-border bg-paper px-3.5 py-2.5 text-[14px] text-foreground outline-none focus:border-foreground"
                   />

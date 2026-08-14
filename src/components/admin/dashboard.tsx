@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ImageInput } from "./image-input";
+import { isValidHttpUrl, isValidEmail } from "@/lib/validation";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -16,6 +17,7 @@ type TabDef = {
   singleton?: boolean;
   readonly?: boolean;
   titleKey?: string;
+  required?: string[];
   fields: Field[];
 };
 
@@ -39,7 +41,7 @@ const ICON_OPTIONS = [
 
 const TABS: TabDef[] = [
   {
-    key: "leadership", table: "leadership", label: "Meet the Board", titleKey: "role",
+    key: "leadership", table: "leadership", label: "Meet the Board", titleKey: "role", required: ["role"],
     fields: [
       { key: "name", label: "Name", type: "text", help: "Leave blank to show the role only" },
       { key: "role", label: "Role / Title", type: "text" },
@@ -50,7 +52,7 @@ const TABS: TabDef[] = [
     ],
   },
   {
-    key: "events", table: "events", label: "Events", titleKey: "title",
+    key: "events", table: "events", label: "Events", titleKey: "title", required: ["title"],
     fields: [
       { key: "title", label: "Event Title", type: "text" },
       { key: "tag", label: "Tag", type: "text", help: "e.g. Tech Talk, Workshop" },
@@ -63,7 +65,7 @@ const TABS: TabDef[] = [
     ],
   },
   {
-    key: "services", table: "services", label: "Services", titleKey: "title",
+    key: "services", table: "services", label: "Services", titleKey: "title", required: ["title"],
     fields: [
       { key: "title", label: "Service Title", type: "text" },
       { key: "icon", label: "Icon", type: "select", options: ICON_OPTIONS, help: "Icon shown in the card" },
@@ -75,7 +77,7 @@ const TABS: TabDef[] = [
     ],
   },
   {
-    key: "contact", table: "contact", label: "Contact Details", singleton: true,
+    key: "contact", table: "contact", label: "Contact Details", singleton: true, required: ["company"],
     fields: [
       { key: "company", label: "Company", type: "text" },
       { key: "office_label", label: "Office Label", type: "text" },
@@ -237,12 +239,16 @@ function CollectionList({ tab, rows, onAdd, onEdit, onDelete }: { tab: TabDef; r
 function RecordForm({ tab, initial, onSave, singleton }: { tab: TabDef; initial: any; onSave: (v: any) => Promise<void> | void; singleton?: boolean }) {
   const [values, setValues] = useState<any>(() => normalize(tab, initial));
   const [saving, setSaving] = useState(false);
-  useEffect(() => { setValues(normalize(tab, initial)); }, [tab, initial]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  useEffect(() => { setValues(normalize(tab, initial)); setErrors({}); }, [tab, initial]);
 
   const set = (k: string, v: any) => setValues((s: any) => ({ ...s, [k]: v }));
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    const errs = validateRecord(tab, values);
+    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    setErrors({});
     setSaving(true);
     await onSave(denormalize(tab, values));
     setSaving(false);
@@ -283,8 +289,9 @@ function RecordForm({ tab, initial, onSave, singleton }: { tab: TabDef; initial:
               </select>
             )}
             {f.type === "number" && (
-              <input type="number" value={values[f.key] ?? 0} onChange={(e) => set(f.key, Number(e.target.value))} className={inputCls} />
+              <input type="number" min={0} step={1} value={values[f.key] ?? 0} onChange={(e) => set(f.key, Number(e.target.value))} className={inputCls} />
             )}
+            {errors[f.key] && <p className="mt-1 text-[12px] text-[#c0564f]">{errors[f.key]}</p>}
             {f.help && <p className="mt-1 text-[12px] text-muted">{f.help}</p>}
           </div>
         ))}
@@ -343,11 +350,35 @@ function normalize(tab: TabDef, r: any) {
   return v;
 }
 
+/** Validate a record before save. Returns field → message (empty = valid). */
+function validateRecord(tab: TabDef, v: any): Record<string, string> {
+  const errs: Record<string, string> = {};
+  const required = tab.required || [];
+  for (const f of tab.fields) {
+    const raw = v[f.key];
+    if ((f.type === "text" || f.type === "textarea") && required.includes(f.key)) {
+      if (String(raw ?? "").trim().length === 0) errs[f.key] = `${f.label} is required.`;
+    }
+    if ((f.type === "url" || f.type === "image") && !isValidHttpUrl(raw)) {
+      errs[f.key] = "Enter a valid http(s) URL.";
+    }
+    if (f.type === "tags" && tab.key === "contact" && f.key === "emails") {
+      const bad = String(raw ?? "").split(",").map((s) => s.trim()).filter(Boolean).find((e) => !isValidEmail(e));
+      if (bad) errs[f.key] = `“${bad}” is not a valid email.`;
+    }
+  }
+  return errs;
+}
+
 function denormalize(tab: TabDef, v: any) {
   const out: any = { ...v };
   for (const f of tab.fields) {
     if (f.type === "lines") out[f.key] = String(v[f.key] || "").split("\n").map((s) => s.trim()).filter(Boolean);
-    if (f.type === "tags") out[f.key] = String(v[f.key] || "").split(",").map((s) => s.trim()).filter(Boolean);
+    else if (f.type === "tags") out[f.key] = String(v[f.key] || "").split(",").map((s) => s.trim()).filter(Boolean);
+    else if (f.type === "number") out[f.key] = Math.max(0, Math.floor(Number(v[f.key]) || 0));
+    else if (f.type === "text" || f.type === "textarea" || f.type === "url" || f.type === "image" || f.type === "select") {
+      out[f.key] = String(v[f.key] ?? "").trim();
+    }
   }
   return out;
 }

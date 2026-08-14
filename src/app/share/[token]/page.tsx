@@ -23,7 +23,7 @@ export default async function SharePage({
     return (
       <>
         <Nav />
-        <main className="flex-1 py-24 text-center">
+        <main className="flex-1 pb-24 pt-36 text-center md:pt-44">
           <h1 className="font-display text-[32px]">Candidate Dossier Not Found</h1>
           <p className="mt-2 text-muted">This share link may have expired or is invalid.</p>
         </main>
@@ -35,7 +35,7 @@ export default async function SharePage({
   return (
     <>
       <Nav />
-      <main className="flex-1 py-20 md:py-28">
+      <main className="flex-1 pb-20 pt-36 md:pb-28 md:pt-44">
         <div className="mx-auto max-w-[900px] px-6">
           <div className="rounded-2xl border border-border bg-surface p-8 shadow-xl space-y-6">
             <div className="flex flex-col gap-2 border-b border-border pb-6 sm:flex-row sm:items-center sm:justify-between">

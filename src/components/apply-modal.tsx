@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { JobPosting, JobApplication, ScreeningQuestion } from "@/types/ats";
 import { createApplication } from "@/lib/supabase";
 import { parseResumeData } from "@/lib/resume-parser";
-import { cleanText, isBlank, validateLead, type FieldErrors } from "@/lib/validation";
+import { cleanText, isBlank, isValidHttpUrl, validateLead, type FieldErrors } from "@/lib/validation";
 import { PhoneField, toE164 } from "@/components/phone-field";
 
 export type ApplyJob = {
@@ -52,9 +52,27 @@ export function ApplyModal({
     const e164 = toE164(phoneCountry, phone);
     const errs = validateLead({ full_name: fullName, email, phone: e164 });
     if (isBlank(phone)) errs.phone = "Please enter your phone number.";
+    else if (!e164) errs.phone = "Please enter a valid phone number."; // e.g. "-----"
+    // Reject javascript:/data:/garbage URLs (stored-XSS guard).
+    if (!isValidHttpUrl(linkedinUrl)) errs.linkedin = "Enter a valid http(s) URL.";
+    if (!isValidHttpUrl(portfolioUrl)) errs.portfolio = "Enter a valid http(s) URL.";
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     setErrors({});
     setStep(2);
+  };
+
+  // Advance out of the screening step — reject negative / invalid number answers.
+  const goToSkills = () => {
+    for (const q of fullJob.screeningQuestions) {
+      if (q.type !== "number") continue;
+      const a = (screeningAnswers[q.id] ?? "").trim();
+      if (a && (Number(a) < 0 || Number.isNaN(Number(a)))) {
+        setFileError(`"${q.question}" must be a valid number (0 or more).`);
+        return;
+      }
+    }
+    setFileError("");
+    setStep(3);
   };
 
   // Build the scoring job from whatever the caller passed. The careers page now
@@ -251,10 +269,12 @@ export function ApplyModal({
                         <input
                           type="url"
                           value={linkedinUrl}
-                          onChange={(e) => setLinkedinUrl(e.target.value)}
+                          aria-invalid={!!errors.linkedin}
+                          onChange={(e) => { setLinkedinUrl(e.target.value); clearError("linkedin"); }}
                           placeholder="https://linkedin.com/in/username"
-                          className="w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:ring-2 focus:ring-accent/30"
+                          className={`w-full rounded-xl border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:ring-2 ${errors.linkedin ? "border-[#c0564f] focus:ring-[#c0564f]/30" : "border-border focus:ring-accent/30"}`}
                         />
+                        {errors.linkedin && <p className="mt-1 text-[12.5px]" style={{ color: "#c0564f" }}>{errors.linkedin}</p>}
                       </div>
                       <div>
                         <label className="block text-[12.5px] uppercase tracking-[0.12em] text-faint mb-1">
@@ -263,10 +283,12 @@ export function ApplyModal({
                         <input
                           type="url"
                           value={portfolioUrl}
-                          onChange={(e) => setPortfolioUrl(e.target.value)}
+                          aria-invalid={!!errors.portfolio}
+                          onChange={(e) => { setPortfolioUrl(e.target.value); clearError("portfolio"); }}
                           placeholder="https://github.com/username"
-                          className="w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:ring-2 focus:ring-accent/30"
+                          className={`w-full rounded-xl border bg-paper px-4 py-3 text-[15px] text-foreground outline-none focus:ring-2 ${errors.portfolio ? "border-[#c0564f] focus:ring-[#c0564f]/30" : "border-border focus:ring-accent/30"}`}
                         />
+                        {errors.portfolio && <p className="mt-1 text-[12.5px]" style={{ color: "#c0564f" }}>{errors.portfolio}</p>}
                       </div>
                     </div>
                   </div>
@@ -299,6 +321,8 @@ export function ApplyModal({
                             <input
                               type={q.type === "number" ? "number" : "text"}
                               required={q.required}
+                              min={q.type === "number" ? 0 : undefined}
+                              step={q.type === "number" ? 1 : undefined}
                               value={screeningAnswers[q.id] || ""}
                               onChange={(e) => handleAnswerChange(q.id, e.target.value)}
                               placeholder="Your response…"
@@ -334,12 +358,14 @@ export function ApplyModal({
                         ))}
                       </div>
                     )}
-                    {fileError && <p className="text-red-500 text-[13px] mt-1">{fileError}</p>}
                   </div>
                 )}
 
+                {/* Validation message visible on any step (e.g. negative years). */}
+                {fileError && <p className="mt-4 text-red-500 text-[13px]">{fileError}</p>}
+
                 {/* Footer Controls */}
-                <div className="mt-8 flex items-center justify-between border-t border-border pt-4">
+                <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
                   {step > 1 ? (
                     <button
                       type="button"
@@ -353,7 +379,7 @@ export function ApplyModal({
                   {step < 3 ? (
                     <button
                       type="button"
-                      onClick={() => (step === 1 ? goToScreening() : setStep((s) => (s + 1) as 1 | 2 | 3))}
+                      onClick={() => (step === 1 ? goToScreening() : goToSkills())}
                       className="btn-pill btn-primary text-[14px] disabled:opacity-50"
                     >
                       Next Step →

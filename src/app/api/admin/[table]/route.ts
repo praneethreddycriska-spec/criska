@@ -25,6 +25,28 @@ function resolve(table: string) {
   return TABLES[table] ?? table;
 }
 
+/**
+ * Defensive server-side sanitation of a record's values (generic, all tables):
+ * - trim string values;
+ * - coerce any field named `sort` to Math.max(0, Math.floor(Number(value) || 0));
+ * - blank out any string whose trimmed form starts with `javascript:` or `data:`.
+ */
+function sanitizeValues(values: Record<string, any>): Record<string, any> {
+  const out: Record<string, any> = { ...values };
+  for (const [k, v] of Object.entries(out)) {
+    if (k === "sort") {
+      out[k] = Math.max(0, Math.floor(Number(v) || 0));
+      continue;
+    }
+    if (typeof v === "string") {
+      const trimmed = v.trim();
+      const lower = trimmed.toLowerCase();
+      out[k] = lower.startsWith("javascript:") || lower.startsWith("data:") ? "" : trimmed;
+    }
+  }
+  return out;
+}
+
 async function admin() {
   const sb = getSupabaseAdmin();
   if (!sb) {
@@ -82,8 +104,9 @@ export async function POST(req: Request, ctx: { params: Promise<{ table: string 
   const { sb, error } = await admin();
   if (error) return error;
 
-  const values = await req.json().catch(() => ({}));
-  delete values.id;
+  const raw = await req.json().catch(() => ({}));
+  delete raw.id;
+  const values = sanitizeValues(raw);
 
   try {
     if (t === "criska_contact") {
@@ -122,7 +145,8 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ table: string
   if (error) return error;
 
   const body = await req.json().catch(() => ({}));
-  const { id, ...values } = body;
+  const { id, ...rest } = body;
+  const values = sanitizeValues(rest);
 
   try {
     if (t === "criska_contact") {

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { JobApplication, ApplicationStatus, ScheduledInterview } from "@/types/ats";
 import { printCandidateDossier } from "@/lib/export-utils";
+import { safeHttpUrl } from "@/lib/validation";
 import { InterviewScheduler } from "./interview-scheduler";
 import { EmailWorkflowModal } from "./email-workflow-modal";
 import { ShareLinkModal } from "./share-link-modal";
@@ -165,16 +166,16 @@ export function CandidateDrawer({
                   <span className="text-muted block text-[12px]">Phone:</span>
                   <a href={`tel:${application.phone}`} className="text-foreground hover:underline font-medium">{application.phone}</a>
                 </div>
-                {application.linkedinUrl && (
+                {safeHttpUrl(application.linkedinUrl) && (
                   <div>
                     <span className="text-muted block text-[12px]">LinkedIn:</span>
-                    <a href={application.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">View LinkedIn Profile ↗</a>
+                    <a href={safeHttpUrl(application.linkedinUrl)} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">View LinkedIn Profile ↗</a>
                   </div>
                 )}
-                {application.portfolioUrl && (
+                {safeHttpUrl(application.portfolioUrl) && (
                   <div>
                     <span className="text-muted block text-[12px]">Portfolio / GitHub:</span>
-                    <a href={application.portfolioUrl} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">View Portfolio ↗</a>
+                    <a href={safeHttpUrl(application.portfolioUrl)} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">View Portfolio ↗</a>
                   </div>
                 )}
               </div>

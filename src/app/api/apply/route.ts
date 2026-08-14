@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
 import { clientIp, limit } from "@/lib/rate-limit";
-import { cleanText, validateLead } from "@/lib/validation";
+import { cleanText, validateLead, safeHttpUrl } from "@/lib/validation";
 
 export async function POST(req: Request) {
   const { limited, retryAfter } = await limit(`apply:${clientIp(req)}`, 8, 60 * 60 * 1000);
@@ -59,8 +59,8 @@ export async function POST(req: Request) {
     email: cleanText(email).slice(0, 200).toLowerCase(),
     phone: String(phone || "").slice(0, 60),
     current_company: String(current_company || "").slice(0, 200),
-    linkedin: String(linkedin || "").slice(0, 400),
-    portfolio_url: String(portfolio_url || "").slice(0, 400),
+    linkedin: safeHttpUrl(linkedin).slice(0, 400),
+    portfolio_url: safeHttpUrl(portfolio_url).slice(0, 400),
     experience_years: String(experience_years ?? "").slice(0, 20),
     notice_period: String(notice_period || "").slice(0, 60),
     project_summary: String(project_summary || "").slice(0, 4000),

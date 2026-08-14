@@ -1,6 +1,7 @@
 import { site } from "@/content/site";
 import { Reveal } from "@/components/reveal";
 import { getLeadership } from "@/lib/data";
+import { safeHttpUrl } from "@/lib/validation";
 
 const CREAM = "var(--navy-text)";
 
@@ -70,11 +71,11 @@ export async function LeadershipMembers({
                   {m.bio}
                 </p>
 
-                {m.linkedin && m.linkedin !== "#" && (
+                {safeHttpUrl(m.linkedin) && (
                   <a
-                    href={m.linkedin}
-                    target={m.linkedin.startsWith("http") ? "_blank" : undefined}
-                    rel={m.linkedin.startsWith("http") ? "noopener noreferrer" : undefined}
+                    href={safeHttpUrl(m.linkedin)}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     aria-label={`${m.name || m.role} on LinkedIn`}
                     className="mt-5 grid h-9 w-9 place-items-center rounded-lg transition-colors"
                     style={{ border: "1px solid var(--navy-border-strong)", color: "var(--navy-body)" }}
