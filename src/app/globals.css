@@ -280,6 +280,37 @@ body {
 }
 .dark .aura-orb { opacity: 0.4; }
 
+/* Interactive cursor spotlight over the hero — soft periwinkle glow that
+   tracks the pointer. Decorative, desktop-only, nothing depends on it. */
+.hero-spotlight {
+  background: radial-gradient(
+    620px circle at var(--mx, 50%) var(--my, 26%),
+    rgba(129, 138, 196, 0.30),
+    transparent 62%
+  );
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.dark .hero-spotlight {
+  background: radial-gradient(
+    620px circle at var(--mx, 50%) var(--my, 26%),
+    rgba(166, 175, 221, 0.24),
+    transparent 62%
+  );
+}
+@media (hover: hover) {
+  .hero-surface:hover .hero-spotlight { opacity: 1; }
+}
+
+/* Magnetic pull for the hero CTAs */
+.magnetic {
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.magnetic:active {
+  transition: transform 100ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-node,
   .animate-marquee,
@@ -288,5 +319,10 @@ body {
   .animate-phone,
   .animate-glow,
   .aura-orb { animation: none !important; }
+  .hero-spotlight { display: none; }
+  .magnetic { transition: none; }
   html { scroll-behavior: auto; }
+}
+@media (hover: none) {
+  .magnetic { transform: none !important; }
 }

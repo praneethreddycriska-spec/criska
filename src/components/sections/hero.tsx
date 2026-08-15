@@ -1,15 +1,48 @@
 "use client";
 
-import { motion, useInView, animate } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { motion, useInView, useReducedMotion, animate } from "motion/react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { site } from "@/content/site";
+
+const EASE = [0.16, 1, 0.3, 1] as const;
 
 export function Hero() {
   const { hero } = site;
+  const reduce = useReducedMotion();
+  const surfaceRef = useRef<HTMLElement>(null);
+
+  // Move the cursor spotlight by writing pointer coords onto the hero surface.
+  function handlePointerMove(e: React.PointerEvent<HTMLElement>) {
+    const el = surfaceRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+    el.style.setProperty("--my", `${e.clientY - r.top}px`);
+  }
+
+  const leadWords = hero.titleLead.split(" ");
+  const accentWords = hero.titleAccent.split(" ");
+
+  const container = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.055, delayChildren: 0.12 } },
+  };
+  const word = {
+    hidden: { opacity: 0, y: 16 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE } },
+  };
+
   return (
-    <header id="top" className="relative isolate overflow-hidden">
+    <header
+      ref={surfaceRef}
+      id="top"
+      onPointerMove={handlePointerMove}
+      className="hero-surface relative isolate overflow-hidden"
+    >
       {/* soft pastel wash + faint guide lines */}
       <div className="pointer-events-none absolute inset-0 pastel-wash" />
+      {/* interactive cursor spotlight */}
+      <div className="hero-spotlight pointer-events-none absolute inset-0" aria-hidden />
       {/* subtle drifting ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
         <div className="aura-orb aura-orb--a" style={{ top: "-8%", left: "-6%", width: "42vw", height: "42vw", maxWidth: 560, maxHeight: 560 }} />
@@ -37,13 +70,25 @@ export function Hero() {
         </motion.div>
 
         <motion.h1
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.65, delay: 0.05 }}
+          aria-label={`${hero.titleLead} ${hero.titleAccent}`}
+          variants={container}
+          initial={reduce ? false : "hidden"}
+          animate="visible"
           className="font-display mx-auto mt-6 max-w-[15ch] text-[44px] leading-[1.04] sm:text-[64px] md:text-[74px]"
         >
-          {hero.titleLead}{" "}
-          <em className="italic text-accent/90">{hero.titleAccent}</em>
+          <span aria-hidden>
+            {leadWords.map((w, i) => (
+              <Fragment key={`l-${i}`}>
+                <motion.span variants={word} className="inline-block">{w}</motion.span>{" "}
+              </Fragment>
+            ))}
+            {accentWords.map((w, i) => (
+              <Fragment key={`a-${i}`}>
+                <motion.span variants={word} className="inline-block italic text-accent/90">{w}</motion.span>
+                {i < accentWords.length - 1 ? " " : ""}
+              </Fragment>
+            ))}
+          </span>
         </motion.h1>
 
         <motion.p
@@ -61,12 +106,12 @@ export function Hero() {
           transition={{ duration: 0.65, delay: 0.2 }}
           className="mt-9 flex flex-wrap items-center justify-center gap-3"
         >
-          <a href={hero.primaryCta.href} className="btn-pill btn-primary">
+          <MagneticButton href={hero.primaryCta.href} reduce={!!reduce} className="btn-pill btn-primary">
             {hero.primaryCta.label}
-          </a>
-          <a href={hero.secondaryCta.href} className="btn-pill btn-ghost">
+          </MagneticButton>
+          <MagneticButton href={hero.secondaryCta.href} reduce={!!reduce} className="btn-pill btn-ghost">
             {hero.secondaryCta.label}
-          </a>
+          </MagneticButton>
         </motion.div>
 
         {/* Stats — editorial serif numbers */}
@@ -87,6 +132,46 @@ export function Hero() {
         </motion.div>
       </div>
     </header>
+  );
+}
+
+function MagneticButton({
+  href,
+  className,
+  reduce,
+  children,
+}: {
+  href: string;
+  className?: string;
+  reduce: boolean;
+  children: React.ReactNode;
+}) {
+  const ref = useRef<HTMLAnchorElement>(null);
+
+  function onMove(e: React.PointerEvent<HTMLAnchorElement>) {
+    if (reduce) return;
+    const el = ref.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const x = (e.clientX - r.left - r.width / 2) * 0.25;
+    const y = (e.clientY - r.top - r.height / 2) * 0.25;
+    el.style.transform = `translate(${x}px, ${y}px)`;
+  }
+  function onLeave() {
+    const el = ref.current;
+    if (el) el.style.transform = "";
+  }
+
+  return (
+    <a
+      ref={ref}
+      href={href}
+      onPointerMove={onMove}
+      onPointerLeave={onLeave}
+      className={`magnetic ${className ?? ""}`}
+    >
+      {children}
+    </a>
   );
 }
 
