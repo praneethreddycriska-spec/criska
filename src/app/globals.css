@@ -302,6 +302,28 @@ body {
   .hero-surface:hover .hero-spotlight { opacity: 1; }
 }
 
+/* Cursor-reactive depth: ambient orbs drift toward the pointer (parallax).
+   The wrapper handles the mouse parallax; the inner .aura-orb keeps its own
+   slow drift animation, so the two transforms compose without conflict. */
+.orb-parallax {
+  position: absolute;
+  will-change: transform;
+  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.orb-parallax--a {
+  transform: translate3d(calc(var(--nx, 0) * 42px), calc(var(--ny, 0) * 42px), 0);
+}
+.orb-parallax--b {
+  transform: translate3d(calc(var(--nx, 0) * -32px), calc(var(--ny, 0) * -28px), 0);
+}
+
+/* Soft halo pulse for the "live" eyebrow dot */
+@keyframes dot-halo {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 147, 196, 0.5); }
+  50% { box-shadow: 0 0 0 5px rgba(139, 147, 196, 0); }
+}
+.dot-halo { animation: dot-halo 2.6s ease-in-out infinite; }
+
 /* Magnetic pull for the hero CTAs */
 .magnetic {
   transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -320,9 +342,12 @@ body {
   .animate-glow,
   .aura-orb { animation: none !important; }
   .hero-spotlight { display: none; }
+  .orb-parallax { transform: none !important; transition: none; }
+  .dot-halo { animation: none !important; }
   .magnetic { transition: none; }
   html { scroll-behavior: auto; }
 }
 @media (hover: none) {
   .magnetic { transform: none !important; }
+  .orb-parallax { transform: none !important; }
 }

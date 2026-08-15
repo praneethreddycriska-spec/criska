@@ -18,6 +18,9 @@ export function Hero() {
     const r = el.getBoundingClientRect();
     el.style.setProperty("--mx", `${e.clientX - r.left}px`);
     el.style.setProperty("--my", `${e.clientY - r.top}px`);
+    // Normalized -0.5..0.5 offset from centre, for the orb parallax.
+    el.style.setProperty("--nx", `${(e.clientX - r.left) / r.width - 0.5}`);
+    el.style.setProperty("--ny", `${(e.clientY - r.top) / r.height - 0.5}`);
   }
 
   const leadWords = hero.titleLead.split(" ");
@@ -45,8 +48,12 @@ export function Hero() {
       <div className="hero-spotlight pointer-events-none absolute inset-0" aria-hidden />
       {/* subtle drifting ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-        <div className="aura-orb aura-orb--a" style={{ top: "-8%", left: "-6%", width: "42vw", height: "42vw", maxWidth: 560, maxHeight: 560 }} />
-        <div className="aura-orb aura-orb--b" style={{ top: "18%", right: "-8%", width: "38vw", height: "38vw", maxWidth: 520, maxHeight: 520 }} />
+        <div className="orb-parallax orb-parallax--a" style={{ top: "-8%", left: "-6%", width: "42vw", height: "42vw", maxWidth: 560, maxHeight: 560 }}>
+          <div className="aura-orb aura-orb--a" style={{ width: "100%", height: "100%" }} />
+        </div>
+        <div className="orb-parallax orb-parallax--b" style={{ top: "18%", right: "-8%", width: "38vw", height: "38vw", maxWidth: 520, maxHeight: 520 }}>
+          <div className="aura-orb aura-orb--b" style={{ width: "100%", height: "100%" }} />
+        </div>
       </div>
       <div className="pointer-events-none absolute inset-0 mx-auto max-w-[1200px] px-6 md:px-10">
         <div className="grid h-full grid-cols-2 md:grid-cols-4">
@@ -64,7 +71,7 @@ export function Hero() {
           className="flex justify-center"
         >
           <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface/70 px-4 py-1.5 shadow-[0_6px_18px_-12px_rgba(10,22,34,0.4)] backdrop-blur">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+            <span className="dot-halo h-1.5 w-1.5 rounded-full bg-accent" />
             <span className="eyebrow">{hero.eyebrow}</span>
           </span>
         </motion.div>
