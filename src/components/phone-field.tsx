@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import {
   getCountries,
   getCountryCallingCode,
@@ -133,6 +133,7 @@ export function PhoneField({
 }) {
   const countries = useCountryList();
   const digitCap = digitCapFor(country);
+  const inputId = useId();
 
   const base =
     "rounded-xl border bg-paper text-[15px] text-foreground outline-none transition focus:ring-2";
@@ -142,7 +143,7 @@ export function PhoneField({
 
   return (
     <div>
-      <label className={labelClass}>
+      <label htmlFor={inputId} className={labelClass}>
         {label}
         {required && <span className="text-accent"> *</span>}
       </label>
@@ -163,6 +164,7 @@ export function PhoneField({
           ))}
         </select>
         <input
+          id={inputId}
           type="tel"
           inputMode="tel"
           autoComplete="tel-national"

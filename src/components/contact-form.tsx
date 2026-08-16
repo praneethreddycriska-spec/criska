@@ -99,9 +99,10 @@ export function ContactForm() {
           error={errors.phone}
         />
         <div className="sm:col-span-2">
-          <Label>Service Interested In</Label>
+          <Label htmlFor="service">Service Interested In</Label>
           <select
             name="service"
+            id="service"
             className="mt-2 w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none transition hover:border-border-strong focus:border-foreground focus:ring-2 focus:ring-accent/30"
             defaultValue=""
           >
@@ -112,18 +113,20 @@ export function ContactForm() {
           </select>
         </div>
         <div className="sm:col-span-2">
-          <Label>Project Requirements</Label>
+          <Label htmlFor="requirements">Project Requirements</Label>
           <textarea
             name="requirements"
+            id="requirements"
             rows={3}
             className="mt-2 w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none transition hover:border-border-strong focus:border-foreground focus:ring-2 focus:ring-accent/30"
             placeholder="Tell us about scope, timeline, and goals…"
           />
         </div>
         <div className="sm:col-span-2">
-          <Label>Message</Label>
+          <Label htmlFor="message">Message</Label>
           <textarea
             name="message"
+            id="message"
             rows={3}
             className="mt-2 w-full rounded-xl border border-border bg-paper px-4 py-3 text-[15px] text-foreground outline-none transition hover:border-border-strong focus:border-foreground focus:ring-2 focus:ring-accent/30"
           />
@@ -139,8 +142,8 @@ export function ContactForm() {
   );
 }
 
-function Label({ children }: { children: React.ReactNode }) {
-  return <label className="text-[12.5px] uppercase tracking-[0.12em] text-faint">{children}</label>;
+function Label({ children, htmlFor }: { children: React.ReactNode; htmlFor?: string }) {
+  return <label htmlFor={htmlFor} className="text-[12.5px] uppercase tracking-[0.12em] text-faint">{children}</label>;
 }
 
 function Field({
@@ -160,10 +163,11 @@ function Field({
 }) {
   return (
     <div>
-      <Label>{label}{required && <span className="text-accent"> *</span>}</Label>
+      <Label htmlFor={name}>{label}{required && <span className="text-accent"> *</span>}</Label>
       <input
         type={type}
         name={name}
+        id={name}
         required={required}
         aria-invalid={!!error}
         onInput={onInput}
