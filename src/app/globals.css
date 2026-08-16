@@ -16,7 +16,7 @@
   --panel-2: #f7f6f3;
   --foreground: #171717; /* near-black */
   --muted: #6f6f6f; /* secondary text */
-  --faint: #979797; /* labels / captions */
+  --faint: #767676; /* labels / captions — WCAG-AA (~4.5:1 on white) */
   --border: #e8e8e8; /* hairline */
   --border-strong: #d7d7d7;
   --ink: #171717; /* dark buttons / dark section */
