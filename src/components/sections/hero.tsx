@@ -16,8 +16,6 @@ export function Hero() {
     const el = surfaceRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    el.style.setProperty("--mx", `${e.clientX - r.left}px`);
-    el.style.setProperty("--my", `${e.clientY - r.top}px`);
     // Normalized -0.5..0.5 offset from centre, for the orb parallax.
     el.style.setProperty("--nx", `${(e.clientX - r.left) / r.width - 0.5}`);
     el.style.setProperty("--ny", `${(e.clientY - r.top) / r.height - 0.5}`);
@@ -44,8 +42,6 @@ export function Hero() {
     >
       {/* soft pastel wash + faint guide lines */}
       <div className="pointer-events-none absolute inset-0 pastel-wash" />
-      {/* interactive cursor spotlight */}
-      <div className="hero-spotlight pointer-events-none absolute inset-0" aria-hidden />
       {/* subtle drifting ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
         <div className="orb-parallax orb-parallax--a" style={{ top: "-8%", left: "-6%", width: "42vw", height: "42vw", maxWidth: 560, maxHeight: 560 }}>
