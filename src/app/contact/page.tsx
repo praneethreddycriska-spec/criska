@@ -83,9 +83,16 @@ export default async function ContactPage() {
                     {contact.emails.map((e) => (
                       <InfoRow key={e} icon={<MailIcon />} href={`mailto:${e}`}>{e}</InfoRow>
                     ))}
-                    <InfoRow icon={<GlobeIcon />} href={`https://${contact.website}`} external>
-                      {contact.website}
-                    </InfoRow>
+                    {(() => {
+                      // Normalise: strip any leading scheme so we never emit
+                      // "https://https://…" if the stored value already has one.
+                      const host = contact.website.replace(/^https?:\/\//i, "");
+                      return (
+                        <InfoRow icon={<GlobeIcon />} href={`https://${host}`} external>
+                          {host}
+                        </InfoRow>
+                      );
+                    })()}
                   </div>
 
                   <div className="mt-auto pt-8">
