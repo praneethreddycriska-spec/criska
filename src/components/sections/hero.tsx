@@ -9,17 +9,6 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 export function Hero() {
   const { hero } = site;
   const reduce = useReducedMotion();
-  const surfaceRef = useRef<HTMLElement>(null);
-
-  // Move the cursor spotlight by writing pointer coords onto the hero surface.
-  function handlePointerMove(e: React.PointerEvent<HTMLElement>) {
-    const el = surfaceRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    // Normalized -0.5..0.5 offset from centre, for the orb parallax.
-    el.style.setProperty("--nx", `${(e.clientX - r.left) / r.width - 0.5}`);
-    el.style.setProperty("--ny", `${(e.clientY - r.top) / r.height - 0.5}`);
-  }
 
   const leadWords = hero.titleLead.split(" ");
   const accentWords = hero.titleAccent.split(" ");
@@ -34,22 +23,13 @@ export function Hero() {
   };
 
   return (
-    <header
-      ref={surfaceRef}
-      id="top"
-      onPointerMove={handlePointerMove}
-      className="hero-surface relative isolate overflow-hidden"
-    >
+    <header id="top" className="relative isolate overflow-hidden">
       {/* soft pastel wash + faint guide lines */}
       <div className="pointer-events-none absolute inset-0 pastel-wash" />
       {/* subtle drifting ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-        <div className="orb-parallax orb-parallax--a" style={{ top: "-8%", left: "-6%", width: "42vw", height: "42vw", maxWidth: 560, maxHeight: 560 }}>
-          <div className="aura-orb aura-orb--a" style={{ width: "100%", height: "100%" }} />
-        </div>
-        <div className="orb-parallax orb-parallax--b" style={{ top: "18%", right: "-8%", width: "38vw", height: "38vw", maxWidth: 520, maxHeight: 520 }}>
-          <div className="aura-orb aura-orb--b" style={{ width: "100%", height: "100%" }} />
-        </div>
+        <div className="aura-orb aura-orb--a" style={{ top: "-8%", left: "-6%", width: "42vw", height: "42vw", maxWidth: 560, maxHeight: 560 }} />
+        <div className="aura-orb aura-orb--b" style={{ top: "18%", right: "-8%", width: "38vw", height: "38vw", maxWidth: 520, maxHeight: 520 }} />
       </div>
       <div className="pointer-events-none absolute inset-0 mx-auto max-w-[1200px] px-6 md:px-10">
         <div className="grid h-full grid-cols-2 md:grid-cols-4">
@@ -150,17 +130,26 @@ function MagneticButton({
   children: React.ReactNode;
 }) {
   const ref = useRef<HTMLAnchorElement>(null);
+  const raf = useRef(0);
 
   function onMove(e: React.PointerEvent<HTMLAnchorElement>) {
     if (reduce) return;
     const el = ref.current;
     if (!el) return;
-    const r = el.getBoundingClientRect();
-    const x = (e.clientX - r.left - r.width / 2) * 0.25;
-    const y = (e.clientY - r.top - r.height / 2) * 0.25;
-    el.style.transform = `translate(${x}px, ${y}px)`;
+    // Coalesce to one update per frame — pointermove can fire far more often.
+    const cx = e.clientX;
+    const cy = e.clientY;
+    if (raf.current) return;
+    raf.current = requestAnimationFrame(() => {
+      raf.current = 0;
+      const r = el.getBoundingClientRect();
+      const x = (cx - r.left - r.width / 2) * 0.2;
+      const y = (cy - r.top - r.height / 2) * 0.2;
+      el.style.transform = `translate(${x}px, ${y}px)`;
+    });
   }
   function onLeave() {
+    if (raf.current) { cancelAnimationFrame(raf.current); raf.current = 0; }
     const el = ref.current;
     if (el) el.style.transform = "";
   }
