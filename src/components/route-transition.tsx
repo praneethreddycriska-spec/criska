@@ -24,7 +24,7 @@ export function RouteTransition() {
     }
     if (reduce) return; // honour reduced-motion — no flash
     setShow(true);
-    const t = setTimeout(() => setShow(false), 480);
+    const t = setTimeout(() => setShow(false), 230);
     return () => clearTimeout(t);
   }, [pathname, reduce]);
 
@@ -36,14 +36,14 @@ export function RouteTransition() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.18, ease: "easeOut" }}
+          transition={{ duration: 0.12, ease: "easeOut" }}
           className="fixed inset-0 z-[190] grid place-items-center bg-paper"
           aria-hidden
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col items-center"
           >
             <CKMark className="h-12 w-auto text-foreground md:h-14" />
