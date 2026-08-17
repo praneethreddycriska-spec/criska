@@ -12,7 +12,8 @@ export const metadata: Metadata = {
     "Full-spectrum enterprise technology & consulting services: AI/ML, Cloud Infrastructure, Cybersecurity, Software Engineering, Data Analytics, and IT Staffing.",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR: cached, refreshed every 5 min (was force-dynamic)
+export const fetchCache = "force-cache"; // cache Supabase reads so the page can be ISR
 
 export default async function ServicesPage() {
   const { services } = site;

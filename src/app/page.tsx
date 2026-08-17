@@ -11,7 +11,8 @@ import { Clients } from "@/components/sections/clients";
 import { CtaContact } from "@/components/sections/cta-contact";
 import { Footer } from "@/components/sections/footer";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR: cached, refreshed every 5 min (was force-dynamic)
+export const fetchCache = "force-cache"; // cache Supabase reads so the page can be ISR
 
 export default function Home() {
   return (

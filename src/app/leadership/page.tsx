@@ -10,7 +10,8 @@ export const metadata: Metadata = {
   description: "Experienced technology and consulting leaders focused on client outcomes and long-term partnerships.",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR: cached, refreshed every 5 min (was force-dynamic)
+export const fetchCache = "force-cache"; // cache Supabase reads so the page can be ISR
 
 export default function LeadershipPage() {
   const { leadership } = site;

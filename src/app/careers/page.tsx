@@ -11,7 +11,8 @@ export const metadata: Metadata = {
   description: "Join Criska — build across AI, cloud, security, data, and consulting with a people-focused team.",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60; // ISR: cached, refreshed every 60s (jobs change often)
+export const fetchCache = "force-cache"; // cache Supabase reads so the page can be ISR
 
 export default async function CareersPage() {
   const { careers } = site;

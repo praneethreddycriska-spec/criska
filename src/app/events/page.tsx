@@ -10,7 +10,8 @@ export const metadata: Metadata = {
   description: "Tech talks, workshops, hackathons, and celebrations at Criska's Hyderabad office.",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR: cached, refreshed every 5 min (was force-dynamic)
+export const fetchCache = "force-cache"; // cache Supabase reads so the page can be ISR
 
 export default async function EventsPage() {
   const { events } = site;

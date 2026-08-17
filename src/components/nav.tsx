@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { site } from "@/content/site";
@@ -53,32 +54,32 @@ export function Nav() {
           }`}
         >
           <nav className="mx-auto flex h-[74px] max-w-[1200px] items-center justify-between px-6 md:px-10">
-            <a href="/" className="text-foreground" aria-label="Criska home">
+            <Link href="/" className="text-foreground" aria-label="Criska home">
               <LogoLockup markClassName="h-[30px] w-auto" />
-            </a>
+            </Link>
 
             {/* Desktop Nav Links */}
             <div className="hidden items-center gap-7 lg:flex">
               {site.nav.links.map((l) => (
-                <a
+                <Link
                   key={l.href}
                   href={l.href}
                   onClick={(e) => handleNavClick(e, l.href)}
                   className="whitespace-nowrap text-[15px] text-foreground/80 transition-colors hover:text-foreground cursor-pointer"
                 >
                   {l.label}
-                </a>
+                </Link>
               ))}
             </div>
 
             <div className="hidden items-center gap-3 lg:flex">
               <ThemeToggle />
-              <a
+              <Link
                 href={site.nav.cta.href}
                 className="btn-pill btn-primary !px-5 !py-2.5 text-[14px]"
               >
                 {site.nav.cta.label}
-              </a>
+              </Link>
             </div>
 
             {/* Mobile Menu Toggle Button */}
@@ -126,22 +127,22 @@ export function Nav() {
             >
               <div className="flex flex-col gap-1">
                 {site.nav.links.map((l) => (
-                  <a
+                  <Link
                     key={l.href}
                     href={l.href}
                     onClick={(e) => handleNavClick(e, l.href)}
                     className="rounded-xl px-3 py-3 text-foreground transition-colors hover:bg-panel cursor-pointer"
                   >
                     {l.label}
-                  </a>
+                  </Link>
                 ))}
-                <a
+                <Link
                   href={site.nav.cta.href}
                   onClick={() => setOpen(false)}
                   className="btn-pill btn-primary mt-2 text-center"
                 >
                   {site.nav.cta.label}
-                </a>
+                </Link>
               </div>
             </motion.div>
           )}
