@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { getSupabase } from "./supabase";
 import { site } from "@/content/site";
 import type { ScreeningQuestion } from "@/types/ats";
@@ -59,7 +60,16 @@ export type ServiceItem = {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export async function getJobs(): Promise<Job[]> {
+// Cache DB reads so public pages render fast (and can be ISR) instead of doing a
+// Supabase round-trip on every request. Admin never uses these — it reads live.
+// Function declarations below are hoisted, so referencing them here is fine.
+export const getJobs = unstable_cache(getJobsImpl, ["getJobs"], { revalidate: 60, tags: ["jobs"] });
+export const getEvents = unstable_cache(getEventsImpl, ["getEvents"], { revalidate: 300, tags: ["events"] });
+export const getLeadership = unstable_cache(getLeadershipImpl, ["getLeadership"], { revalidate: 300, tags: ["leadership"] });
+export const getServices = unstable_cache(getServicesImpl, ["getServices"], { revalidate: 300, tags: ["services"] });
+export const getContactInfo = unstable_cache(getContactInfoImpl, ["getContactInfo"], { revalidate: 300, tags: ["contact"] });
+
+async function getJobsImpl(): Promise<Job[]> {
   const sb = getSupabase();
   if (sb) {
     try {
@@ -118,7 +128,7 @@ export async function getJobs(): Promise<Job[]> {
   }));
 }
 
-export async function getEvents(): Promise<EventItem[]> {
+async function getEventsImpl(): Promise<EventItem[]> {
   const sb = getSupabase();
   if (sb) {
     try {
@@ -153,7 +163,7 @@ export async function getEvents(): Promise<EventItem[]> {
   }));
 }
 
-export async function getLeadership(): Promise<Member[]> {
+async function getLeadershipImpl(): Promise<Member[]> {
   const sb = getSupabase();
   if (sb) {
     try {
@@ -188,7 +198,7 @@ export async function getLeadership(): Promise<Member[]> {
     .filter((m) => (m.name || "").trim().length > 0);
 }
 
-export async function getServices(): Promise<ServiceItem[]> {
+async function getServicesImpl(): Promise<ServiceItem[]> {
   const sb = getSupabase();
   if (sb) {
     try {
@@ -222,7 +232,7 @@ export async function getServices(): Promise<ServiceItem[]> {
   }));
 }
 
-export async function getContactInfo(): Promise<ContactInfo> {
+async function getContactInfoImpl(): Promise<ContactInfo> {
   const sb = getSupabase();
   if (sb) {
     try {

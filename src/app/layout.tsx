@@ -3,6 +3,7 @@ import { EB_Garamond, Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { IntroSplash } from "@/components/intro-splash";
+import { RouteTransition } from "@/components/route-transition";
 import { VisitTracker } from "@/components/visit-tracker";
 
 const ebGaramond = EB_Garamond({
@@ -53,6 +54,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <ThemeProvider>{children}</ThemeProvider>
         <IntroSplash />
+        <RouteTransition />
         <VisitTracker />
         <div className="grain" aria-hidden />
       </body>

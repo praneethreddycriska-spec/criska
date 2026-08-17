@@ -12,7 +12,6 @@ export const metadata: Metadata = {
 };
 
 export const revalidate = 300; // ISR: cached, refreshed every 5 min (was force-dynamic)
-export const fetchCache = "force-cache"; // cache Supabase reads so the page can be ISR
 
 const MAP_QUERY = "Spacion Business Towers, Madhapur, Hyderabad";
 
