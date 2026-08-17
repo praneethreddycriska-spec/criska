@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { revalidateTag } from "next/cache";
 import { SESSION_COOKIE } from "@/lib/auth";
 import { verifyFreshSession } from "@/lib/session";
 import { getSupabaseAdmin, getSupabase } from "@/lib/supabase";
@@ -15,6 +16,23 @@ const TABLES: Record<string, string> = {
   inquiries: "criska_inquiries",
   job_postings: "job_postings",
 };
+
+// Public reads in src/lib/data.ts are cached under these tags (unstable_cache) and
+// the public pages are ISR. Busting the tag after a write makes admin edits show
+// up on the site immediately instead of waiting out the revalidate window.
+const TAG_BY_TABLE: Record<string, string> = {
+  criska_services: "services",
+  criska_leadership: "leadership",
+  criska_events: "events",
+  criska_contact: "contact",
+  criska_jobs: "jobs",
+  job_postings: "jobs", // getJobs falls back to job_postings
+};
+
+function bust(t: string) {
+  const tag = TAG_BY_TABLE[t];
+  if (tag) revalidateTag(tag, "max"); // Next 16 requires a profile; "max" = expire now
+}
 
 async function guard() {
   const jar = await cookies();
@@ -116,6 +134,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ table: string 
         .select()
         .single();
       if (e) return NextResponse.json({ error: e.message, tableMissing: e.code === "PGRST205" }, { status: 200 });
+      bust(t);
       return NextResponse.json({ data });
     }
 
@@ -131,6 +150,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ table: string 
       }
       return NextResponse.json({ error: e.message }, { status: 200 });
     }
+    bust(t);
     return NextResponse.json({ data });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "Save error" }, { status: 200 });
@@ -156,6 +176,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ table: string
         .select()
         .single();
       if (e) return NextResponse.json({ error: e.message }, { status: 200 });
+      bust(t);
       return NextResponse.json({ data });
     }
     if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
@@ -166,6 +187,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ table: string
       }
       return NextResponse.json({ error: e.message }, { status: 200 });
     }
+    bust(t);
     return NextResponse.json({ data });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "Update error" }, { status: 200 });
@@ -188,6 +210,7 @@ export async function DELETE(req: Request, ctx: { params: Promise<{ table: strin
       return NextResponse.json({ ok: true, savedLocally: true, tableMissing: true }, { status: 200 });
     }
     if (e) return NextResponse.json({ error: e.message }, { status: 200 });
+    bust(t);
     return NextResponse.json({ ok: true });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "Delete error" }, { status: 200 });

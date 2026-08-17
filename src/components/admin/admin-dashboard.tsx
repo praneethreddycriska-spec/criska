@@ -990,6 +990,7 @@ export function AdminDashboard() {
       {/* Candidate Profile Drawer */}
       <CandidateDrawer
         application={selectedApp}
+        job={jobs.find((j) => j.id === selectedApp?.jobId) ?? null}
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         onUpdateStatus={handleUpdateStatus}

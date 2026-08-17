@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { JobApplication, ApplicationStatus, ScheduledInterview } from "@/types/ats";
+import { useEffect, useState } from "react";
+import { JobApplication, ApplicationStatus, ScheduledInterview, JobPosting } from "@/types/ats";
 import { printCandidateDossier } from "@/lib/export-utils";
 import { safeHttpUrl } from "@/lib/validation";
 import { InterviewScheduler } from "./interview-scheduler";
@@ -10,12 +10,14 @@ import { ShareLinkModal } from "./share-link-modal";
 
 export function CandidateDrawer({
   application,
+  job,
   isOpen,
   onClose,
   onUpdateStatus,
   onUpdateNotes,
 }: {
   application: JobApplication | null;
+  job: JobPosting | null;
   isOpen: boolean;
   onClose: () => void;
   onUpdateStatus: (id: string, newStatus: ApplicationStatus) => void;
@@ -28,7 +30,19 @@ export function CandidateDrawer({
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
 
+  // The drawer stays mounted (it only returns null when closed), so the notes
+  // useState initializer runs once and goes stale. Re-sync when the candidate
+  // changes so existing notes load and Save persists the right value.
+  useEffect(() => {
+    setNotes(application?.adminNotes || "");
+  }, [application?.id]);
+
   if (!isOpen || !application) return null;
+
+  // Screening answers are keyed by question id; resolve to the configured
+  // question text (falls back to the id if the job/question is unavailable).
+  const questionText = (id: string) =>
+    job?.screeningQuestions?.find((q) => q.id === id)?.question ?? id;
 
   const handleNotesSave = () => {
     onUpdateNotes(application.id, notes);
@@ -242,7 +256,7 @@ export function CandidateDrawer({
                 <div className="space-y-3">
                   {Object.entries(application.screeningAnswers).map(([qKey, ans]) => (
                     <div key={qKey} className="border-b border-border pb-2 last:border-0 last:pb-0">
-                      <span className="text-[12.5px] font-medium text-foreground block">{qKey}:</span>
+                      <span className="text-[12.5px] font-medium text-foreground block">{questionText(qKey)}:</span>
                       <span className="text-[13.5px] text-muted block mt-0.5">{ans}</span>
                     </div>
                   ))}
