@@ -179,7 +179,7 @@ async function getLeadershipImpl(): Promise<Member[]> {
             linkedin: r.linkedin ?? "#",
             sort: r.sort ?? 0,
           }))
-          .filter((m) => (m.name || "").trim().length > 0);
+          .filter((m) => (m.name || "").trim().length > 0 || (m.role || "").trim().length > 0);
       }
     } catch {
       // fallback
@@ -195,7 +195,7 @@ async function getLeadershipImpl(): Promise<Member[]> {
       linkedin: m.linkedin ?? "#",
       sort: i,
     }))
-    .filter((m) => (m.name || "").trim().length > 0);
+    .filter((m) => (m.name || "").trim().length > 0 || (m.role || "").trim().length > 0);
 }
 
 async function getServicesImpl(): Promise<ServiceItem[]> {

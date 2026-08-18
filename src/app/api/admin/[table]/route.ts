@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { SESSION_COOKIE } from "@/lib/auth";
 import { verifyFreshSession } from "@/lib/session";
 import { getSupabaseAdmin, getSupabase } from "@/lib/supabase";
@@ -29,9 +29,21 @@ const TAG_BY_TABLE: Record<string, string> = {
   job_postings: "jobs", // getJobs falls back to job_postings
 };
 
+// Public pages that render each table's data. revalidatePath purges the ISR
+// route cache (and the data it rendered) so edits show on the next request.
+const PATHS_BY_TABLE: Record<string, string[]> = {
+  criska_services: ["/services", "/"],
+  criska_leadership: ["/leadership", "/"],
+  criska_events: ["/events"],
+  criska_contact: ["/contact"],
+  criska_jobs: ["/careers"],
+  job_postings: ["/careers"],
+};
+
 function bust(t: string) {
   const tag = TAG_BY_TABLE[t];
-  if (tag) revalidateTag(tag, "max"); // Next 16 requires a profile; "max" = expire now
+  if (tag) revalidateTag(tag, "max"); // purge the unstable_cache data tag
+  for (const p of PATHS_BY_TABLE[t] ?? []) revalidatePath(p); // purge the ISR route cache
 }
 
 async function guard() {
