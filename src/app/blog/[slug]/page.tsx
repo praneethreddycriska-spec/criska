@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/sections/footer";
+import { JsonLd } from "@/components/json-ld";
+import { articleJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 import { site } from "@/content/site";
 
 export function generateStaticParams() {
@@ -16,7 +18,12 @@ export async function generateMetadata({
   const { slug } = await params;
   const post = site.blog.featured.find((p) => p.slug === slug);
   if (!post) return { title: "Article — Criska" };
-  return { title: `${post.title} — Criska`, description: post.excerpt };
+  return {
+    title: `${post.title} — Criska`,
+    description: post.excerpt,
+    alternates: { canonical: `/blog/${slug}` },
+    openGraph: { type: "article", title: post.title, description: post.excerpt, url: `/blog/${slug}` },
+  };
 }
 
 export default async function BlogPostPage({
@@ -32,6 +39,7 @@ export default async function BlogPostPage({
 
   return (
     <>
+      <JsonLd data={[articleJsonLd({ slug, title: post.title, excerpt: post.excerpt }), breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Blog", path: "/blog" }, { name: post.title, path: `/blog/${slug}` }])]} />
       <Nav />
       <main className="flex-1">
         <article className="mx-auto max-w-[760px] px-6 pb-20 pt-36 md:pt-44">

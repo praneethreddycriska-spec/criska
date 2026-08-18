@@ -3,6 +3,8 @@ import { Nav } from "@/components/nav";
 import { Footer } from "@/components/sections/footer";
 import { PageHeader } from "@/components/page-header";
 import { ServiceIcon } from "@/components/icons";
+import { JsonLd } from "@/components/json-ld";
+import { serviceListJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 import { site } from "@/content/site";
 import { getServices } from "@/lib/data";
 
@@ -10,6 +12,7 @@ export const metadata: Metadata = {
   title: "Services & Capabilities — Criska Business Consulting",
   description:
     "Full-spectrum enterprise technology & consulting services: AI/ML, Cloud Infrastructure, Cybersecurity, Software Engineering, Data Analytics, and IT Staffing.",
+  alternates: { canonical: "/services" },
 };
 
 export const revalidate = 300; // ISR: cached, refreshed every 5 min (was force-dynamic)
@@ -19,6 +22,7 @@ export default async function ServicesPage() {
   const items = await getServices();
   return (
     <>
+      <JsonLd data={[serviceListJsonLd(items.map((s) => ({ title: s.title, desc: s.desc }))), breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Services", path: "/services" }])]} />
       <Nav />
       <main className="flex-1">
         <PageHeader eyebrow={services.eyebrow} title={services.title} lead={services.lead} />

@@ -1,0 +1,63 @@
+# Criska Business Consulting
+
+> Criska Business Consulting Pvt. Ltd. is an AI-enabled technology services partner founded in 2014, headquartered in Hyderabad, India, serving clients across India, the United Kingdom, and the United States. Criska delivers AI & Generative AI, cloud, cybersecurity, software and product engineering, data & analytics, IT infrastructure, staffing, and consulting.
+
+## About
+
+- **Company:** Criska Business Consulting Pvt. Ltd.
+- **Founded:** 2014
+- **Headquarters:** Spacion Business Towers, Madhapur, Hyderabad, Telangana 500081, India
+- **Markets served:** India, United Kingdom, United States
+- **Contact:** info@criska.in · +91 8121485444 · https://criska.in
+- **Positioning:** A trusted IT services, staffing, and consulting firm evolved into an AI-enabled technology services partner.
+
+## Services
+
+Criska offers fifteen service lines:
+
+1. **Artificial Intelligence & Generative AI** — AI strategy, LLM integration, chatbots, conversational AI, predictive analytics, intelligent document processing, machine learning, computer vision, NLP, AI automation, and AI governance.
+2. **Cloud Infrastructure Services** — cloud strategy, migration, architecture, hybrid & multi-cloud, cost optimization, disaster recovery, business continuity, and cloud security.
+3. **Cybersecurity Services** — security assessments, vulnerability management, penetration testing, Security Operations Center (SOC), managed security, IAM, endpoint & network security, data protection, incident response, and security awareness training.
+4. **Software Development** — custom web and enterprise application development.
+5. **Mobile Application Development**
+6. **Product Engineering**
+7. **Data Analytics & Business Intelligence**
+8. **DevOps & Site Reliability Engineering**
+9. **Digital Transformation**
+10. **IT Infrastructure Services**
+11. **Enterprise Application Services**
+12. **Staff Augmentation & Talent** — IT staffing and talent outsourcing.
+13. **Business Process Outsourcing**
+14. **IT Consulting Services**
+15. **Managed IT Services**
+
+## Engagement models
+
+Project-based delivery, dedicated teams, offshore development centers, staff augmentation, and managed services.
+
+## Security & compliance
+
+Cybersecurity-first approach, ISO certified, aligned to SOC 2, PCI DSS, GDPR, and HIPAA, and advancing toward CMMI certification.
+
+## Industries served
+
+Banking & financial services, healthcare, retail & e-commerce, manufacturing, education, telecom, logistics, government, technology, energy, professional services, and startups.
+
+## Key pages
+
+- Home: https://criska.in/
+- Services: https://criska.in/services
+- Industries: https://criska.in/industries
+- Case studies: https://criska.in/case-studies
+- Careers: https://criska.in/careers
+- Events: https://criska.in/events
+- Blog & insights: https://criska.in/blog
+- FAQ: https://criska.in/faq
+- Contact: https://criska.in/contact
+
+## FAQ
+
+- **What services does Criska offer?** AI & Generative AI, cloud, cybersecurity, software and mobile development, product engineering, data & BI, DevOps/SRE, digital transformation, IT infrastructure, enterprise applications, staffing, BPO, IT consulting, and managed IT services.
+- **Where is Criska located?** Corporate office in Hyderabad, India; serves clients across India, the UK, and the US.
+- **How does Criska handle security and compliance?** Cybersecurity-first, ISO certified, aligned to SOC 2, PCI DSS, GDPR, HIPAA, advancing toward CMMI.
+- **How do I get started?** Schedule a consultation at https://criska.in/contact and the team will scope needs and recommend an engagement model.

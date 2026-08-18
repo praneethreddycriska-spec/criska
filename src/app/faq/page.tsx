@@ -2,17 +2,21 @@ import type { Metadata } from "next";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/sections/footer";
 import { PageHeader } from "@/components/page-header";
+import { JsonLd } from "@/components/json-ld";
+import { faqJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 import { site } from "@/content/site";
 
 export const metadata: Metadata = {
   title: "FAQs — Criska Business Consulting",
   description: "Answers to common questions about services, engagement models, security, and getting started with Criska.",
+  alternates: { canonical: "/faq" },
 };
 
 export default function FaqPage() {
   const { faq } = site;
   return (
     <>
+      <JsonLd data={[faqJsonLd(faq.items), breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "FAQs", path: "/faq" }])]} />
       <Nav />
       <main className="flex-1">
         <PageHeader eyebrow={faq.eyebrow} title={faq.title} lead={faq.lead} />

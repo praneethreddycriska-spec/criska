@@ -2,12 +2,15 @@ import type { Metadata } from "next";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/sections/footer";
 import { PageHeader } from "@/components/page-header";
+import { JsonLd } from "@/components/json-ld";
+import { eventListJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 import { getEvents } from "@/lib/data";
 import { site } from "@/content/site";
 
 export const metadata: Metadata = {
   title: "Events — Criska Business Consulting",
   description: "Tech talks, workshops, hackathons, and celebrations at Criska's Hyderabad office.",
+  alternates: { canonical: "/events" },
 };
 
 export const revalidate = 300; // ISR: cached, refreshed every 5 min (was force-dynamic)
@@ -17,6 +20,7 @@ export default async function EventsPage() {
   const items = await getEvents();
   return (
     <>
+      <JsonLd data={[eventListJsonLd(items.map((e) => ({ title: e.title, overview: e.overview, date: e.date, location: e.location }))), breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Events", path: "/events" }])]} />
       <Nav />
       <main className="flex-1">
         <PageHeader eyebrow={events.eyebrow} title={events.title} lead={events.lead} />

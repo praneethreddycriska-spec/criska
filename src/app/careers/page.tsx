@@ -3,12 +3,15 @@ import { Nav } from "@/components/nav";
 import { Footer } from "@/components/sections/footer";
 import { PageHeader } from "@/components/page-header";
 import { CareersRoles } from "@/components/careers-roles";
+import { JsonLd } from "@/components/json-ld";
+import { jobPostingsJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 import { getJobs } from "@/lib/data";
 import { site } from "@/content/site";
 
 export const metadata: Metadata = {
   title: "Careers & ATS Portal — Criska Business Consulting",
   description: "Join Criska — build across AI, cloud, security, data, and consulting with a people-focused team.",
+  alternates: { canonical: "/careers" },
 };
 
 export const revalidate = 60; // ISR: cached, refreshed every 60s (jobs change often)
@@ -16,9 +19,11 @@ export const revalidate = 60; // ISR: cached, refreshed every 60s (jobs change o
 export default async function CareersPage() {
   const { careers } = site;
   const jobs = await getJobs();
+  const openJobs = jobs.filter((j) => j.isOpen);
 
   return (
     <>
+      <JsonLd data={[jobPostingsJsonLd(openJobs), breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Careers", path: "/careers" }])]} />
       <Nav />
       <main className="flex-1">
         <PageHeader eyebrow={careers.eyebrow} title={careers.title} lead={careers.lead} />
