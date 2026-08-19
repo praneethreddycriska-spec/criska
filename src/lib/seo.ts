@@ -30,7 +30,7 @@ export const ORG = {
   sameAs: [
     "https://www.linkedin.com/company/criska-business-consulting",
     "https://twitter.com/criska_in",
-    "https://criska.in",
+    "https://criska.org",
   ] as string[],
 };
 
