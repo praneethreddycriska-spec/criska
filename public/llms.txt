@@ -8,7 +8,7 @@
 - **Founded:** 2014
 - **Headquarters:** Spacion Business Towers, Madhapur, Hyderabad, Telangana 500081, India
 - **Markets served:** India, United Kingdom, United States
-- **Contact:** info@criska.in · +91 8121485444 · https://criska.in
+- **Contact:** info@criska.org · +91 8121485444 · https://criska.org
 - **Positioning:** A trusted IT services, staffing, and consulting firm evolved into an AI-enabled technology services partner.
 
 ## Services
@@ -45,19 +45,19 @@ Banking & financial services, healthcare, retail & e-commerce, manufacturing, ed
 
 ## Key pages
 
-- Home: https://criska.in/
-- Services: https://criska.in/services
-- Industries: https://criska.in/industries
-- Case studies: https://criska.in/case-studies
-- Careers: https://criska.in/careers
-- Events: https://criska.in/events
-- Blog & insights: https://criska.in/blog
-- FAQ: https://criska.in/faq
-- Contact: https://criska.in/contact
+- Home: https://criska.org/
+- Services: https://criska.org/services
+- Industries: https://criska.org/industries
+- Case studies: https://criska.org/case-studies
+- Careers: https://criska.org/careers
+- Events: https://criska.org/events
+- Blog & insights: https://criska.org/blog
+- FAQ: https://criska.org/faq
+- Contact: https://criska.org/contact
 
 ## FAQ
 
 - **What services does Criska offer?** AI & Generative AI, cloud, cybersecurity, software and mobile development, product engineering, data & BI, DevOps/SRE, digital transformation, IT infrastructure, enterprise applications, staffing, BPO, IT consulting, and managed IT services.
 - **Where is Criska located?** Corporate office in Hyderabad, India; serves clients across India, the UK, and the US.
 - **How does Criska handle security and compliance?** Cybersecurity-first, ISO certified, aligned to SOC 2, PCI DSS, GDPR, HIPAA, advancing toward CMMI.
-- **How do I get started?** Schedule a consultation at https://criska.in/contact and the team will scope needs and recommend an engagement model.
+- **How do I get started?** Schedule a consultation at https://criska.org/contact and the team will scope needs and recommend an engagement model.
