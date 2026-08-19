@@ -4,7 +4,7 @@
  * and citations in AI answer engines (ChatGPT/Perplexity/Gemini/Claude — "GEO").
  */
 
-export const SITE_URL = "https://criska.in";
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://criska.org";
 export const SITE_NAME = "Criska";
 
 export const ORG = {
