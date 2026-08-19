@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: "Leadership Team & Management — Criska Business Consulting",
   description:
     "Meet the board and executive leadership team at Criska Business Consulting — driving AI-enabled technology innovation, cloud engineering, cybersecurity, and talent partnerships.",
-  alternates: { canonical: "/leadership" },
+  alternates: { canonical: "https://criska.org/leadership" },
   keywords: [
     "Criska Leadership Team",
     "Criska Management",

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: "Tech Events, Workshops & Culture — Criska Business Consulting",
   description:
     "Explore tech talks, Generative AI workshops, hackathons, and culture events hosted at Criska Business Consulting, Madhapur, Hyderabad.",
-  alternates: { canonical: "/events" },
+  alternates: { canonical: "https://criska.org/events" },
   keywords: [
     "Criska Events",
     "Criska Tech Talks Hyderabad",

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: "Contact Us — Criska Business Consulting | Madhapur, Hyderabad",
   description:
     "Get in touch with Criska Business Consulting at Spacion Business Towers, Madhapur, Hyderabad. Speak to our AI, cloud, cybersecurity, software, and staffing solution architects.",
-  alternates: { canonical: "/contact" },
+  alternates: { canonical: "https://criska.org/contact" },
   keywords: [
     "Contact Criska",
     "Criska Hyderabad Address",

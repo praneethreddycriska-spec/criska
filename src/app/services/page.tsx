@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: "Technology Services & AI Consulting — Criska Business Consulting",
   description:
     "Explore Criska's full-spectrum technology & consulting services: AI/ML engineering, Cloud & DevOps, Cybersecurity & SOC, Software Development, Data Analytics, and IT Staffing across India, UK, and US.",
-  alternates: { canonical: "/services" },
+  alternates: { canonical: "https://criska.org/services" },
   keywords: [
     "Criska Services",
     "Criska AI Consulting",

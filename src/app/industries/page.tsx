@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: "Industry Sectors & Solutions — Criska Business Consulting",
   description:
     "Tailored enterprise technology solutions across BFSI, Healthcare, Manufacturing, Energy, Retail, High-Tech, Telecom, and Public Sector by Criska Business Consulting.",
-  alternates: { canonical: "/industries" },
+  alternates: { canonical: "https://criska.org/industries" },
   keywords: [
     "Criska Industry Sectors",
     "Criska Banking Fintech Solutions",
