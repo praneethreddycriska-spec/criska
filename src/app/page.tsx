@@ -10,20 +10,27 @@ import { LeadershipMembers } from "@/components/sections/leadership-members";
 import { Clients } from "@/components/sections/clients";
 import { CtaContact } from "@/components/sections/cta-contact";
 import { Footer } from "@/components/sections/footer";
+import { JsonLd } from "@/components/json-ld";
+import { serviceListJsonLd, faqJsonLd } from "@/lib/seo";
+import { site } from "@/content/site";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Criska — AI-Enabled Technology Services Partner",
+  title: "Criska — AI-Enabled Technology Services Partner | Business Consulting",
   description:
-    "Criska helps organizations grow through AI & Generative AI, cloud, cybersecurity, software & product engineering, data & analytics, IT infrastructure, staffing and consulting — delivered across India, the UK, and the US since 2014.",
+    "Criska Business Consulting is an ISO 27001 certified technology partner in Madhapur, Hyderabad, delivering AI & Generative AI, cloud infrastructure, cybersecurity, software development, data analytics, and IT staffing across India, UK, and US since 2014.",
   alternates: { canonical: "/" },
 };
 
-export const revalidate = 300; // ISR: cached, refreshed every 5 min (was force-dynamic)
+export const revalidate = 300; // ISR: cached, refreshed every 5 min
 
 export default function Home() {
+  const serviceItems = site.services.items.map((s) => ({ title: s.title, desc: s.desc }));
+  const faqItems = (site.faq?.items ?? []).map((f) => ({ q: f.q, a: f.a }));
+
   return (
     <>
+      <JsonLd data={[serviceListJsonLd(serviceItems), faqJsonLd(faqItems)]} />
       <Nav />
       <main className="flex-1">
         <Hero />

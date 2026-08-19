@@ -2,11 +2,23 @@ import type { Metadata } from "next";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/sections/footer";
 import { PageHeader } from "@/components/page-header";
+import { JsonLd } from "@/components/json-ld";
+import { breadcrumbJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "Industry Sectors & Solutions — Criska Consulting",
+  title: "Industry Sectors & Solutions — Criska Business Consulting",
   description:
-    "Tailored enterprise technology solutions across BFSI, Healthcare, Manufacturing, Energy, Retail, High-Tech, Telecom, and Public Sector.",
+    "Tailored enterprise technology solutions across BFSI, Healthcare, Manufacturing, Energy, Retail, High-Tech, Telecom, and Public Sector by Criska Business Consulting.",
+  alternates: { canonical: "/industries" },
+  keywords: [
+    "Criska Industry Sectors",
+    "Criska Banking Fintech Solutions",
+    "Criska Healthcare HIPAA Cloud",
+    "Criska Smart Manufacturing IoT",
+    "Criska Clean Energy Utilities",
+    "Criska Retail E-Commerce Tech",
+    "Criska SaaS GenAI Solutions",
+  ],
 };
 
 const SECTORS = [
@@ -127,6 +139,14 @@ const SECTORS = [
 export default function IndustriesPage() {
   return (
     <>
+      <JsonLd
+        data={[
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Industries", path: "/industries" },
+          ]),
+        ]}
+      />
       <Nav />
       <main className="flex-1">
         <PageHeader

@@ -8,7 +8,21 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        // Keep the admin/ATS portal, candidate share links and API out of search.
+        // Exclude admin dashboard, internal API endpoints, and private share tokens from search indexing.
+        disallow: ["/admin", "/api", "/share"],
+      },
+      {
+        // Generative Engine Optimization (GEO) — Explicitly allow AI search crawlers to index public pages.
+        userAgent: [
+          "GPTBot",
+          "ChatGPT-User",
+          "PerplexityBot",
+          "ClaudeBot",
+          "Google-Extended",
+          "Applebot-Extended",
+          "ByteSpider",
+        ],
+        allow: "/",
         disallow: ["/admin", "/api", "/share"],
       },
     ],

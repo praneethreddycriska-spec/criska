@@ -2,17 +2,36 @@ import type { Metadata } from "next";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/sections/footer";
 import { PageHeader } from "@/components/page-header";
+import { JsonLd } from "@/components/json-ld";
+import { breadcrumbJsonLd } from "@/lib/seo";
 import { site } from "@/content/site";
 
 export const metadata: Metadata = {
-  title: "Case Studies — Criska Business Consulting",
-  description: "Measurable outcomes Criska has delivered across banking, healthcare, retail, and technology.",
+  title: "Case Studies & Success Stories — Criska Business Consulting",
+  description:
+    "Explore real-world results and enterprise case studies delivered by Criska across banking, healthcare, retail, clean energy, and software engineering.",
+  alternates: { canonical: "/case-studies" },
+  keywords: [
+    "Criska Case Studies",
+    "Criska Success Stories",
+    "Criska Enterprise Client Results",
+    "AI Transformation Case Study",
+    "Cloud Migration Case Study",
+  ],
 };
 
 export default function CaseStudiesPage() {
   const { caseStudies } = site;
   return (
     <>
+      <JsonLd
+        data={[
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Case Studies", path: "/case-studies" },
+          ]),
+        ]}
+      />
       <Nav />
       <main className="flex-1">
         <PageHeader eyebrow={caseStudies.eyebrow} title={caseStudies.title} lead={caseStudies.lead} />

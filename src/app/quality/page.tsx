@@ -2,17 +2,36 @@ import type { Metadata } from "next";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/sections/footer";
 import { PageHeader } from "@/components/page-header";
+import { JsonLd } from "@/components/json-ld";
+import { breadcrumbJsonLd } from "@/lib/seo";
 import { site } from "@/content/site";
 
 export const metadata: Metadata = {
-  title: "Quality & Compliance — Criska Business Consulting",
-  description: "ISO certified and advancing toward CMMI — Criska's commitment to quality excellence.",
+  title: "Quality Standards & ISO Compliance — Criska Business Consulting",
+  description:
+    "Criska's quality commitment — ISO 27001 certified information security, SOC 2 alignment, HIPAA compliance, and advancing toward CMMI maturity.",
+  alternates: { canonical: "/quality" },
+  keywords: [
+    "Criska Quality Policy",
+    "Criska ISO 27001 Certified",
+    "Criska SOC 2 Compliance",
+    "Criska CMMI Level Journey",
+    "Criska Security Standards",
+  ],
 };
 
 export default function QualityPage() {
   const { quality } = site;
   return (
     <>
+      <JsonLd
+        data={[
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Quality", path: "/quality" },
+          ]),
+        ]}
+      />
       <Nav />
       <main className="flex-1">
         <PageHeader eyebrow={quality.eyebrow} title={quality.title} lead={quality.intro} />

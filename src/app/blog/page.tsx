@@ -2,11 +2,22 @@ import type { Metadata } from "next";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/sections/footer";
 import { PageHeader } from "@/components/page-header";
+import { JsonLd } from "@/components/json-ld";
+import { breadcrumbJsonLd } from "@/lib/seo";
 import { site } from "@/content/site";
 
 export const metadata: Metadata = {
-  title: "Blog & Insights — Criska Business Consulting",
-  description: "Expert insights on AI, cybersecurity, cloud, data, software, and business transformation.",
+  title: "Blog & Technology Insights — Criska Business Consulting",
+  description:
+    "Expert insights on AI & Generative AI, cybersecurity resilience, cloud migration, software engineering, and digital transformation.",
+  alternates: { canonical: "/blog" },
+  keywords: [
+    "Criska Blog",
+    "Criska Technology Insights",
+    "Generative AI Enterprise Articles",
+    "Cybersecurity Insights",
+    "Cloud Architecture Blog",
+  ],
 };
 
 export default function BlogPage() {
@@ -15,6 +26,14 @@ export default function BlogPage() {
 
   return (
     <>
+      <JsonLd
+        data={[
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Blog", path: "/blog" },
+          ]),
+        ]}
+      />
       <Nav />
       <main className="flex-1">
         <PageHeader eyebrow={blog.eyebrow} title={blog.title} lead={blog.lead} />

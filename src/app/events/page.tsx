@@ -8,19 +8,42 @@ import { getEvents } from "@/lib/data";
 import { site } from "@/content/site";
 
 export const metadata: Metadata = {
-  title: "Events — Criska Business Consulting",
-  description: "Tech talks, workshops, hackathons, and celebrations at Criska's Hyderabad office.",
+  title: "Tech Events, Workshops & Culture — Criska Business Consulting",
+  description:
+    "Explore tech talks, Generative AI workshops, hackathons, and culture events hosted at Criska Business Consulting, Madhapur, Hyderabad.",
   alternates: { canonical: "/events" },
+  keywords: [
+    "Criska Events",
+    "Criska Tech Talks Hyderabad",
+    "Criska Hackathons",
+    "Generative AI Workshop Hyderabad",
+    "Criska Office Culture",
+  ],
 };
 
-export const revalidate = 300; // ISR: cached, refreshed every 5 min (was force-dynamic)
+export const revalidate = 300; // ISR: cached, refreshed every 5 min
 
 export default async function EventsPage() {
   const { events } = site;
   const items = await getEvents();
   return (
     <>
-      <JsonLd data={[eventListJsonLd(items.map((e) => ({ title: e.title, overview: e.overview, date: e.date, location: e.location }))), breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Events", path: "/events" }])]} />
+      <JsonLd
+        data={[
+          eventListJsonLd(
+            items.map((e) => ({
+              title: e.title,
+              overview: e.overview,
+              date: e.date,
+              location: e.location,
+            })),
+          ),
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Events", path: "/events" },
+          ]),
+        ]}
+      />
       <Nav />
       <main className="flex-1">
         <PageHeader eyebrow={events.eyebrow} title={events.title} lead={events.lead} />

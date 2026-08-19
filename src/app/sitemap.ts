@@ -3,35 +3,35 @@ import { site } from "@/content/site";
 
 const BASE = "https://criska.in";
 
-/** Public, indexable routes. Admin, share and API surfaces are excluded (see robots.ts). */
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
-  const routes = [
-    "",
-    "/services",
-    "/industries",
-    "/case-studies",
-    "/blog",
-    "/careers",
-    "/leadership",
-    "/events",
-    "/faq",
-    "/quality",
-    "/contact",
+
+  const routeConfig: { path: string; priority: number; changeFreq: "daily" | "weekly" | "monthly" }[] = [
+    { path: "", priority: 1.0, changeFreq: "daily" },
+    { path: "/services", priority: 0.9, changeFreq: "weekly" },
+    { path: "/careers", priority: 0.9, changeFreq: "daily" },
+    { path: "/industries", priority: 0.8, changeFreq: "weekly" },
+    { path: "/contact", priority: 0.8, changeFreq: "monthly" },
+    { path: "/leadership", priority: 0.7, changeFreq: "monthly" },
+    { path: "/events", priority: 0.7, changeFreq: "weekly" },
+    { path: "/case-studies", priority: 0.7, changeFreq: "monthly" },
+    { path: "/blog", priority: 0.7, changeFreq: "weekly" },
+    { path: "/quality", priority: 0.6, changeFreq: "monthly" },
+    { path: "/faq", priority: 0.6, changeFreq: "monthly" },
   ];
 
-  const staticEntries: MetadataRoute.Sitemap = routes.map((r) => ({
-    url: `${BASE}${r}`,
+  const staticEntries: MetadataRoute.Sitemap = routeConfig.map((item) => ({
+    url: `${BASE}${item.path}`,
     lastModified: now,
-    changeFrequency: "monthly",
-    priority: r === "" ? 1 : 0.7,
+    changeFrequency: item.changeFreq,
+    priority: item.priority,
   }));
 
   const blogEntries: MetadataRoute.Sitemap = (site.blog?.featured ?? []).map((p) => ({
     url: `${BASE}/blog/${p.slug}`,
     lastModified: now,
-    changeFrequency: "monthly",
-    priority: 0.5,
+    changeFrequency: "weekly",
+    priority: 0.6,
   }));
 
   return [...staticEntries, ...blogEntries];

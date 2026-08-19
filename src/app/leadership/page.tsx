@@ -3,19 +3,38 @@ import { Nav } from "@/components/nav";
 import { Footer } from "@/components/sections/footer";
 import { PageHeader } from "@/components/page-header";
 import { LeadershipMembers } from "@/components/sections/leadership-members";
+import { JsonLd } from "@/components/json-ld";
+import { breadcrumbJsonLd } from "@/lib/seo";
 import { site } from "@/content/site";
 
 export const metadata: Metadata = {
-  title: "Leadership Team — Criska Business Consulting",
-  description: "Experienced technology and consulting leaders focused on client outcomes and long-term partnerships.",
+  title: "Leadership Team & Management — Criska Business Consulting",
+  description:
+    "Meet the board and executive leadership team at Criska Business Consulting — driving AI-enabled technology innovation, cloud engineering, cybersecurity, and talent partnerships.",
+  alternates: { canonical: "/leadership" },
+  keywords: [
+    "Criska Leadership Team",
+    "Criska Management",
+    "Criska Executive Board",
+    "Criska Founders",
+    "Criska Technology Directors",
+  ],
 };
 
-export const revalidate = 300; // ISR: cached, refreshed every 5 min (was force-dynamic)
+export const revalidate = 300; // ISR: cached, refreshed every 5 min
 
 export default function LeadershipPage() {
   const { leadership } = site;
   return (
     <>
+      <JsonLd
+        data={[
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Leadership", path: "/leadership" },
+          ]),
+        ]}
+      />
       <Nav />
       <main className="flex-1">
         <PageHeader eyebrow={leadership.eyebrow} title={leadership.title} lead={leadership.lead} />

@@ -9,9 +9,20 @@ import { getJobs } from "@/lib/data";
 import { site } from "@/content/site";
 
 export const metadata: Metadata = {
-  title: "Careers & ATS Portal — Criska Business Consulting",
-  description: "Join Criska — build across AI, cloud, security, data, and consulting with a people-focused team.",
+  title: "Careers & Job Opportunities — Criska Business Consulting",
+  description:
+    "Explore career opportunities at Criska in Hyderabad and remote. Build next-gen AI, cloud infrastructure, cybersecurity, and software applications with an enterprise technology partner.",
   alternates: { canonical: "/careers" },
+  keywords: [
+    "Criska Careers",
+    "Criska Jobs",
+    "Criska ATS",
+    "IT Jobs Hyderabad",
+    "AI Engineer jobs Hyderabad",
+    "Cloud DevOps jobs India",
+    "Cybersecurity analyst careers Hyderabad",
+    "Full-Stack developer jobs India",
+  ],
 };
 
 export const revalidate = 60; // ISR: cached, refreshed every 60s (jobs change often)
@@ -23,7 +34,15 @@ export default async function CareersPage() {
 
   return (
     <>
-      <JsonLd data={[jobPostingsJsonLd(openJobs), breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Careers", path: "/careers" }])]} />
+      <JsonLd
+        data={[
+          jobPostingsJsonLd(openJobs),
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Careers", path: "/careers" },
+          ]),
+        ]}
+      />
       <Nav />
       <main className="flex-1">
         <PageHeader eyebrow={careers.eyebrow} title={careers.title} lead={careers.lead} />

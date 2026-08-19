@@ -9,20 +9,39 @@ import { site } from "@/content/site";
 import { getServices } from "@/lib/data";
 
 export const metadata: Metadata = {
-  title: "Services & Capabilities — Criska Business Consulting",
+  title: "Technology Services & AI Consulting — Criska Business Consulting",
   description:
-    "Full-spectrum enterprise technology & consulting services: AI/ML, Cloud Infrastructure, Cybersecurity, Software Engineering, Data Analytics, and IT Staffing.",
+    "Explore Criska's full-spectrum technology & consulting services: AI/ML engineering, Cloud & DevOps, Cybersecurity & SOC, Software Development, Data Analytics, and IT Staffing across India, UK, and US.",
   alternates: { canonical: "/services" },
+  keywords: [
+    "Criska Services",
+    "Criska AI Consulting",
+    "Criska Technology Solutions",
+    "AI and Generative AI Services Hyderabad",
+    "Cloud DevOps Consulting India",
+    "Cybersecurity Consulting Hyderabad",
+    "Software Product Engineering Company",
+    "Data Engineering and BI Dashboards",
+    "IT Staffing and Consulting",
+  ],
 };
 
-export const revalidate = 300; // ISR: cached, refreshed every 5 min (was force-dynamic)
+export const revalidate = 300; // ISR: cached, refreshed every 5 min
 
 export default async function ServicesPage() {
   const { services } = site;
   const items = await getServices();
   return (
     <>
-      <JsonLd data={[serviceListJsonLd(items.map((s) => ({ title: s.title, desc: s.desc }))), breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Services", path: "/services" }])]} />
+      <JsonLd
+        data={[
+          serviceListJsonLd(items.map((s) => ({ title: s.title, desc: s.desc }))),
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Services", path: "/services" },
+          ]),
+        ]}
+      />
       <Nav />
       <main className="flex-1">
         <PageHeader eyebrow={services.eyebrow} title={services.title} lead={services.lead} />

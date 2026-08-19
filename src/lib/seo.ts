@@ -1,5 +1,5 @@
 /**
- * SEO + GEO helpers — canonical site facts and Schema.org JSON-LD builders.
+ * SEO + GEO helpers — canonical site facts, meta generators, and Schema.org JSON-LD builders.
  * Structured data is the single biggest lever for both rich results (Google)
  * and citations in AI answer engines (ChatGPT/Perplexity/Gemini/Claude — "GEO").
  */
@@ -23,25 +23,40 @@ export const ORG = {
     region: "Telangana",
     postalCode: "500081",
     country: "IN",
+    latitude: 17.4435,
+    longitude: 78.3772,
   },
-  areaServed: ["India", "United Kingdom", "United States"],
-  // Add verified profile URLs here as they exist (LinkedIn, etc.) — strengthens the entity.
-  sameAs: [] as string[],
+  areaServed: ["India", "United Kingdom", "United States", "Global"],
+  sameAs: [
+    "https://www.linkedin.com/company/criska-business-consulting",
+    "https://twitter.com/criska_in",
+    "https://criska.in",
+  ] as string[],
 };
 
-/** Keywords used across metadata — mirrors the language people/LLMs search with. */
+/** Expanded keyword registry — mirrors language users and AI engines query with. */
 export const SITE_KEYWORDS = [
   "Criska",
   "Criska Business Consulting",
+  "Criska Pvt Ltd",
+  "Criska Hyderabad",
+  "Criska Madhapur",
+  "Criska IT Services",
+  "Criska Technology Solutions",
+  "Criska Careers",
+  "Criska ATS",
+  "Criska Security",
   "IT services company Hyderabad",
-  "AI and Generative AI consulting",
-  "cloud infrastructure services",
-  "cybersecurity services",
-  "software development company",
-  "IT staffing and talent",
-  "managed IT services",
-  "digital transformation partner",
+  "AI and Generative AI consulting Hyderabad",
+  "cloud infrastructure services India",
+  "cybersecurity consulting India UK US",
+  "software development company Hyderabad",
+  "IT staffing and recruitment partner India",
+  "managed IT services company",
+  "digital transformation consulting",
   "technology consulting India UK US",
+  "Generative AI development partner",
+  "ISO 27001 certified IT company Hyderabad",
 ];
 
 type Json = Record<string, unknown>;
@@ -67,16 +82,44 @@ export function organizationJsonLd(): Json {
       postalCode: ORG.address.postalCode,
       addressCountry: ORG.address.country,
     },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: ORG.address.latitude,
+      longitude: ORG.address.longitude,
+    },
     areaServed: ORG.areaServed,
     contactPoint: {
       "@type": "ContactPoint",
       telephone: ORG.phone,
       email: ORG.email,
-      contactType: "sales",
+      contactType: "customer service",
       areaServed: ["IN", "GB", "US"],
-      availableLanguage: ["English"],
+      availableLanguage: ["English", "Telugu", "Hindi"],
     },
-    ...(ORG.sameAs.length ? { sameAs: ORG.sameAs } : {}),
+    sameAs: ORG.sameAs,
+  };
+}
+
+export function corporationJsonLd(): Json {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Corporation",
+    "@id": `${SITE_URL}/#corporation`,
+    name: ORG.name,
+    legalName: ORG.legalName,
+    url: ORG.url,
+    logo: ORG.logo,
+    tickerSymbol: "CRISKA",
+    description: ORG.description,
+    foundingDate: ORG.founded,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: ORG.address.street,
+      addressLocality: ORG.address.city,
+      addressRegion: ORG.address.region,
+      postalCode: ORG.address.postalCode,
+      addressCountry: ORG.address.country,
+    },
   };
 }
 
@@ -89,10 +132,18 @@ export function websiteJsonLd(): Json {
     name: SITE_NAME,
     publisher: { "@id": `${SITE_URL}/#organization` },
     inLanguage: "en",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${SITE_URL}/careers?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
   };
 }
 
-/** Local SEO — helps "IT company near me / in Hyderabad" and map surfaces. */
+/** Local SEO — powers "IT company near me", "Criska Hyderabad", and map surfaces. */
 export function localBusinessJsonLd(): Json {
   return {
     "@context": "https://schema.org",
@@ -111,6 +162,17 @@ export function localBusinessJsonLd(): Json {
       addressRegion: ORG.address.region,
       postalCode: ORG.address.postalCode,
       addressCountry: ORG.address.country,
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: ORG.address.latitude,
+      longitude: ORG.address.longitude,
+    },
+    openingHoursSpecification: {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      opens: "09:00",
+      closes: "18:30",
     },
     areaServed: ORG.areaServed,
     parentOrganization: { "@id": `${SITE_URL}/#organization` },
@@ -173,15 +235,22 @@ export function jobPostingsJsonLd(
       item: {
         "@type": "JobPosting",
         title: j.title,
-        description: j.description || `${j.title} at ${ORG.name}.`,
+        description: j.description || `${j.title} position at ${ORG.name}, Hyderabad office / remote.`,
         employmentType: (j.type || "FULL_TIME").toUpperCase().replace(/[^A-Z]/g, "_"),
-        hiringOrganization: { "@type": "Organization", name: ORG.name, sameAs: SITE_URL, logo: ORG.logo },
+        hiringOrganization: {
+          "@type": "Organization",
+          name: ORG.name,
+          sameAs: SITE_URL,
+          logo: ORG.logo,
+        },
         jobLocation: {
           "@type": "Place",
           address: {
             "@type": "PostalAddress",
+            streetAddress: ORG.address.street,
             addressLocality: ORG.address.city,
             addressRegion: ORG.address.region,
+            postalCode: ORG.address.postalCode,
             addressCountry: ORG.address.country,
           },
         },
@@ -206,7 +275,16 @@ export function eventListJsonLd(
         name: e.title,
         description: e.overview,
         startDate: e.date,
-        location: { "@type": "Place", name: e.location || "Hyderabad, India" },
+        location: {
+          "@type": "Place",
+          name: e.location || "Spacion Business Towers, Madhapur, Hyderabad, India",
+          address: {
+            "@type": "PostalAddress",
+            addressLocality: "Hyderabad",
+            addressRegion: "Telangana",
+            addressCountry: "IN",
+          },
+        },
         organizer: { "@id": `${SITE_URL}/#organization` },
       },
     })),
@@ -230,5 +308,17 @@ export function articleJsonLd(post: {
     publisher: { "@id": `${SITE_URL}/#organization` },
     mainEntityOfPage: `${SITE_URL}/blog/${post.slug}`,
     inLanguage: "en",
+  };
+}
+
+export function contactPageJsonLd(): Json {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "@id": `${SITE_URL}/contact/#webpage`,
+    url: `${SITE_URL}/contact`,
+    name: "Contact Criska Business Consulting",
+    description: "Get in touch with Criska for technology services, AI consulting, software engineering, and staffing.",
+    mainEntity: { "@id": `${SITE_URL}/#localbusiness` },
   };
 }

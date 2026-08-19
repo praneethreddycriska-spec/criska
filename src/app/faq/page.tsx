@@ -7,9 +7,17 @@ import { faqJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 import { site } from "@/content/site";
 
 export const metadata: Metadata = {
-  title: "FAQs — Criska Business Consulting",
-  description: "Answers to common questions about services, engagement models, security, and getting started with Criska.",
+  title: "Frequently Asked Questions (FAQ) — Criska Business Consulting",
+  description:
+    "Answers to common questions about Criska's IT services, AI development, engagement models, security standards, and getting started.",
   alternates: { canonical: "/faq" },
+  keywords: [
+    "Criska FAQ",
+    "Criska Business Consulting Questions",
+    "Criska Engagement Models",
+    "Criska Security Standards FAQ",
+    "How to hire Criska",
+  ],
 };
 
 export default function FaqPage() {

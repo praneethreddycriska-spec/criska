@@ -3,15 +3,27 @@ import { Nav } from "@/components/nav";
 import { Footer } from "@/components/sections/footer";
 import { PageHeader } from "@/components/page-header";
 import { ContactForm } from "@/components/contact-form";
+import { JsonLd } from "@/components/json-ld";
+import { contactPageJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 import { getContactInfo } from "@/lib/data";
 import { site } from "@/content/site";
 
 export const metadata: Metadata = {
-  title: "Contact — Criska Business Consulting",
-  description: "Talk to Criska about consulting, software development, staffing, or outsourcing.",
+  title: "Contact Us — Criska Business Consulting | Madhapur, Hyderabad",
+  description:
+    "Get in touch with Criska Business Consulting at Spacion Business Towers, Madhapur, Hyderabad. Speak to our AI, cloud, cybersecurity, software, and staffing solution architects.",
+  alternates: { canonical: "/contact" },
+  keywords: [
+    "Contact Criska",
+    "Criska Hyderabad Address",
+    "Criska Spacion Business Towers Madhapur",
+    "Criska Phone Number",
+    "Criska Email Contact",
+    "IT Consulting Partner Contact Hyderabad",
+  ],
 };
 
-export const revalidate = 300; // ISR: cached, refreshed every 5 min (was force-dynamic)
+export const revalidate = 300; // ISR: cached, refreshed every 5 min
 
 const MAP_QUERY = "Spacion Business Towers, Madhapur, Hyderabad";
 
@@ -21,6 +33,15 @@ export default async function ContactPage() {
 
   return (
     <>
+      <JsonLd
+        data={[
+          contactPageJsonLd(),
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Contact", path: "/contact" },
+          ]),
+        ]}
+      />
       <Nav />
       <main className="flex-1">
         <PageHeader eyebrow={contact.eyebrow} title={contact.title} lead={contact.lead} />
@@ -84,8 +105,6 @@ export default async function ContactPage() {
                       <InfoRow key={e} icon={<MailIcon />} href={`mailto:${e}`}>{e}</InfoRow>
                     ))}
                     {(() => {
-                      // Normalise: strip any leading scheme so we never emit
-                      // "https://https://…" if the stored value already has one.
                       const host = contact.website.replace(/^https?:\/\//i, "");
                       return (
                         <InfoRow icon={<GlobeIcon />} href={`https://${host}`} external>
