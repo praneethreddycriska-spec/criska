@@ -1,4 +1,4 @@
-import { JobApplication } from "@/types/ats";
+import { JobApplication, ScreeningQuestion } from "@/types/ats";
 
 /**
  * Export Candidate Applications List to CSV / Excel
@@ -52,9 +52,12 @@ export function exportApplicationsToCSV(applications: JobApplication[]): void {
 /**
  * Generate Printable Candidate Dossier HTML / PDF View
  */
-export function printCandidateDossier(app: JobApplication): void {
+export function printCandidateDossier(app: JobApplication, questions: ScreeningQuestion[] = []): void {
   const printWindow = window.open("", "_blank");
   if (!printWindow) return;
+
+  // Screening answers are keyed by question id — resolve to the real question text.
+  const questionText = (id: string) => questions.find((q) => q.id === id)?.question ?? id;
 
   const html = `
     <!DOCTYPE html>
@@ -115,7 +118,7 @@ export function printCandidateDossier(app: JobApplication): void {
               <tr><th>Question</th><th>Candidate Answer</th></tr>
             </thead>
             <tbody>
-              ${Object.entries(app.screeningAnswers || {}).map(([q, a]) => `<tr><td><strong>${q}</strong></td><td>${a}</td></tr>`).join("")}
+              ${Object.entries(app.screeningAnswers || {}).map(([q, a]) => `<tr><td><strong>${questionText(q)}</strong></td><td>${a}</td></tr>`).join("")}
             </tbody>
           </table>
         </div>

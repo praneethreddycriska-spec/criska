@@ -83,11 +83,12 @@ function digitCapFor(country: string): number {
 
 /**
  * Strip disallowed characters, then truncate so the string carries at most
- * `cap` digits. Formatting characters (space, parens, +, -) are preserved but
- * anything trailing beyond the last allowed digit is dropped once the cap is hit.
+ * `cap` digits. Only digits, spaces and parentheses are kept — the national
+ * field must NOT accept a leading minus/negative sign or a "+" (the country
+ * calling code is chosen separately), so those are stripped on input.
  */
 function sanitizePhoneInput(raw: string, cap: number): string {
-  const cleaned = raw.replace(/[^\d\s()+-]/g, "");
+  const cleaned = raw.replace(/[^\d\s()]/g, "");
   let digitCount = 0;
   let out = "";
   for (const ch of cleaned) {

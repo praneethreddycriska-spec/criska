@@ -114,7 +114,7 @@ export function CandidateDrawer({
             </div>
             <button
               type="button"
-              onClick={() => printCandidateDossier(application)}
+              onClick={() => printCandidateDossier(application, job?.screeningQuestions ?? [])}
               className="text-accent hover:underline font-medium text-[12.5px]"
             >
               🖨️ Print PDF Dossier

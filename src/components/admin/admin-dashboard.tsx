@@ -168,8 +168,16 @@ export function AdminDashboard() {
       result.push(value);
     });
 
-    return result;
-  }, [jobs, filteredApplications]);
+    // When any filter/search is active, hide role groups that have no matching
+    // applications — otherwise the filtered results appear alongside the
+    // remaining (non-matching) role sections. Unfiltered view still shows all.
+    const filtering =
+      !!searchQuery.trim() ||
+      selectedJobId !== "all" ||
+      selectedStatus !== "all" ||
+      selectedScoreTier !== "all";
+    return filtering ? result.filter((g) => g.apps.length > 0) : result;
+  }, [jobs, filteredApplications, searchQuery, selectedJobId, selectedStatus, selectedScoreTier]);
 
   const selectedCandidates = useMemo(() => {
     return applications.filter((a) => selectedCandidateIds.includes(a.id));
@@ -250,7 +258,7 @@ export function AdminDashboard() {
     <div className="min-h-screen bg-paper text-foreground">
       {/* Top Admin Header Bar */}
       <header className="sticky top-0 z-30 border-b border-border bg-paper/90 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-6">
+        <div className="mx-auto flex min-h-16 max-w-[1400px] flex-wrap items-center justify-between gap-x-4 gap-y-2 px-6 py-2">
           <div className="flex items-center gap-4">
             <a href="/" className="font-semibold tracking-[0.2em] text-foreground text-[18px]">
               CRISKA <span className="text-accent text-[12px] font-normal tracking-normal uppercase">ADMIN PORTAL</span>
@@ -336,7 +344,7 @@ export function AdminDashboard() {
       </header>
 
       {/* Main Admin Content */}
-      <main className="mx-auto max-w-[1400px] px-6 py-8">
+      <main className="mx-auto max-w-[1400px] px-6 pb-8 pt-10">
         {loading ? (
           <div className="py-20 text-center text-muted">Loading ATS candidates & job matrix…</div>
         ) : (
@@ -632,7 +640,7 @@ export function AdminDashboard() {
                                         <button
                                           type="button"
                                           title="Print Candidate PDF Dossier"
-                                          onClick={() => printCandidateDossier(app)}
+                                          onClick={() => printCandidateDossier(app, jobs.find((j) => j.id === app.jobId)?.screeningQuestions ?? [])}
                                           className="p-1.5 rounded-lg border border-border bg-paper hover:bg-panel text-[13px]"
                                         >
                                           🖨️
@@ -784,7 +792,7 @@ export function AdminDashboard() {
                                     <button
                                       type="button"
                                       title="Print Candidate PDF Dossier"
-                                      onClick={() => printCandidateDossier(app)}
+                                      onClick={() => printCandidateDossier(app, jobs.find((j) => j.id === app.jobId)?.screeningQuestions ?? [])}
                                       className="p-1.5 rounded-lg border border-border bg-paper hover:bg-panel text-[13px]"
                                     >
                                       🖨️

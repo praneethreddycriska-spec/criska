@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { fetchApplications } from "@/lib/supabase";
+import { fetchApplications, fetchJobs } from "@/lib/supabase";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/sections/footer";
 
@@ -16,8 +16,12 @@ export default async function SharePage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  const applications = await fetchApplications();
+  const [applications, jobs] = await Promise.all([fetchApplications(), fetchJobs()]);
   const application = applications.find((a) => a.id === token || a.shareToken === token);
+  const job = application ? jobs.find((j) => j.id === application.jobId) : null;
+  // Screening answers are keyed by question id — resolve to the real question text.
+  const questionText = (id: string) =>
+    job?.screeningQuestions?.find((q) => q.id === id)?.question ?? id;
 
   if (!application) {
     return (
@@ -77,7 +81,7 @@ export default async function SharePage({
               <div className="space-y-2 border border-border rounded-xl p-4 bg-paper">
                 {Object.entries(application.screeningAnswers || {}).map(([q, a]) => (
                   <div key={q} className="border-b border-border pb-2 last:border-0 last:pb-0">
-                    <span className="text-[13px] font-medium text-foreground block">{q}</span>
+                    <span className="text-[13px] font-medium text-foreground block">{questionText(q)}</span>
                     <span className="text-[14px] text-muted block">{a}</span>
                   </div>
                 ))}

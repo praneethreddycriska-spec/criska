@@ -69,7 +69,17 @@ export function JobModal({
 
   const handleQuestionChange = (id: string, field: keyof ScreeningQuestion, value: unknown) => {
     setScreeningQuestions((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, [field]: value } : q))
+      prev.map((q) => {
+        if (q.id !== id) return q;
+        const next = { ...q, [field]: value };
+        // When the question TYPE changes, reset type-specific fields so stale
+        // "select" options can't reappear (or get saved) after toggling type.
+        if (field === "type") {
+          if (value === "select") next.options = q.options ?? [];
+          else delete next.options;
+        }
+        return next;
+      })
     );
   };
 
