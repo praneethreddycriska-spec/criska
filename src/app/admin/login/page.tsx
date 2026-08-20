@@ -138,11 +138,33 @@ function PasswordLogin() {
   );
 }
 
+/**
+ * Google is the primary method when configured, but we always offer the admin
+ * password as a fallback — so a Google/OAuth outage (e.g. an origin_mismatch
+ * misconfiguration) can never lock the admin out of their own dashboard.
+ */
+function LoginSwitcher() {
+  const [mode, setMode] = useState<"google" | "password">("google");
+  if (!GOOGLE_SIGNIN_ENABLED) return <PasswordLogin />;
+  return (
+    <div className="flex w-full max-w-sm flex-col items-center gap-4">
+      {mode === "google" ? <GoogleOnly /> : <PasswordLogin />}
+      <button
+        type="button"
+        onClick={() => setMode(mode === "google" ? "password" : "google")}
+        className="text-[13px] text-muted underline underline-offset-2 transition-colors hover:text-foreground"
+      >
+        {mode === "google" ? "Use admin password instead" : "← Back to Google sign-in"}
+      </button>
+    </div>
+  );
+}
+
 export default function AdminLogin() {
   return (
     <div className="grid min-h-screen place-items-center bg-paper px-6">
       <Suspense fallback={<div className="text-muted text-[14px]">Loading...</div>}>
-        {GOOGLE_SIGNIN_ENABLED ? <GoogleOnly /> : <PasswordLogin />}
+        <LoginSwitcher />
       </Suspense>
     </div>
   );
