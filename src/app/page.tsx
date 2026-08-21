@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   title: "Criska — AI-Enabled Technology Services Partner | Business Consulting",
   description:
     "Criska Business Consulting is an ISO 27001 certified technology partner in Madhapur, Hyderabad, delivering AI & Generative AI, cloud infrastructure, cybersecurity, software development, data analytics, and IT staffing across India, UK, and US since 2014.",
-  alternates: { canonical: "https://criska.org/" },
+  alternates: { canonical: "https://criska.in/" },
 };
 
 export const revalidate = 300; // ISR: cached, refreshed every 5 min

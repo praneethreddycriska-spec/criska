@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   creator: "Criska Business Consulting",
   publisher: "Criska Business Consulting",
   category: "Technology Consulting",
-  alternates: { canonical: "https://criska.org/" },
+  alternates: { canonical: "https://criska.in/" },
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },

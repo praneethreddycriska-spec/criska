@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   title: "Frequently Asked Questions (FAQ) — Criska Business Consulting",
   description:
     "Answers to common questions about Criska's IT services, AI development, engagement models, security standards, and getting started.",
-  alternates: { canonical: "https://criska.org/faq" },
+  alternates: { canonical: "https://criska.in/faq" },
   keywords: [
     "Criska FAQ",
     "Criska Business Consulting Questions",

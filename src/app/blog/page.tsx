@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   title: "Blog & Technology Insights — Criska Business Consulting",
   description:
     "Expert insights on AI & Generative AI, cybersecurity resilience, cloud migration, software engineering, and digital transformation.",
-  alternates: { canonical: "https://criska.org/blog" },
+  alternates: { canonical: "https://criska.in/blog" },
   keywords: [
     "Criska Blog",
     "Criska Technology Insights",

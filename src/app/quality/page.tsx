@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   title: "Quality Standards & ISO Compliance — Criska Business Consulting",
   description:
     "Criska's quality commitment — ISO 27001 certified information security, SOC 2 alignment, HIPAA compliance, and advancing toward CMMI maturity.",
-  alternates: { canonical: "https://criska.org/quality" },
+  alternates: { canonical: "https://criska.in/quality" },
   keywords: [
     "Criska Quality Policy",
     "Criska ISO 27001 Certified",

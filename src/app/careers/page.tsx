@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: "Careers & Job Opportunities — Criska Business Consulting",
   description:
     "Explore career opportunities at Criska in Hyderabad and remote. Build next-gen AI, cloud infrastructure, cybersecurity, and software applications with an enterprise technology partner.",
-  alternates: { canonical: "https://criska.org/careers" },
+  alternates: { canonical: "https://criska.in/careers" },
   keywords: [
     "Criska Careers",
     "Criska Jobs",

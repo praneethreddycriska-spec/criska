@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   title: "Case Studies & Success Stories — Criska Business Consulting",
   description:
     "Explore real-world results and enterprise case studies delivered by Criska across banking, healthcare, retail, clean energy, and software engineering.",
-  alternates: { canonical: "https://criska.org/case-studies" },
+  alternates: { canonical: "https://criska.in/case-studies" },
   keywords: [
     "Criska Case Studies",
     "Criska Success Stories",
