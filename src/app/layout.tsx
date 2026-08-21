@@ -44,6 +44,14 @@ export const metadata: Metadata = {
   publisher: "Criska Business Consulting",
   category: "Technology Consulting",
   alternates: { canonical: "https://criska.org/" },
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon.png", type: "image/png", sizes: "256x256" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-icon.png",
+  },
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "",
   },

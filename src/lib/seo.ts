@@ -11,7 +11,7 @@ export const ORG = {
   name: "Criska Business Consulting",
   legalName: "Criska Business Consulting Pvt. Ltd.",
   url: SITE_URL,
-  logo: `${SITE_URL}/icon.svg`,
+  logo: `${SITE_URL}/icon.png`,
   founded: "2014",
   phone: "+91 8121485444",
   email: "info@criska.in",
