@@ -25,6 +25,26 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
   },
+  // 301-redirect the OLD criska.in site's .html URLs (still in Google's index)
+  // to their matching pages on the new site, so their SEO value transfers and
+  // Google replaces the stale results. Specific mappings first; any other
+  // legacy .html page falls back to the home page.
+  async redirects() {
+    return [
+      { source: "/about.html", destination: "/", permanent: true },
+      { source: "/company.html", destination: "/", permanent: true },
+      { source: "/careers.html", destination: "/careers", permanent: true },
+      { source: "/services.html", destination: "/services", permanent: true },
+      { source: "/contact.html", destination: "/contact", permanent: true },
+      { source: "/soft-pro-dev.html", destination: "/services", permanent: true },
+      { source: "/mobile-learning.html", destination: "/services", permanent: true },
+      { source: "/cotract_staffing_sol.html", destination: "/services", permanent: true },
+      { source: "/contract_staffing_sol.html", destination: "/services", permanent: true },
+      { source: "/permanent_hiring_sol.html", destination: "/services", permanent: true },
+      { source: "/pro-man.html", destination: "/services", permanent: true },
+      { source: "/index.html", destination: "/", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {
