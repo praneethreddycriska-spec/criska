@@ -31,8 +31,13 @@ export async function POST(req: Request) {
   }
 
   const sb = getSupabase();
-  if (sb) {
-    try {
+  // Not configured → report failure (503) so the modal shows an error + fallback
+  // instead of "Consultation Scheduled" while nothing is actually saved.
+  if (!sb) {
+    return NextResponse.json({ ok: false, error: "Service unavailable" }, { status: 503 });
+  }
+
+  try {
       // Store consultations in the same criska_inquiries inbox (source tag lets
       // admins tell them apart). The preferred date is folded into requirements.
       const reqParts = [
@@ -51,10 +56,8 @@ export async function POST(req: Request) {
         status: "new",
       });
       if (!error) return NextResponse.json({ ok: true });
-    } catch {
-      // fallback
-    }
+      return NextResponse.json({ ok: false, error: error.message }, { status: 502 });
+  } catch (e: any) {
+    return NextResponse.json({ ok: false, error: e?.message || "Save failed" }, { status: 502 });
   }
-
-  return NextResponse.json({ ok: true, savedLocally: true });
 }

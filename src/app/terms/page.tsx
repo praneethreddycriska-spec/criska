@@ -97,7 +97,7 @@ export default function TermsPage() {
               <Block title="11. Contact us">
                 Questions about these Terms? Contact us at{" "}
                 <a href="mailto:info@criska.in" className="text-accent underline underline-offset-2">info@criska.in</a>{" "}
-                or <a href="tel:+918121485444" className="text-accent underline underline-offset-2">+91 81214 85444</a>.
+                or <a href="tel:+919959146494" className="text-accent underline underline-offset-2">+91 99591 46494</a>.
               </Block>
             </div>
           </div>

@@ -5,7 +5,12 @@
  *
  * Uses plain fetch (no supabase-js) so it runs in the Edge middleware too.
  */
-import { parseSession, sessionSign, safeEqual } from "@/lib/auth";
+import { parseSession, sessionSign, safeEqual, USING_DEFAULT_SECRET } from "@/lib/auth";
+
+// Remembers the last DB-derived basis so a TRANSIENT Supabase failure doesn't
+// silently flip the fingerprint to the env basis and invalidate every live
+// session (random logouts). Only a successful fetch updates it.
+let lastDbBasis: string | null = null;
 
 /** Reads the value the fingerprint is derived from (DB password hash, else env). */
 async function currentPasswordBasis(): Promise<string> {
@@ -20,11 +25,18 @@ async function currentPasswordBasis(): Promise<string> {
       if (r.ok) {
         const rows = await r.json();
         const h = rows?.[0]?.password_hash;
-        if (h) return `db:${h}`;
+        if (h) {
+          lastDbBasis = `db:${h}`;
+          return lastDbBasis;
+        }
       }
     } catch {
-      /* fall through to env basis */
+      /* transient failure — fall through to the last known-good DB basis */
     }
+    // The DB is the configured source of truth. If this read failed transiently
+    // but we have a known-good basis, reuse it rather than flipping to env: and
+    // bouncing a validly-signed-in admin to the login page.
+    if (lastDbBasis) return lastDbBasis;
   }
   return `env:${process.env.ADMIN_PASSWORD || ""}`;
 }
@@ -79,6 +91,9 @@ async function isRevoked(jti: string): Promise<boolean> {
  * Returns false for tampered, expired, password-superseded, OR logged-out sessions.
  */
 export async function verifyFreshSession(token: string | undefined | null): Promise<boolean> {
+  // Fail closed in production if the session secret was never configured — a
+  // default-key signature is public knowledge and therefore forgeable.
+  if (USING_DEFAULT_SECRET && process.env.NODE_ENV === "production") return false;
   const claims = await parseSession(token);
   if (!claims) return false;
   if (await isRevoked(claims.jti)) return false;

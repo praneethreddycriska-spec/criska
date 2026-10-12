@@ -12,6 +12,7 @@ export function ContactForm() {
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
+  const [formError, setFormError] = useState("");
   const [phone, setPhone] = useState("");
   const [phoneCountry, setPhoneCountry] = useState("IN");
   const clearError = (k: string) => setErrors((e) => (e[k] ? { ...e, [k]: "" } : e));
@@ -39,6 +40,7 @@ export function ContactForm() {
       return;
     }
     setErrors({});
+    setFormError("");
     setSending(true);
     try {
       const res = await fetch("/api/inquiry", {
@@ -46,14 +48,20 @@ export function ContactForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        setErrors(j.errors || { email: j.error || "Something went wrong. Please try again." });
+      const j = await res.json().catch(() => ({}));
+      // Only treat it as sent when the server actually confirms the save.
+      if (!res.ok || j?.ok === false) {
+        if (j?.errors) setErrors(j.errors);
+        setFormError(
+          j?.error && res.status === 400
+            ? j.error
+            : "We couldn't send your message right now. Please try again, or email us directly at info@criska.in.",
+        );
         setSending(false);
         return;
       }
     } catch {
-      setErrors({ email: "Network error. Please try again." });
+      setFormError("Network error. Please try again, or email us directly at info@criska.in.");
       setSending(false);
       return;
     }
@@ -132,6 +140,15 @@ export function ContactForm() {
           />
         </div>
       </div>
+      {formError && (
+        <p
+          role="alert"
+          className="mt-7 rounded-xl border px-4 py-3 text-[13.5px]"
+          style={{ color: "#c0564f", borderColor: "rgba(192,86,79,0.35)", background: "rgba(192,86,79,0.06)" }}
+        >
+          {formError}
+        </p>
+      )}
       <div className="mt-7 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
         <button type="submit" disabled={sending} className="btn-pill btn-primary w-full disabled:opacity-50 sm:w-auto">
           {sending ? "Sending…" : contact.submitLabel}

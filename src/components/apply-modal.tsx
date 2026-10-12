@@ -61,12 +61,18 @@ export function ApplyModal({
     setStep(2);
   };
 
-  // Advance out of the screening step — reject negative / invalid number answers.
+  // Advance out of the screening step — enforce required answers, then reject
+  // negative / invalid number answers. (Required can't rely on native HTML
+  // validation here because "Next Step" is a type="button" and the fields
+  // unmount on the next step.)
   const goToSkills = () => {
     for (const q of fullJob.screeningQuestions) {
-      if (q.type !== "number") continue;
       const a = (screeningAnswers[q.id] ?? "").trim();
-      if (a && (Number(a) < 0 || Number.isNaN(Number(a)))) {
+      if (q.required && !a) {
+        setFileError(`Please answer: "${q.question}".`);
+        return;
+      }
+      if (q.type === "number" && a && (Number(a) < 0 || Number.isNaN(Number(a)))) {
         setFileError(`"${q.question}" must be a valid number (0 or more).`);
         return;
       }
@@ -126,7 +132,9 @@ export function ApplyModal({
       setStep(4);
     } catch (err) {
       console.error("Submission failed:", err);
-      setFileError("Failed to submit application. Please try again.");
+      setFileError(
+        "We couldn't submit your application right now. Please try again, or email your details to info@criska.in.",
+      );
     } finally {
       setLoading(false);
     }

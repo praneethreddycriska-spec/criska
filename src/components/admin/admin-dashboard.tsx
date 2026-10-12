@@ -6,6 +6,7 @@ import {
   fetchJobs,
   fetchApplications,
   updateApplicationRecord,
+  deleteApplicationRecord,
   saveJobPosting,
   deleteJobPosting,
   isSupabaseConfigured,
@@ -183,6 +184,16 @@ export function AdminDashboard() {
     return applications.filter((a) => selectedCandidateIds.includes(a.id));
   }, [applications, selectedCandidateIds]);
 
+  // Live applicant count per job, derived from the actual applications (joined by
+  // jobId) — the single source of truth the ATS already uses. The stored
+  // `applicationsCount` column is never populated in the DB (always 0), which is
+  // why the Job Postings cards and the ATS tab were out of sync.
+  const appCountByJob = useMemo(() => {
+    const m = new Map<string, number>();
+    applications.forEach((a) => m.set(a.jobId, (m.get(a.jobId) || 0) + 1));
+    return m;
+  }, [applications]);
+
   const toggleSelectCandidate = (id: string) => {
     setSelectedCandidateIds((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
@@ -202,22 +213,32 @@ export function AdminDashboard() {
       : 0;
 
   const handleUpdateStatus = async (id: string, newStatus: ApplicationStatus) => {
-    await updateApplicationRecord(id, { status: newStatus });
+    // Optimistic update, then confirm with the server. If it failed, reload to
+    // revert to the true DB state instead of leaving a change that never saved.
     setApplications((prev) =>
       prev.map((a) => (a.id === id ? { ...a, status: newStatus } : a))
     );
     if (selectedApp && selectedApp.id === id) {
       setSelectedApp((prev) => (prev ? { ...prev, status: newStatus } : null));
     }
+    const ok = await updateApplicationRecord(id, { status: newStatus });
+    if (!ok) {
+      alert("Couldn't save the status change. Reverting — please try again.");
+      await loadData();
+    }
   };
 
   const handleUpdateNotes = async (id: string, notes: string) => {
-    await updateApplicationRecord(id, { adminNotes: notes });
     setApplications((prev) =>
       prev.map((a) => (a.id === id ? { ...a, adminNotes: notes } : a))
     );
     if (selectedApp && selectedApp.id === id) {
       setSelectedApp((prev) => (prev ? { ...prev, adminNotes: notes } : null));
+    }
+    const ok = await updateApplicationRecord(id, { adminNotes: notes });
+    if (!ok) {
+      alert("Couldn't save your notes. Reverting — please try again.");
+      await loadData();
     }
   };
 
@@ -251,6 +272,29 @@ export function AdminDashboard() {
     if (!confirm(`Remove the "${job.title || "Untitled"}" position? This cannot be undone.`)) return;
     setJobs((prev) => prev.filter((j) => j.id !== job.id));
     await deleteJobPosting(job.id);
+    await loadData();
+  };
+
+  const handleDeleteApplication = async (app: JobApplication) => {
+    if (
+      !confirm(
+        `Permanently delete the application from "${app.fullName || "this candidate"}"${
+          app.jobTitle ? ` for ${app.jobTitle}` : ""
+        }? This cannot be undone.`,
+      )
+    )
+      return;
+    // Optimistic removal from local state + any open selection/drawer.
+    setApplications((prev) => prev.filter((a) => a.id !== app.id));
+    setSelectedCandidateIds((prev) => prev.filter((id) => id !== app.id));
+    if (selectedApp?.id === app.id) {
+      setDrawerOpen(false);
+      setSelectedApp(null);
+    }
+    const ok = await deleteApplicationRecord(app.id);
+    if (!ok) {
+      alert("Couldn't delete this application on the server. It will reappear below — please try again.");
+    }
     await loadData();
   };
 
@@ -647,6 +691,14 @@ export function AdminDashboard() {
                                         </button>
                                         <button
                                           type="button"
+                                          title="Delete Application"
+                                          onClick={() => handleDeleteApplication(app)}
+                                          className="p-1.5 rounded-lg border border-border bg-paper hover:bg-red-500/10 text-[13px] text-[#c0564f]"
+                                        >
+                                          🗑️
+                                        </button>
+                                        <button
+                                          type="button"
                                           onClick={() => {
                                             setSelectedApp(app);
                                             setDrawerOpen(true);
@@ -796,6 +848,14 @@ export function AdminDashboard() {
                                       className="p-1.5 rounded-lg border border-border bg-paper hover:bg-panel text-[13px]"
                                     >
                                       🖨️
+                                    </button>
+                                    <button
+                                      type="button"
+                                      title="Delete Application"
+                                      onClick={() => handleDeleteApplication(app)}
+                                      className="p-1.5 rounded-lg border border-border bg-paper hover:bg-red-500/10 text-[13px] text-[#c0564f]"
+                                    >
+                                      🗑️
                                     </button>
                                     <button
                                       type="button"
@@ -961,7 +1021,7 @@ export function AdminDashboard() {
 
                       <div className="mt-6 pt-4 border-t border-border flex items-center justify-between text-[13px]">
                         <span className="text-muted">
-                          <strong>{j.applicationsCount || 0}</strong> Applicants
+                          <strong>{appCountByJob.get(j.id) || 0}</strong> Applicants
                         </span>
                         <div className="flex items-center gap-2">
                           <button

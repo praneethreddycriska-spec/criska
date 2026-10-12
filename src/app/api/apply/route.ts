@@ -47,7 +47,9 @@ export async function POST(req: Request) {
 
   const sb = getSupabase();
   if (!sb) {
-    return NextResponse.json({ ok: false, fallback: true }, { status: 200 });
+    // Not configured → fail honestly so the apply modal surfaces an error +
+    // fallback instead of showing "Application Received" while nothing is saved.
+    return NextResponse.json({ ok: false, error: "Service unavailable" }, { status: 503 });
   }
 
   // Plain insert (no RETURNING) — the anon role has INSERT but not SELECT on

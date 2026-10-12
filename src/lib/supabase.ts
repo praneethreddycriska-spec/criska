@@ -240,7 +240,7 @@ export async function deleteJobPosting(id: string): Promise<void> {
 export async function updateApplicationRecord(
   id: string,
   updates: { status?: ApplicationStatus; adminNotes?: string },
-): Promise<void> {
+): Promise<boolean> {
   const existing = getStoredApplications();
   const updated = existing.map((app) => {
     if (app.id === id) {
@@ -258,7 +258,20 @@ export async function updateApplicationRecord(
   const body: any = { id };
   if (updates.status) body.status = updates.status;
   if (updates.adminNotes !== undefined) body.admin_notes = updates.adminNotes;
-  await adminApi("applications", { method: "PATCH", body: JSON.stringify(body) });
+  const res = await adminApi("applications", { method: "PATCH", body: JSON.stringify(body) });
+  return !res?.error;
+}
+
+/**
+ * Permanently delete a candidate application (local store + criska_applications).
+ * Returns false if the server rejected the delete, so the caller can surface an
+ * error and refresh (otherwise an optimistic removal would hide a failed delete).
+ */
+export async function deleteApplicationRecord(id: string): Promise<boolean> {
+  const existing = getStoredApplications();
+  saveStoredApplications(existing.filter((app) => app.id !== id));
+  const res = await adminApi("applications", { method: "DELETE", body: JSON.stringify({ id }) });
+  return !res?.error;
 }
 
 /**
@@ -302,33 +315,35 @@ export async function createApplication(
     createdAt: new Date().toISOString(),
   };
 
-  // Save to local store for instant display
+  const res = await fetch("/api/apply", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      job_id: isUuid(job.id) ? job.id : null,
+      job_title: job.title,
+      full_name: candidateData.fullName,
+      email: candidateData.email,
+      phone: candidateData.phone,
+      linkedin: candidateData.linkedinUrl || "",
+      portfolio_url: candidateData.portfolioUrl || "",
+      technical_skills: candidateData.technicalSkills || [],
+      screening_answers: candidateData.screeningAnswers || {},
+      ats_score: atsAnalysis.overallScore,
+      ats_analysis: atsAnalysis,
+    }),
+  });
+  const json = await res.json().catch(() => ({}));
+  // The server must confirm the insert. A non-2xx or ok:false means the
+  // application was NOT saved — throw so the modal shows an error + fallback
+  // instead of a false "Application Received" that silently loses the candidate.
+  if (!res.ok || json?.ok === false) {
+    throw new Error(json?.error || "Your application could not be submitted.");
+  }
+  if (json?.id) app.id = json.id;
+
+  // Mirror to the local store only after a confirmed server save.
   const existingApps = getStoredApplications();
   saveStoredApplications([app, ...existingApps]);
-
-  try {
-    const res = await fetch("/api/apply", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        job_id: isUuid(job.id) ? job.id : null,
-        job_title: job.title,
-        full_name: candidateData.fullName,
-        email: candidateData.email,
-        phone: candidateData.phone,
-        linkedin: candidateData.linkedinUrl || "",
-        portfolio_url: candidateData.portfolioUrl || "",
-        technical_skills: candidateData.technicalSkills || [],
-        screening_answers: candidateData.screeningAnswers || {},
-        ats_score: atsAnalysis.overallScore,
-        ats_analysis: atsAnalysis,
-      }),
-    });
-    const json = await res.json().catch(() => ({}));
-    if (json?.id) app.id = json.id;
-  } catch {
-    // Non-fatal — saved locally
-  }
 
   return app;
 }

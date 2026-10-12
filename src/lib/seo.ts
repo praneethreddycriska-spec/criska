@@ -13,7 +13,7 @@ export const ORG = {
   url: SITE_URL,
   logo: `${SITE_URL}/icon.png`,
   founded: "2014",
-  phone: "+91 8121485444",
+  phone: "+91 9959146494",
   email: "info@criska.in",
   description:
     "Criska Business Consulting is an AI-enabled technology services partner — AI & Generative AI, cloud, cybersecurity, software & product engineering, data & analytics, IT infrastructure, staffing and consulting — serving clients across India, the UK, and the US since 2014.",
@@ -109,7 +109,6 @@ export function corporationJsonLd(): Json {
     legalName: ORG.legalName,
     url: ORG.url,
     logo: ORG.logo,
-    tickerSymbol: "CRISKA",
     description: ORG.description,
     foundingDate: ORG.founded,
     address: {

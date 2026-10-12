@@ -23,7 +23,9 @@ export async function POST(req: Request) {
   }
 
   const sb = getSupabase();
-  if (!sb) return NextResponse.json({ ok: false, fallback: true }, { status: 200 });
+  // Not configured → tell the client it failed (503) so it can show a fallback
+  // ("email us directly") instead of a false success screen that loses the lead.
+  if (!sb) return NextResponse.json({ ok: false, error: "Service unavailable" }, { status: 503 });
 
   const clip = (v: unknown, n: number) => cleanText(v).slice(0, n);
   const { error } = await sb.from("criska_inquiries").insert({
@@ -39,8 +41,9 @@ export async function POST(req: Request) {
   });
 
   if (error) {
-    // Table not created yet — don't block the user; report soft failure.
-    return NextResponse.json({ ok: false, error: error.message }, { status: 200 });
+    // Real DB failure (missing table, RLS, outage…). Return a non-2xx so the
+    // form surfaces an error + fallback rather than silently dropping the lead.
+    return NextResponse.json({ ok: false, error: error.message }, { status: 502 });
   }
   return NextResponse.json({ ok: true });
 }

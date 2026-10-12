@@ -74,21 +74,16 @@ export const metadata: Metadata = {
     title: "Criska — AI-Enabled Technology Services Partner",
     description:
       "Trusted IT partner since 2014, now AI-enabled. AI & Generative AI, cloud, cybersecurity, software, staffing & consulting across India, the UK, and the US.",
-    images: [
-      {
-        url: `${SITE_URL}/icon.svg`,
-        width: 1200,
-        height: 630,
-        alt: "Criska Business Consulting",
-      },
-    ],
+    // No explicit `images` here: that lets the file-based `opengraph-image.tsx`
+    // (a real 1200×630 PNG card) serve the preview. An SVG override here breaks
+    // previews on X/Facebook/LinkedIn/Slack/WhatsApp, which don't render SVG.
   },
   twitter: {
     card: "summary_large_image",
     title: "Criska — AI-Enabled Technology Services Partner",
     description:
       "AI-enabled technology services partner since 2014 — AI, cloud, security, software, data, staffing & consulting.",
-    images: [`${SITE_URL}/icon.svg`],
+    // No explicit `images`: falls back to the generated PNG OG card (X needs PNG/JPG).
   },
   other: {
     "geo.region": "IN-TG",

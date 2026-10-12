@@ -10,7 +10,16 @@
 
 export const SESSION_COOKIE = "criska_admin";
 const TTL_MS = 1000 * 60 * 60 * 8; // 8 hours
-const SECRET = process.env.ADMIN_SESSION_SECRET || "criska-dev-secret-change-me";
+const DEFAULT_SECRET = "criska-dev-secret-change-me";
+const SECRET = process.env.ADMIN_SESSION_SECRET || DEFAULT_SECRET;
+
+/**
+ * True when no real ADMIN_SESSION_SECRET is configured (the hardcoded dev default
+ * is in use). The verify path uses this to FAIL CLOSED in production — otherwise
+ * a deploy missing the secret would accept cookies signed with a publicly-known
+ * key, i.e. forgeable admin sessions.
+ */
+export const USING_DEFAULT_SECRET = SECRET === DEFAULT_SECRET;
 
 const enc = new TextEncoder();
 

@@ -110,7 +110,7 @@ export default function PrivacyPage() {
               <Block title="11. Contact us">
                 For any privacy question or request, contact us at{" "}
                 <a href="mailto:info@criska.in" className="text-accent underline underline-offset-2">info@criska.in</a>{" "}
-                or call <a href="tel:+918121485444" className="text-accent underline underline-offset-2">+91 81214 85444</a>.
+                or call <a href="tel:+919959146494" className="text-accent underline underline-offset-2">+91 99591 46494</a>.
                 You can also reach us at our corporate office in Madhapur, Hyderabad, India.
               </Block>
             </div>

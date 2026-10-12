@@ -406,7 +406,7 @@ export const site = {
       "Hyderabad, Rangareddy",
       "Telangana — 500081",
     ],
-    phone: "+91 8121485444",
+    phone: "+91 9959146494",
     emails: ["info@criska.in", "info2@criska.in"],
     website: "www.criska.in",
     formFields: [

@@ -30,6 +30,9 @@ const MAP_QUERY = "Spacion Business Towers, Madhapur, Hyderabad";
 export default async function ContactPage() {
   const contact = { ...site.contact, ...(await getContactInfo()) };
   const tel = `tel:${contact.phone.replace(/[^\d+]/g, "")}`;
+  // Guard against a DB contact row with an empty emails array (would render
+  // "mailto:undefined" and a blank tile). Fall back to the static primary email.
+  const primaryEmail = contact.emails?.[0] || site.contact.emails[0];
 
   return (
     <>
@@ -57,10 +60,10 @@ export default async function ContactPage() {
                 value={contact.phone}
               />
               <QuickTile
-                href={`mailto:${contact.emails[0]}`}
+                href={`mailto:${primaryEmail}`}
                 icon={<MailIcon />}
                 label="Email us"
-                value={contact.emails[0]}
+                value={primaryEmail}
               />
               <QuickTile
                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(MAP_QUERY)}`}

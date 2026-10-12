@@ -51,8 +51,11 @@ async function guard() {
   return verifyFreshSession(jar.get(SESSION_COOKIE)?.value);
 }
 
-function resolve(table: string) {
-  return TABLES[table] ?? table;
+// Only the keys in TABLES may be addressed. Everything else is rejected so an
+// authenticated admin can't read/write/delete arbitrary tables (e.g. the
+// criska_admin_settings row that holds the password hash) through this endpoint.
+function resolve(table: string): string | null {
+  return TABLES[table] ?? null;
 }
 
 /**
@@ -94,6 +97,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ table: string 
   if (!(await guard())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { table } = await ctx.params;
   const t = resolve(table);
+  if (!t) return NextResponse.json({ error: "Unknown table" }, { status: 400 });
 
   const sb = getSupabaseAdmin() ?? (table !== "applications" ? getSupabase() : null);
   if (!sb) {
@@ -131,6 +135,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ table: string 
   if (!(await guard())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { table } = await ctx.params;
   const t = resolve(table);
+  if (!t) return NextResponse.json({ error: "Unknown table" }, { status: 400 });
   const { sb, error } = await admin();
   if (error) return error;
 
@@ -145,7 +150,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ table: string 
         .upsert({ ...values, id: 1, updated_at: new Date().toISOString() })
         .select()
         .single();
-      if (e) return NextResponse.json({ error: e.message, tableMissing: e.code === "PGRST205" }, { status: 200 });
+      if (e) return NextResponse.json({ error: e.message, tableMissing: e.code === "PGRST205" }, { status: e.code === "PGRST205" ? 200 : 500 });
       bust(t);
       return NextResponse.json({ data });
     }
@@ -160,12 +165,12 @@ export async function POST(req: Request, ctx: { params: Promise<{ table: string 
           message: `Saved locally. Run supabase/schema.sql in Supabase SQL Editor to create table '${t}'.`,
         }, { status: 200 });
       }
-      return NextResponse.json({ error: e.message }, { status: 200 });
+      return NextResponse.json({ error: e.message }, { status: 500 });
     }
     bust(t);
     return NextResponse.json({ data });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || "Save error" }, { status: 200 });
+    return NextResponse.json({ error: err?.message || "Save error" }, { status: 500 });
   }
 }
 
@@ -173,6 +178,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ table: string
   if (!(await guard())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { table } = await ctx.params;
   const t = resolve(table);
+  if (!t) return NextResponse.json({ error: "Unknown table" }, { status: 400 });
   const { sb, error } = await admin();
   if (error) return error;
 
@@ -187,7 +193,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ table: string
         .upsert({ ...values, id: 1, updated_at: new Date().toISOString() })
         .select()
         .single();
-      if (e) return NextResponse.json({ error: e.message }, { status: 200 });
+      if (e) return NextResponse.json({ error: e.message }, { status: 500 });
       bust(t);
       return NextResponse.json({ data });
     }
@@ -197,12 +203,12 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ table: string
       if (e.code === "PGRST205" || e.message?.includes("schema cache")) {
         return NextResponse.json({ ok: true, savedLocally: true, tableMissing: true }, { status: 200 });
       }
-      return NextResponse.json({ error: e.message }, { status: 200 });
+      return NextResponse.json({ error: e.message }, { status: 500 });
     }
     bust(t);
     return NextResponse.json({ data });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || "Update error" }, { status: 200 });
+    return NextResponse.json({ error: err?.message || "Update error" }, { status: 500 });
   }
 }
 
@@ -210,6 +216,7 @@ export async function DELETE(req: Request, ctx: { params: Promise<{ table: strin
   if (!(await guard())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { table } = await ctx.params;
   const t = resolve(table);
+  if (!t) return NextResponse.json({ error: "Unknown table" }, { status: 400 });
   const { sb, error } = await admin();
   if (error) return error;
 
@@ -221,10 +228,10 @@ export async function DELETE(req: Request, ctx: { params: Promise<{ table: strin
     if (e && (e.code === "PGRST205" || e.message?.includes("schema cache"))) {
       return NextResponse.json({ ok: true, savedLocally: true, tableMissing: true }, { status: 200 });
     }
-    if (e) return NextResponse.json({ error: e.message }, { status: 200 });
+    if (e) return NextResponse.json({ error: e.message }, { status: 500 });
     bust(t);
     return NextResponse.json({ ok: true });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || "Delete error" }, { status: 200 });
+    return NextResponse.json({ error: err?.message || "Delete error" }, { status: 500 });
   }
 }
