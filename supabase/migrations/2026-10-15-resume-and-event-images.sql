@@ -12,5 +12,16 @@ alter table criska_applications
 alter table criska_events
   add column if not exists images jsonb not null default '[]'::jsonb;
 
--- The `resumes` storage bucket + its public insert/select policies already exist
--- in schema.sql. If this is a fresh project, run schema.sql first.
+-- 3) Resume files are stored in a public Storage bucket named `resumes`.
+--    If it doesn't exist yet (uploads fail with "Bucket not found"), create it.
+--    Easiest: Supabase Dashboard → Storage → New bucket → name "resumes" → Public.
+--    Or via SQL:
+insert into storage.buckets (id, name, public)
+values ('resumes', 'resumes', true)
+on conflict (id) do nothing;
+
+-- Public read is covered by the bucket being public; uploads go through the
+-- service role (which bypasses RLS), so no extra object policy is required.
+-- (Optional, only if you later upload with the anon key instead of service role:)
+--   create policy "resumes_insert" on storage.objects for insert with check (bucket_id = 'resumes');
+--   create policy "resumes_select" on storage.objects for select using (bucket_id = 'resumes');

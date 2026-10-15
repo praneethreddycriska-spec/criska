@@ -392,6 +392,9 @@ export const site = {
     title: "Let's start a conversation.",
     lead: "Consulting, software development, staffing, or outsourcing — our team is ready to help you move faster.",
     button: { label: "Schedule Consultation", href: "/contact" },
+    // Phone shown ONLY in this "Let's start a conversation" CTA button. The rest
+    // of the site (contact page, footer, legal, JSON-LD) uses contact.phone.
+    phone: "+91 8121485444",
   },
 
   contact: {

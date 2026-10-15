@@ -3,6 +3,8 @@ import { Reveal } from "@/components/reveal";
 
 export function CtaContact() {
   const { cta, contact } = site;
+  // CTA-specific number (falls back to the shared contact number if unset).
+  const ctaPhone = cta.phone || contact.phone;
   return (
     <section
       id="contact-cta"
@@ -42,11 +44,11 @@ export function CtaContact() {
               {cta.button.label}
             </a>
             <a
-              href={`tel:${contact.phone.replace(/[^\d+]/g, "")}`}
+              href={`tel:${ctaPhone.replace(/[^\d+]/g, "")}`}
               className="btn-pill"
               style={{ border: "1px solid var(--navy-border-strong)", color: "var(--navy-body)" }}
             >
-              {contact.phone}
+              {ctaPhone}
             </a>
           </div>
         </Reveal>
