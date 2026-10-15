@@ -30,6 +30,7 @@ create table if not exists criska_events (
   location text default '',
   overview text default '',
   image text default '',
+  images jsonb not null default '[]'::jsonb,
   link text default '',
   sort int not null default 0,
   created_at timestamptz not null default now()
@@ -75,6 +76,7 @@ create table if not exists criska_applications (
   screening_answers jsonb not null default '{}'::jsonb,
   ats_score int not null default 0,
   ats_analysis jsonb not null default '{}'::jsonb,
+  resume_url text default '',
   status text not null default 'new',
   admin_notes text default '',
   created_at timestamptz not null default now()

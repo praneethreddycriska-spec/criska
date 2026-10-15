@@ -18,6 +18,7 @@ export function exportApplicationsToCSV(applications: JobApplication[]): void {
     "Applied Date",
     "Matched Skills",
     "LinkedIn URL",
+    "Resume URL",
     "Admin Notes",
   ];
 
@@ -33,6 +34,7 @@ export function exportApplicationsToCSV(applications: JobApplication[]): void {
     `"${new Date(app.createdAt).toLocaleDateString()}"`,
     `"${(app.atsAnalysis?.skillsMatched || []).join("; ").replace(/"/g, '""')}"`,
     `"${app.linkedinUrl || ""}"`,
+    `"${app.resumeUrl || ""}"`,
     `"${(app.adminNotes || "").replace(/"/g, '""')}"`,
   ]);
 
@@ -99,6 +101,7 @@ export function printCandidateDossier(app: JobApplication, questions: ScreeningQ
           <p><strong>Email:</strong> ${app.email} | <strong>Phone:</strong> ${app.phone}</p>
           ${app.linkedinUrl ? `<p><strong>LinkedIn:</strong> ${app.linkedinUrl}</p>` : ""}
           ${app.portfolioUrl ? `<p><strong>Portfolio:</strong> ${app.portfolioUrl}</p>` : ""}
+          ${app.resumeUrl ? `<p><strong>Resume:</strong> ${app.resumeUrl}</p>` : ""}
         </div>
 
         <div class="section">

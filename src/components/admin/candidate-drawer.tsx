@@ -192,6 +192,12 @@ export function CandidateDrawer({
                     <a href={safeHttpUrl(application.portfolioUrl)} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">View Portfolio ↗</a>
                   </div>
                 )}
+                {safeHttpUrl(application.resumeUrl) && (
+                  <div>
+                    <span className="text-muted block text-[12px]">Resume:</span>
+                    <a href={safeHttpUrl(application.resumeUrl)} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Download Resume ↓</a>
+                  </div>
+                )}
               </div>
 
               {/* Technical Skills */}

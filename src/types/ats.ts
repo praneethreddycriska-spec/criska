@@ -76,6 +76,7 @@ export interface JobApplication {
   phone: string;
   portfolioUrl?: string;
   linkedinUrl?: string;
+  resumeUrl?: string;
   technicalSkills?: string[];
   screeningAnswers: Record<string, string>;
   atsScore: number;

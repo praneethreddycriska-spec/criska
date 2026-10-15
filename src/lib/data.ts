@@ -25,6 +25,7 @@ export type EventItem = {
   location: string;
   overview: string;
   image: string;
+  images: string[];
   link: string;
   sort: number;
 };
@@ -128,39 +129,67 @@ async function getJobsImpl(): Promise<Job[]> {
   }));
 }
 
+// Normalize an event row's image(s) into an ordered list, tolerant of every
+// storage shape: the new `images` jsonb array, a JSON-array string stashed in
+// the legacy `image` column, or a plain single-URL `image`.
+function normalizeEventImages(row: { images?: unknown; image?: unknown }): string[] {
+  const clean = (arr: unknown[]) =>
+    arr.map((v) => (typeof v === "string" ? v.trim() : "")).filter(Boolean);
+  if (Array.isArray(row.images) && row.images.length > 0) return clean(row.images);
+  const img = typeof row.image === "string" ? row.image.trim() : "";
+  if (!img) return [];
+  if (img.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(img);
+      if (Array.isArray(parsed)) return clean(parsed);
+    } catch {
+      /* not JSON — treat as a single URL */
+    }
+  }
+  return [img];
+}
+
 async function getEventsImpl(): Promise<EventItem[]> {
   const sb = getSupabase();
   if (sb) {
     try {
       const { data, error } = await sb.from("criska_events").select("*").order("sort");
       if (!error && data && data.length > 0) {
-        return data.map((r: any) => ({
-          id: r.id,
-          title: r.title,
-          tag: r.tag ?? "",
-          date: r.date_label ?? "",
-          location: r.location ?? "",
-          overview: r.overview ?? "",
-          image: r.image ?? "",
-          link: r.link ?? "",
-          sort: r.sort ?? 0,
-        }));
+        return data.map((r: any) => {
+          const images = normalizeEventImages(r);
+          return {
+            id: r.id,
+            title: r.title,
+            tag: r.tag ?? "",
+            date: r.date_label ?? "",
+            location: r.location ?? "",
+            overview: r.overview ?? "",
+            image: images[0] ?? "",
+            images,
+            link: r.link ?? "",
+            sort: r.sort ?? 0,
+          };
+        });
       }
     } catch {
       // fallback
     }
   }
-  return site.events.items.map((e: any, i: number) => ({
-    id: String(i),
-    title: e.title,
-    tag: e.tag,
-    date: e.date,
-    location: e.location,
-    overview: e.overview,
-    image: e.image ?? "",
-    link: "",
-    sort: i,
-  }));
+  return site.events.items.map((e: any, i: number) => {
+    const images = normalizeEventImages(e);
+    return {
+      id: String(i),
+      title: e.title,
+      tag: e.tag,
+      date: e.date,
+      location: e.location,
+      overview: e.overview,
+      image: images[0] ?? "",
+      images,
+      link: "",
+      sort: i,
+    };
+  });
 }
 
 async function getLeadershipImpl(): Promise<Member[]> {

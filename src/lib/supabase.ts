@@ -82,6 +82,7 @@ function appFromRow(r: any): JobApplication {
     phone: r.phone ?? "",
     portfolioUrl: r.portfolio_url ?? "",
     linkedinUrl: r.linkedin ?? "",
+    resumeUrl: r.resume_url ?? "",
     technicalSkills: Array.isArray(r.technical_skills) ? r.technical_skills : [],
     screeningAnswers: r.screening_answers ?? {},
     atsScore: r.ats_score ?? 0,
@@ -285,6 +286,7 @@ export async function createApplication(
     phone: string;
     portfolioUrl?: string;
     linkedinUrl?: string;
+    resumeUrl?: string;
     technicalSkills?: string[];
     screeningAnswers: Record<string, string>;
   },
@@ -306,6 +308,7 @@ export async function createApplication(
     phone: candidateData.phone,
     portfolioUrl: candidateData.portfolioUrl,
     linkedinUrl: candidateData.linkedinUrl,
+    resumeUrl: candidateData.resumeUrl,
     technicalSkills: candidateData.technicalSkills || [],
     screeningAnswers: candidateData.screeningAnswers,
     atsScore: atsAnalysis.overallScore,
@@ -326,6 +329,7 @@ export async function createApplication(
       phone: candidateData.phone,
       linkedin: candidateData.linkedinUrl || "",
       portfolio_url: candidateData.portfolioUrl || "",
+      resume_url: candidateData.resumeUrl || "",
       technical_skills: candidateData.technicalSkills || [],
       screening_answers: candidateData.screeningAnswers || {},
       ats_score: atsAnalysis.overallScore,

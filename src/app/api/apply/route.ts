@@ -24,6 +24,7 @@ export async function POST(req: Request) {
     current_company,
     linkedin,
     portfolio_url,
+    resume_url,
     experience_years,
     notice_period,
     project_summary,
@@ -54,7 +55,7 @@ export async function POST(req: Request) {
 
   // Plain insert (no RETURNING) — the anon role has INSERT but not SELECT on
   // criska_applications (privacy), so a .select() here would trip RLS.
-  const { error } = await sb.from("criska_applications").insert({
+  const record: Record<string, unknown> = {
     job_id: job_id || null,
     job_title: job_title || "",
     full_name: cleanText(full_name).slice(0, 200),
@@ -63,6 +64,7 @@ export async function POST(req: Request) {
     current_company: String(current_company || "").slice(0, 200),
     linkedin: safeHttpUrl(linkedin).slice(0, 400),
     portfolio_url: safeHttpUrl(portfolio_url).slice(0, 400),
+    resume_url: safeHttpUrl(resume_url).slice(0, 600),
     experience_years: String(experience_years ?? "").slice(0, 20),
     notice_period: String(notice_period || "").slice(0, 60),
     project_summary: String(project_summary || "").slice(0, 4000),
@@ -71,7 +73,16 @@ export async function POST(req: Request) {
     ats_score: Number.isFinite(ats_score) ? ats_score : 0,
     ats_analysis: ats_analysis && typeof ats_analysis === "object" ? ats_analysis : {},
     status: "new",
-  });
+  };
+
+  let { error } = await sb.from("criska_applications").insert(record);
+  // If the resume_url column hasn't been added yet (migration not run), retry
+  // once without it so the application still saves rather than being rejected.
+  if (error && /resume_url/i.test(error.message || "")) {
+    const { resume_url: _omit, ...withoutResume } = record;
+    void _omit;
+    ({ error } = await sb.from("criska_applications").insert(withoutResume));
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });

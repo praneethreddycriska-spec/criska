@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ImageInput } from "./image-input";
+import { MultiImageInput } from "./multi-image-input";
 import { isValidHttpUrl, isValidEmail } from "@/lib/validation";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-type FieldType = "text" | "textarea" | "number" | "bool" | "url" | "image" | "lines" | "tags" | "select";
+type FieldType = "text" | "textarea" | "number" | "bool" | "url" | "image" | "images" | "lines" | "tags" | "select";
 type Field = { key: string; label: string; type: FieldType; help?: string; options?: { value: string; label: string }[] };
 
 type TabDef = {
@@ -59,7 +60,7 @@ const TABS: TabDef[] = [
       { key: "date_label", label: "Date", type: "text", help: "e.g. March 2026" },
       { key: "location", label: "Location", type: "text" },
       { key: "overview", label: "Overview", type: "textarea" },
-      { key: "image", label: "Image", type: "image" },
+      { key: "images", label: "Images", type: "images", help: "Upload one or more — multiple images auto-scroll as a carousel on the Events page. The first image is the cover." },
       { key: "link", label: "Link (optional)", type: "url" },
       { key: "sort", label: "Sort order", type: "number" },
     ],
@@ -260,7 +261,7 @@ function RecordForm({ tab, initial, onSave, singleton }: { tab: TabDef; initial:
       {singleton && <h2 className="font-display mb-6 text-[24px]">{tab.label}</h2>}
       <div className="grid gap-5 sm:grid-cols-2">
         {tab.fields.map((f) => (
-          <div key={f.key} className={f.type === "textarea" || f.type === "lines" || f.type === "image" ? "sm:col-span-2" : ""}>
+          <div key={f.key} className={f.type === "textarea" || f.type === "lines" || f.type === "image" || f.type === "images" ? "sm:col-span-2" : ""}>
             <label className="text-[12.5px] uppercase tracking-[0.1em] text-faint">{f.label}</label>
             {f.type === "textarea" && (
               <textarea rows={3} value={values[f.key] ?? ""} onChange={(e) => set(f.key, e.target.value)} className={inputCls} />
@@ -270,6 +271,9 @@ function RecordForm({ tab, initial, onSave, singleton }: { tab: TabDef; initial:
             )}
             {f.type === "image" && (
               <div className="mt-2"><ImageInput value={values[f.key] ?? ""} onChange={(url) => set(f.key, url)} /></div>
+            )}
+            {f.type === "images" && (
+              <div className="mt-2"><MultiImageInput value={Array.isArray(values[f.key]) ? values[f.key] : []} onChange={(urls) => set(f.key, urls)} /></div>
             )}
             {f.type === "bool" && (
               <div className="mt-2">
@@ -343,6 +347,8 @@ function normalize(tab: TabDef, r: any) {
   for (const f of tab.fields) {
     if (f.type === "lines") v[f.key] = Array.isArray(r[f.key]) ? r[f.key].join("\n") : (r[f.key] ?? "");
     if (f.type === "tags") v[f.key] = Array.isArray(r[f.key]) ? r[f.key].join(", ") : (r[f.key] ?? "");
+    // Multi-image: load from the `images` array, falling back to a legacy single `image`.
+    if (f.type === "images") v[f.key] = Array.isArray(r[f.key]) && r[f.key].length ? r[f.key] : (r.image ? [r.image] : []);
     if (f.type === "bool") v[f.key] = r[f.key] ?? true;
     if (f.type === "number") v[f.key] = r[f.key] ?? 0;
     if (f.type === "select") v[f.key] = r[f.key] ?? f.options?.[0]?.value ?? "";
@@ -375,6 +381,7 @@ function denormalize(tab: TabDef, v: any) {
   for (const f of tab.fields) {
     if (f.type === "lines") out[f.key] = String(v[f.key] || "").split("\n").map((s) => s.trim()).filter(Boolean);
     else if (f.type === "tags") out[f.key] = String(v[f.key] || "").split(",").map((s) => s.trim()).filter(Boolean);
+    else if (f.type === "images") out[f.key] = Array.isArray(v[f.key]) ? v[f.key].map((s: any) => String(s).trim()).filter(Boolean) : [];
     else if (f.type === "number") out[f.key] = Math.max(0, Math.floor(Number(v[f.key]) || 0));
     else if (f.type === "text" || f.type === "textarea" || f.type === "url" || f.type === "image" || f.type === "select") {
       out[f.key] = String(v[f.key] ?? "").trim();

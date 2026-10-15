@@ -45,6 +45,42 @@ export function ApplyModal({
   const [errors, setErrors] = useState<FieldErrors>({});
   const clearError = (k: string) => setErrors((e) => (e[k] ? { ...e, [k]: "" } : e));
 
+  // Optional resume upload (PDF/DOC/DOCX → public resumes bucket).
+  const [resumeUrl, setResumeUrl] = useState("");
+  const [resumeName, setResumeName] = useState("");
+  const [resumeUploading, setResumeUploading] = useState(false);
+  const [resumeError, setResumeError] = useState("");
+
+  const onResumeSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file
+    if (!file) return;
+    setResumeError("");
+    const ext = (file.name.split(".").pop() || "").toLowerCase();
+    if (!["pdf", "doc", "docx"].includes(ext)) {
+      setResumeError("Please upload a PDF, DOC, or DOCX file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setResumeError("File is too large (max 5 MB).");
+      return;
+    }
+    setResumeUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/apply-resume", { method: "POST", body: fd });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.url) throw new Error(j.error || "Upload failed. Please try again.");
+      setResumeUrl(j.url);
+      setResumeName(file.name);
+    } catch (err) {
+      setResumeError((err as Error).message || "Upload failed. Please try again.");
+    } finally {
+      setResumeUploading(false);
+    }
+  };
+
   if (!isOpen || !job) return null;
 
   // Validate the contact step before advancing (name, email, phone required).
@@ -122,6 +158,7 @@ export function ApplyModal({
         phone: toE164(phoneCountry, phone),
         linkedinUrl: cleanText(linkedinUrl),
         portfolioUrl: cleanText(portfolioUrl),
+        resumeUrl,
         technicalSkills: skills,
         screeningAnswers,
       });
@@ -150,6 +187,9 @@ export function ApplyModal({
     setPortfolioUrl("");
     setScreeningAnswers({});
     setTechnicalSkills("");
+    setResumeUrl("");
+    setResumeName("");
+    setResumeError("");
     setFileError("");
     setSubmittedApp(null);
     onClose();
@@ -298,6 +338,41 @@ export function ApplyModal({
                         />
                         {errors.portfolio && <p className="mt-1 text-[12.5px]" style={{ color: "#c0564f" }}>{errors.portfolio}</p>}
                       </div>
+                    </div>
+
+                    {/* Resume upload (optional) */}
+                    <div>
+                      <label className="block text-[12.5px] uppercase tracking-[0.12em] text-faint mb-1">
+                        Resume <span className="normal-case tracking-normal text-faint/80">(PDF, DOC, or DOCX — optional, max 5 MB)</span>
+                      </label>
+                      {resumeUrl ? (
+                        <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-panel px-4 py-3">
+                          <div className="flex min-w-0 items-center gap-2 text-[14px] text-foreground">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-accent"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>
+                            <span className="truncate">{resumeName || "Resume uploaded"}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => { setResumeUrl(""); setResumeName(""); }}
+                            className="shrink-0 text-[13px] text-[#c0564f] hover:underline"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ) : (
+                        <label className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-paper px-4 py-3.5 text-[14px] text-muted transition-colors hover:border-border-strong hover:text-foreground ${resumeUploading ? "pointer-events-none opacity-60" : ""}`}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M17 8l-5-5-5 5" /><path d="M12 3v12" /></svg>
+                          <span>{resumeUploading ? "Uploading…" : "Upload your resume"}</span>
+                          <input
+                            type="file"
+                            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                            onChange={onResumeSelected}
+                            disabled={resumeUploading}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
+                      {resumeError && <p className="mt-1 text-[12.5px]" style={{ color: "#c0564f" }}>{resumeError}</p>}
                     </div>
                   </div>
                 )}
